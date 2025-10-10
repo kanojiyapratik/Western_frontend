@@ -36,8 +36,8 @@ function App() {
           <Route path="/superadmin/*" element={<SuperAdminLayout />} />
         )}
         
-        {/* Regular user routes: dashboard first, viewer at /app */}
-        {user.role !== 'admin' && user.role !== 'superadmin' && (
+        {/* Regular user routes: for users, employees, managers, and other custom roles */}
+        {(user.role === 'user' || user.role === 'employee' || user.role === 'manager' || user.role === 'assistantmanager' || user.role === 'custom') && (
           <>
             <Route path="/user/*" element={<UserLayout />} />
             <Route path="/" element={<Navigate to="/user/dashboard" replace />} />

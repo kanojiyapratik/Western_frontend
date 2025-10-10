@@ -1,3 +1,125 @@
+// Default permissions for each role
+const ROLE_DEFAULT_PERMISSIONS = {
+  manager: {
+    modelUpload: true,
+    modelManageUpload: true,
+    modelManageEdit: true,
+    modelManageDelete: true,
+    doorPresets: true,
+    doorToggles: true,
+    drawerToggles: true,
+    textureWidget: true,
+    lightWidget: true,
+    globalTextureWidget: true,
+    screenshotWidget: true,
+    saveConfig: true,
+    canRotate: true,
+    canPan: true,
+    canZoom: true,
+    canMove: true,
+    reflectionWidget: false,
+    movementWidget: false,
+    customWidget: false,
+    imageDownloadQualities: ['average', 'good', 'best'],
+    presetAccess: {},
+  },
+  assistantmanager: {
+    modelUpload: false,
+    modelManageUpload: false,
+    modelManageEdit: true,
+    modelManageDelete: false,
+    doorPresets: true,
+    doorToggles: true,
+    drawerToggles: true,
+    textureWidget: true,
+    lightWidget: true,
+    globalTextureWidget: false,
+    screenshotWidget: false,
+    saveConfig: true,
+    canRotate: true,
+    canPan: false,
+    canZoom: true,
+    canMove: false,
+    reflectionWidget: false,
+    movementWidget: false,
+    customWidget: false,
+    imageDownloadQualities: ['average', 'good'],
+    presetAccess: {},
+  },
+  employee: {
+    modelUpload: false,
+    modelManageUpload: false,
+    modelManageEdit: false,
+    modelManageDelete: false,
+    doorPresets: true,
+    doorToggles: true,
+    drawerToggles: true,
+    textureWidget: true,
+    lightWidget: true,
+    globalTextureWidget: false,
+    screenshotWidget: false,
+    saveConfig: true,
+    canRotate: true,
+    canPan: false,
+    canZoom: true,
+    canMove: false,
+    reflectionWidget: false,
+    movementWidget: false,
+    customWidget: false,
+    imageDownloadQualities: ['average'],
+    presetAccess: {},
+  },
+};
+
+// Helper to compare permissions (only core role permissions, not presetAccess or other metadata)
+const arePermissionsEqual = (a, b) => {
+  // Only compare core permission properties, not metadata like presetAccess
+  const corePermissionKeys = [
+    'modelUpload', 'modelManageUpload', 'modelManageEdit', 'modelManageDelete',
+    'doorPresets', 'doorToggles', 'drawerToggles', 'textureWidget', 'lightWidget',
+    'globalTextureWidget', 'screenshotWidget', 'saveConfig', 'canRotate', 'canPan',
+    'canZoom', 'canMove', 'reflectionWidget', 'movementWidget', 'customWidget', 
+    'imageDownloadQualities'
+  ];
+  
+  for (let key of corePermissionKeys) {
+    const aVal = a[key];
+    const bVal = b[key];
+    
+    // Handle arrays (like imageDownloadQualities)
+    if (Array.isArray(aVal) && Array.isArray(bVal)) {
+      if (aVal.length !== bVal.length || aVal.some(v => !bVal.includes(v))) {
+        return false;
+      }
+    }
+    // Handle boolean/other values
+    else if (aVal !== bVal) {
+      return false;
+    }
+  }
+  return true;
+};
+
+// Display role name with proper formatting
+const getRoleDisplayName = (user) => {
+  const role = user.role || 'employee';
+  
+  // Debug: Log what we're actually getting from the database
+  console.log('getRoleDisplayName - User:', user.name, 'Role from DB:', user.role, 'Permissions keys:', user.permissions ? Object.keys(user.permissions) : 'none');
+  
+  // Handle custom roles
+  if (role === 'custom') {
+    return user.customRoleName || 'Custom';
+  }
+  
+  // Handle special formatting for compound role names
+  if (role === 'assistantmanager') {
+    return 'Assistant Manager';
+  }
+  
+  // Handle standard roles with proper capitalization
+  return role.charAt(0).toUpperCase() + role.slice(1);
+};
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../../context/AuthContext';
 import './UserManagement.css';
@@ -16,7 +138,7 @@ const UserManagement = () => {
   const [showActivityModal, setShowActivityModal] = useState(false);
   const [activityUserId, setActivityUserId] = useState(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [newUser, setNewUser] = useState({ name: '', email: '', password: '', role: 'user' });
+  const [newUser, setNewUser] = useState({ name: '', email: '', password: '', role: 'employee' });
   const [createdPassword, setCreatedPassword] = useState('');
   const [createErrors, setCreateErrors] = useState({});
   const [creating, setCreating] = useState(false);
@@ -31,7 +153,7 @@ const UserManagement = () => {
   const [debugMessage, setDebugMessage] = useState('');
   const { user: tokenUser } = useAuth();
   const isSuperAdmin = tokenUser?.role === 'superadmin';
-  const [selectedTab, setSelectedTab] = useState('admins'); // 'admins' | 'users'
+  const [selectedTab, setSelectedTab] = useState('admins'); // 'admins' | 'employees'
   const currentUserId = tokenUser?.id || tokenUser?._id || (tokenUser?._id && tokenUser._id.toString && tokenUser._id.toString());
 
   useEffect(() => {
@@ -86,33 +208,39 @@ const UserManagement = () => {
   };
 
   const handleEditUser = (user) => {
-    // Ensure all permissions exist with default values
-    const defaultPermissions = {
-      doorPresets: false,
-      doorToggles: false,
-      drawerToggles: false,
-      textureWidget: false,
-      lightWidget: false,
-  globalTextureWidget: false,
-  screenshotWidget: false,
-      modelUpload: false,
-  // Removed reflectionWidget, movementWidget, customWidget
-      saveConfig: false,
-      canRotate: true,
-      canPan: false,
-      canZoom: false,
-      canMove: false,
-      imageDownloadQualities: ['average']
-    };
-
-    const completePermissions = { ...defaultPermissions, ...user.permissions, presetAccess: user.permissions?.presetAccess || {} };
-
+    console.log('DEBUG: Opening edit modal for user:', user.name);
+    console.log('DEBUG: User role from DB:', user.role);
+    console.log('DEBUG: User permissions from DB:', user.permissions);
+    console.log('DEBUG: User customRoleName from DB:', user.customRoleName);
+    
+    let completePermissions = { ...user.permissions, presetAccess: user.permissions?.presetAccess || {} };
+    
+    // For users with 'employee' role but manager/other permissions, detect the intended role
+    let actualRole = user.role || 'employee';
+    let actualCustomName = user.customRoleName || '';
+    
+    // If user has 'employee' role but permissions match a predefined role, suggest that role in edit
+    if (actualRole === 'employee' && user.permissions) {
+      for (const [roleName, rolePerms] of Object.entries(ROLE_DEFAULT_PERMISSIONS)) {
+        if (arePermissionsEqual(user.permissions, rolePerms)) {
+          actualRole = roleName;
+          break;
+        }
+      }
+      // If no exact match found but has custom permissions, set to custom
+      if (actualRole === 'employee' && Object.keys(user.permissions).length > 0) {
+        actualRole = 'custom';
+        actualCustomName = actualCustomName || 'Custom Employee';
+      }
+    }
+    
     setEditingUser({
       ...user,
-      permissions: completePermissions
+      role: actualRole,
+      permissions: completePermissions,
+      customRoleName: actualCustomName,
     });
     setShowEditModal(true);
-    // load available presets so admin can toggle them
     setTimeout(() => loadModelPresets(), 10);
   };
 
@@ -162,13 +290,20 @@ const UserManagement = () => {
     e.preventDefault();
     try {
       const token = localStorage.getItem('token');
-  const response = await fetch(`${API_BASE_URL}/api/admin-dashboard/users/${editingUser._id}/permissions`, {
+      const payload = {
+        permissions: editingUser.permissions || {},
+        role: editingUser.role || 'employee',
+        customRoleName: editingUser.customRoleName || '',
+      };
+      console.log('Sending update for user:', editingUser.name, 'payload:', payload);
+      
+      const response = await fetch(`${API_BASE_URL}/api/admin-dashboard/users/${editingUser._id}/permissions`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ permissions: editingUser.permissions }),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
@@ -176,9 +311,16 @@ const UserManagement = () => {
       }
 
       const updatedUser = await response.json();
-      setUsers(users.map(user => 
-        user._id === updatedUser.user._id ? updatedUser.user : user
+      console.log('Server response:', updatedUser);
+      
+      // Update the users state with the new user data
+      setUsers(prevUsers => prevUsers.map(user => 
+        user._id === editingUser._id ? updatedUser.user : user
       ));
+      
+      // Refresh the entire users list to ensure consistency
+      await fetchUsers();
+      
       setShowEditModal(false);
       setEditingUser(null);
     } catch (error) {
@@ -342,9 +484,9 @@ const UserManagement = () => {
   const handleCreateSubmit = async (e) => {
     e.preventDefault();
     setCreateSuccess('');
-    // Force non-superadmin creators to only create 'user' role accounts
+    // Force non-superadmin creators to only create 'employee' role accounts
     const payload = { ...newUser };
-    if (!isSuperAdmin) payload.role = 'user';
+    if (!isSuperAdmin) payload.role = 'employee';
     const errs = validateCreateForm(payload);
     setCreateErrors(errs);
     if (Object.keys(errs).length > 0) return;
@@ -369,7 +511,7 @@ const UserManagement = () => {
       setCreateSuccess('User created successfully');
       await fetchUsers();
       // reset form but keep createdPassword visible for copy
-      setNewUser({ name: '', email: '', password: '', role: 'user' });
+      setNewUser({ name: '', email: '', password: '', role: 'employee' });
       setShowCreateModal(false);
     } catch (err) {
       console.error('Create user error', err);
@@ -437,7 +579,7 @@ const UserManagement = () => {
               className="kt-btn primary"
               onClick={() => {
                 // Ensure non-superadmin cannot pre-select admin role when opening the modal
-                if (!isSuperAdmin) setNewUser(prev => ({ ...prev, role: 'user' }));
+                if (!isSuperAdmin) setNewUser(prev => ({ ...prev, role: 'employee' }));
                 setShowCreateModal(true);
               }}
             >
@@ -467,11 +609,11 @@ const UserManagement = () => {
                 Admins ({users.filter(u => (u.role === 'admin' || u.role === 'superadmin') && String(u._id) !== String(currentUserId)).length})
               </button>
               <button
-                className={`kt-btn sm ${selectedTab === 'users' ? 'primary' : 'outline'}`}
-                onClick={() => setSelectedTab('users')}
+                className={`kt-btn sm ${selectedTab === 'employees' ? 'primary' : 'outline'}`}
+                onClick={() => setSelectedTab('employees')}
                 style={{minWidth:110}}
               >
-                Users ({users.filter(u => u.role === 'user').length})
+                Employees ({users.filter(u => u.role === 'employee').length})
               </button>
             </div>
             <div style={{fontSize:13, color:'var(--kt-text-soft)'}}>Select a list to manage</div>
@@ -498,7 +640,11 @@ const UserManagement = () => {
                           <span>{user.name}</span>
                         </td>
                         <td>{user.email}</td>
-                        <td><span className={user.role === 'manager' ? 'role-badge manager' : user.role === 'admin' ? 'role-badge admin' : user.role === 'user' ? 'role-badge user' : 'role-badge'}>{user.role === 'manager' ? 'Manager' : user.role.charAt(0).toUpperCase() + user.role.slice(1)}</span></td>
+                        <td>
+                          <span className={`role-badge ${user.role === 'superadmin' ? 'superadmin' : user.role}`}>
+                            {getRoleDisplayName(user)}
+                          </span>
+                        </td>
                         <td>{new Date(user.createdAt).toLocaleDateString()}</td>
                         <td>
                           <div className="kt-actions">
@@ -512,7 +658,7 @@ const UserManagement = () => {
                   </tbody>
                 </table>
               </div>
-            ) : (
+            ) : selectedTab === 'employees' ? (
               <div className="kt-table-wrapper">
                 <table className="kt-table">
                   <thead>
@@ -526,7 +672,7 @@ const UserManagement = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {users.filter(u => u.role === 'user').map(user => (
+                    {users.filter(u => u.role === 'employee').map(user => (
                       <tr key={user._id}>
                         <td style={{display:'flex', alignItems:'center', gap:8}}>
                           <div className="kt-avatar" style={{width:34, height:34, fontSize:13}}>{user.name.charAt(0).toUpperCase()}</div>
@@ -572,8 +718,8 @@ const UserManagement = () => {
                           </div>
                         </td>
                         <td>
-                          <span className={user.role === 'manager' ? 'role-badge manager' : user.role === 'admin' ? 'role-badge admin' : user.role === 'user' ? 'role-badge user' : 'role-badge'}>
-                            {user.role === 'manager' ? 'Manager' : (user.role === 'user' && user?.permissions?.modelUpload ? 'custom user' : user.role.charAt(0).toUpperCase() + user.role.slice(1))}
+                          <span className={`role-badge ${user.role === 'custom' ? 'custom' : user.role}`}>
+                            {getRoleDisplayName(user)}
                           </span>
                         </td>
                         <td>{new Date(user.createdAt).toLocaleDateString()}</td>
@@ -590,7 +736,7 @@ const UserManagement = () => {
                   </tbody>
                 </table>
               </div>
-            )}
+            ) : null}
           </div>
         </div>
       ) : (
@@ -658,8 +804,8 @@ const UserManagement = () => {
                     </div>
                   </td>
                   <td>
-                    <span className={user.role === 'manager' ? 'role-badge manager' : user.role === 'admin' ? 'role-badge admin' : user.role === 'user' ? 'role-badge user' : 'role-badge'}>
-                      {user.role === 'manager' ? 'Manager' : (user.role === 'user' && user?.permissions?.modelUpload ? 'custom user' : user.role.charAt(0).toUpperCase() + user.role.slice(1))}
+                    <span className={`role-badge ${user.role === 'custom' ? 'custom' : (user.role || 'employee')}`}>
+                      {getRoleDisplayName(user)}
                     </span>
                   </td>
                   <td>{new Date(user.createdAt).toLocaleDateString()}</td>
@@ -741,17 +887,113 @@ const UserManagement = () => {
                   </div>
                   <div style={{flex:'1 1 220px'}}>
                     <label style={{fontSize:12, fontWeight:600, color:'var(--kt-text-soft)'}}>Role</label>
-                    <select
-                      style={{width:'100%', marginTop:4, padding:'8px 10px', borderRadius:6, border:'1px solid var(--kt-border)', fontSize:15}}
-                      value={editingUser.role}
-                      onChange={e => setEditingUser(prev => ({...prev, role: e.target.value}))}
-                      disabled={!isSuperAdmin && (editingUser.role === 'superadmin' || editingUser.role === 'admin')}
-                    >
-                      <option value="user">User</option>
-                      <option value="manager">Manager</option>
-                      <option value="admin" disabled={!isSuperAdmin}>Admin</option>
-                      <option value="superadmin" disabled={!isSuperAdmin}>Superadmin</option>
-                    </select>
+                    <div style={{display: 'flex', alignItems: 'center', gap: 8, marginTop: 4}}>
+                      <select
+                        style={{flex: 1, padding:'8px 10px', borderRadius:6, border:'1px solid var(--kt-border)', fontSize:15}}
+                        value={editingUser.role}
+                        onChange={e => {
+                          const newRole = e.target.value;
+                          console.log('Role changed to:', newRole);
+                          if (newRole === 'custom') {
+                            setEditingUser(prev => ({ 
+                              ...prev, 
+                              role: 'custom', 
+                              customRoleName: prev.customRoleName || '', 
+                              permissions: { ...prev.permissions } // Keep existing permissions for custom
+                            }));
+                          } else {
+                            const defaultPerms = ROLE_DEFAULT_PERMISSIONS[newRole] || {};
+                            console.log('Setting default permissions for role:', newRole, defaultPerms);
+                            setEditingUser(prev => ({ 
+                              ...prev, 
+                              role: newRole, 
+                              customRoleName: '', // Clear custom name when switching to predefined role
+                              permissions: { 
+                                ...defaultPerms, 
+                                presetAccess: prev.permissions?.presetAccess || {} 
+                              }
+                            }));
+                          }
+                        }}
+                        disabled={!isSuperAdmin && (editingUser.role === 'superadmin' || editingUser.role === 'admin')}
+                      >
+                        <option value="employee">Employee</option>
+                        <option value="manager">Manager</option>
+                        <option value="assistantmanager">Assistant Manager</option>
+                        <option value="custom">Custom</option>
+                        <option value="admin" disabled={!isSuperAdmin}>Admin</option>
+                        <option value="superadmin" disabled={!isSuperAdmin}>Superadmin</option>
+                      </select>
+                      {editingUser.role === 'custom' && (
+                        <input
+                          type="text"
+                          placeholder="Custom role name"
+                          value={editingUser.customRoleName || ''}
+                          onChange={e => setEditingUser(prev => ({ ...prev, customRoleName: e.target.value }))}
+                          style={{flex: 1, padding:'8px 10px', borderRadius:6, border:'1px solid var(--kt-border)', fontSize:15}}
+                        />
+                      )}
+                      {(() => {
+                        // Only show custom indicator if role is not custom and permissions differ
+                        if (editingUser.role === 'custom') return null;
+                        
+                        const defaultPerms = ROLE_DEFAULT_PERMISSIONS[editingUser.role] || {};
+                        const currentPerms = editingUser.permissions || {};
+                        const hasCustomizations = !arePermissionsEqual(currentPerms, defaultPerms);
+                        
+                        // Debug logging to understand why custom shows
+                        if (hasCustomizations) {
+                          console.log('Custom indicator showing for:', editingUser.name, {
+                            role: editingUser.role,
+                            currentPerms: currentPerms,
+                            defaultPerms: defaultPerms,
+                            hasCustomizations
+                          });
+                        }
+                        
+                        return hasCustomizations ? (
+                          <div style={{display: 'flex', gap: 4, alignItems: 'center'}}>
+                            <span 
+                              style={{
+                                fontSize: 11,
+                                background: 'var(--kt-warning)',
+                                color: 'white',
+                                padding: '2px 6px',
+                                borderRadius: 4
+                              }}
+                              title="This role has custom permissions applied"
+                            >
+                              Custom
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const defaultPerms = ROLE_DEFAULT_PERMISSIONS[editingUser.role] || {};
+                                setEditingUser(prev => ({
+                                  ...prev,
+                                  permissions: {
+                                    ...defaultPerms,
+                                    presetAccess: prev.permissions?.presetAccess || {}
+                                  }
+                                }));
+                              }}
+                              style={{
+                                fontSize: 10,
+                                padding: '2px 6px',
+                                background: 'var(--kt-primary)',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: 4,
+                                cursor: 'pointer'
+                              }}
+                              title="Reset to default permissions for this role"
+                            >
+                              Reset
+                            </button>
+                          </div>
+                        ) : null;
+                      })()}
+                    </div>
                   </div>
                   {/* Active flag removed */}
                 </div>
@@ -798,7 +1040,7 @@ const UserManagement = () => {
                     </label>
                   </div>
                 )}
-              </div>
+          </div>
 
               {/* Other feature permissions */}
               <div className="kt-card" style={{boxShadow:'none', border:'1px dashed var(--kt-border)'}}>
@@ -910,11 +1152,11 @@ const UserManagement = () => {
                 <label style={{fontSize:12, fontWeight:600}}>Role</label>
                 {isSuperAdmin ? (
                   <select value={newUser.role} onChange={(e) => setNewUser(prev => ({ ...prev, role: e.target.value }))}>
-                    <option value="user">User</option>
+                    <option value="employee">Employee</option>
                     <option value="admin">Admin</option>
                   </select>
                 ) : (
-                  <div style={{padding:'6px 10px', background:'#f8fafc', border:'1px solid #e2e8f0', borderRadius:6}}>User</div>
+                  <div style={{padding:'6px 10px', background:'#f8fafc', border:'1px solid #e2e8f0', borderRadius:6}}>Employee</div>
                 )}
                 <div style={{marginLeft:'auto'}}>
                   {createErrors.form && <div style={{color:'var(--kt-danger)', fontSize:13, marginRight:12}}>{createErrors.form}</div>}
@@ -923,7 +1165,7 @@ const UserManagement = () => {
               </div>
 
               <div className="flex" style={{justifyContent:'flex-end', gap:12}}>
-                <button type="button" className="kt-btn outline" onClick={() => { setShowCreateModal(false); setCreateErrors({}); setNewUser({ name: '', email: '', password: '', role: 'user' }); }}>Cancel</button>
+                <button type="button" className="kt-btn outline" onClick={() => { setShowCreateModal(false); setCreateErrors({}); setNewUser({ name: '', email: '', password: '', role: 'employee' }); }}>Cancel</button>
                 <button type="submit" className="kt-btn primary" disabled={creating}>{creating ? 'Creating…' : 'Create user'}</button>
               </div>
             </form>

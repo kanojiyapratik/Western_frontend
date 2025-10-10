@@ -57,7 +57,11 @@ const UserShell = () => {
 
 const UserLayout = () => {
   const { user } = useAuth();
-  if (!user || user.role !== 'user') return <div style={{ padding:16 }}>Access denied</div>;
+  // Allow access for all non-admin roles (user, employee, manager, assistantmanager, custom)
+  const allowedRoles = ['user', 'employee', 'manager', 'assistantmanager', 'custom'];
+  if (!user || !allowedRoles.includes(user.role)) {
+    return <div style={{ padding:16 }}>Access denied</div>;
+  }
   return <UserShell />;
 };
 
