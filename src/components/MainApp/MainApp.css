@@ -1,0 +1,182 @@
+/* Main App Styles */
+.main-app {
+  /* Fill parent container (kt-content) instead of forcing viewport height which creates nested scroll */
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: #000;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+/* Header removed; layout now full height split */
+
+.model-select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  padding: 6px 10px;
+  font-size: 14px;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  color: #374151;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+}
+
+.model-select:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
+/* User pill removed */
+
+.admin-btn,
+.logout-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.admin-btn { margin-left: 4px; }
+.logout-btn { margin-left: 4px; }
+
+.admin-btn {
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  color: white;
+}
+
+.admin-btn:hover {
+  background: linear-gradient(135deg, #5855eb 0%, #7c3aed 100%);
+  transform: translateY(-1px);
+}
+
+.logout-btn {
+  background: #fee2e2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+.logout-btn:hover {
+  background: #fecaca;
+  color: #b91c1c;
+}
+
+.app-content {
+  flex: 1;
+  display: flex;
+  position: relative;
+  overflow: hidden; /* keep page from scrolling when sidebar overflows */
+  align-items: stretch;
+}
+
+.canvas-container {
+  flex: 3 1 0;
+  position: relative;
+  min-width: 0; /* allow flex item to shrink without causing overflow */
+  height: 100%;
+  background: #0f1115;
+  border-right: 1px solid #1f2937;
+}
+
+/* Sidebar wrapper (Interface root uses fixed/flex basis but we ensure flex ratio) */
+.interface-container {
+  /* Allow fixed-ish sidebar width to match Interface.css (520px) */
+  flex: 0 0 440px !important;
+  max-width: 440px;
+  min-width: 300px;
+  border-left: 1px solid #e5e7eb;
+  background: #f8fafc;
+}
+
+/* Tighten header buttons */
+.user-info {
+  background: #475569;
+  padding: 4px 10px;
+  gap: 8px;
+}
+
+.admin-btn,
+.logout-btn {
+  padding: 6px 10px;
+  font-size: 11px;
+  border-radius: 5px;
+}
+
+.model-select {
+  padding: 4px 8px;
+  font-size: 13px;
+}
+
+/* Prevent huge growth if viewport super wide */
+@media (min-width: 2000px) {
+  .canvas-container { flex: 3 1 0; }
+  .interface-container { max-width: 620px; }
+}
+
+/* Medium breakpoint: keep split but reduce sidebar width */
+@media (max-width: 1200px) {
+  .interface-container { max-width: 400px; }
+}
+
+/* Tablet & below: stack with interface below canvas */
+@media (max-width: 900px) {
+  .app-content { flex-direction: column; }
+  .canvas-container { flex: none; height: 55%; border-right: none; border-bottom: 1px solid #1f2937; }
+  .interface-container { flex: none !important; width: 100% !important; max-width: 100%; height: 45%; }
+}
+
+/* Small phones: full height toggle style (simple) */
+@media (max-width: 540px) {
+  .canvas-container { height: 50%; }
+  .interface-container { height: 50%; }
+  .app-header { padding: 8px 12px; }
+  .app-header h1 { font-size: 16px; }
+  .user-info { font-size: 12px; }
+}
+
+.app-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  background: #f8fafc;
+  color: #6b7280;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #f3f4f6;
+  border-top: 3px solid #6366f1;
+
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 16px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Responsive */
+@media (max-width: 768px) { /* header removed - keep placeholder for future */ }
+
+/* Ensure the canvas and its wrapper don't force the page to grow: allow proper flex shrink */
+.app-content, .canvas-container, .interface-container {
+  min-height: 0;
+  height: 100%;
+}
+
+/* Make the underlying canvas element fill its container so it doesn't add extra height */
+.canvas-container canvas {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+}
