@@ -69,6 +69,29 @@ const ROLE_DEFAULT_PERMISSIONS = {
     imageDownloadQualities: ['average'],
     presetAccess: {},
   },
+  custom: {
+    modelUpload: false,
+    modelManageUpload: false,
+    modelManageEdit: false,
+    modelManageDelete: false,
+    doorPresets: true,
+    doorToggles: true,
+    drawerToggles: true,
+    textureWidget: true,
+    lightWidget: true,
+    globalTextureWidget: false,
+    screenshotWidget: false,
+    saveConfig: true,
+    canRotate: true,
+    canPan: false,
+    canZoom: true,
+    canMove: false,
+    reflectionWidget: false,
+    movementWidget: false,
+    customWidget: false,
+    imageDownloadQualities: ['average'],
+    presetAccess: {},
+  },
 };
 
 // Helper to compare permissions (only core role permissions, not presetAccess or other metadata)
@@ -138,7 +161,7 @@ const UserManagement = () => {
   const [showActivityModal, setShowActivityModal] = useState(false);
   const [activityUserId, setActivityUserId] = useState(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [newUser, setNewUser] = useState({ name: '', email: '', password: '', role: 'employee' });
+  const [newUser, setNewUser] = useState({ name: '', email: '', password: '', role: 'employee', customRoleName: '' });
   const [createdPassword, setCreatedPassword] = useState('');
   const [createErrors, setCreateErrors] = useState({});
   const [creating, setCreating] = useState(false);
@@ -895,12 +918,19 @@ const UserManagement = () => {
                           const newRole = e.target.value;
                           console.log('Role changed to:', newRole);
                           if (newRole === 'custom') {
-                            setEditingUser(prev => ({ 
-                              ...prev, 
-                              role: 'custom', 
-                              customRoleName: prev.customRoleName || '', 
-                              permissions: { ...prev.permissions } // Keep existing permissions for custom
-                            }));
+                            setEditingUser(prev => {
+                              // For custom role, use current permissions if they exist, otherwise use custom defaults
+                              const currentPerms = prev.permissions || {};
+                              const hasValidPermissions = Object.keys(currentPerms).length > 0;
+                              const customDefaults = ROLE_DEFAULT_PERMISSIONS[newRole] || {};
+                              
+                              return { 
+                                ...prev, 
+                                role: 'custom', 
+                                customRoleName: prev.customRoleName || '', 
+                                permissions: hasValidPermissions ? { ...currentPerms } : { ...customDefaults }
+                              };
+                            });
                           } else {
                             const defaultPerms = ROLE_DEFAULT_PERMISSIONS[newRole] || {};
                             console.log('Setting default permissions for role:', newRole, defaultPerms);
@@ -1148,16 +1178,44 @@ const UserManagement = () => {
                 </div>
               </div>
 
-              <div style={{display:'flex', gap:12, alignItems:'center'}}>
+              <div style={{display:'flex', gap:12, alignItems:'center', flexWrap:'wrap'}}>
                 <label style={{fontSize:12, fontWeight:600}}>Role</label>
-                {isSuperAdmin ? (
-                  <select value={newUser.role} onChange={(e) => setNewUser(prev => ({ ...prev, role: e.target.value }))}>
-                    <option value="employee">Employee</option>
-                    <option value="admin">Admin</option>
-                  </select>
-                ) : (
-                  <div style={{padding:'6px 10px', background:'#f8fafc', border:'1px solid #e2e8f0', borderRadius:6}}>Employee</div>
-                )}
+                <div style={{display:'flex', gap:8, alignItems:'center'}}>
+                  {isSuperAdmin ? (
+                    <select 
+                      value={newUser.role} 
+                      onChange={(e) => setNewUser(prev => ({ ...prev, role: e.target.value, customRoleName: e.target.value === 'custom' ? prev.customRoleName : '' }))} 
+                      style={{padding:'8px 10px', borderRadius:6, border:'1px solid var(--kt-border)', fontSize:15}}
+                    >
+                      <option value="employee">Employee</option>
+                      <option value="manager">Manager</option>
+                      <option value="assistantmanager">Assistant Manager</option>
+                      <option value="custom">Custom</option>
+                      <option value="admin">Admin</option>
+                      <option value="superadmin">Superadmin</option>
+                    </select>
+                  ) : (
+                    <select 
+                      value={newUser.role} 
+                      onChange={(e) => setNewUser(prev => ({ ...prev, role: e.target.value, customRoleName: e.target.value === 'custom' ? prev.customRoleName : '' }))} 
+                      style={{padding:'8px 10px', borderRadius:6, border:'1px solid var(--kt-border)', fontSize:15}}
+                    >
+                      <option value="employee">Employee</option>
+                      <option value="manager">Manager</option>
+                      <option value="assistantmanager">Assistant Manager</option>
+                      <option value="custom">Custom</option>
+                    </select>
+                  )}
+                  {newUser.role === 'custom' && (
+                    <input
+                      type="text"
+                      placeholder="Custom role name"
+                      value={newUser.customRoleName}
+                      onChange={e => setNewUser(prev => ({ ...prev, customRoleName: e.target.value }))}
+                      style={{padding:'8px 10px', borderRadius:6, border:'1px solid var(--kt-border)', fontSize:15, minWidth:'150px'}}
+                    />
+                  )}
+                </div>
                 <div style={{marginLeft:'auto'}}>
                   {createErrors.form && <div style={{color:'var(--kt-danger)', fontSize:13, marginRight:12}}>{createErrors.form}</div>}
                   {createSuccess && <div style={{color:'var(--kt-success)', fontSize:13, marginRight:12}}>{createSuccess}</div>}
@@ -1165,7 +1223,7 @@ const UserManagement = () => {
               </div>
 
               <div className="flex" style={{justifyContent:'flex-end', gap:12}}>
-                <button type="button" className="kt-btn outline" onClick={() => { setShowCreateModal(false); setCreateErrors({}); setNewUser({ name: '', email: '', password: '', role: 'employee' }); }}>Cancel</button>
+                <button type="button" className="kt-btn outline" onClick={() => { setShowCreateModal(false); setCreateErrors({}); setNewUser({ name: '', email: '', password: '', role: 'employee', customRoleName: '' }); }}>Cancel</button>
                 <button type="submit" className="kt-btn primary" disabled={creating}>{creating ? 'Creating…' : 'Create user'}</button>
               </div>
             </form>
