@@ -1,3 +1,26 @@
+// Role hierarchy (higher number = higher authority)
+const ROLE_HIERARCHY = {
+  employee: 1,
+  assistantmanager: 2,
+  manager: 3,
+  custom: 3, // Same level as manager
+  admin: 4,
+  superadmin: 5
+};
+
+// Get allowed roles for current user (can only assign roles below their level)
+const getAllowedRoles = (currentUserRole) => {
+  const currentLevel = ROLE_HIERARCHY[currentUserRole] || 1;
+  return Object.keys(ROLE_HIERARCHY).filter(role => ROLE_HIERARCHY[role] < currentLevel);
+};
+
+// Check if user can edit another user (can only edit users at lower levels)
+const canEditUser = (currentUserRole, targetUserRole) => {
+  const currentLevel = ROLE_HIERARCHY[currentUserRole] || 1;
+  const targetLevel = ROLE_HIERARCHY[targetUserRole] || 1;
+  return currentLevel > targetLevel;
+};
+
 // Default permissions for each role
 const ROLE_DEFAULT_PERMISSIONS = {
   manager: {
@@ -252,6 +275,14 @@ const UserManagement = () => {
   };
 
   const handleEditUser = (user) => {
+    if (user._id === currentUserId) {
+      setError('You cannot edit your own account');
+      return;
+    }
+    if (!canEditUser(tokenUser?.role, user.role)) {
+      setError('You can only edit users with lower authority levels');
+      return;
+    }
     console.log('=== EDIT USER DEBUG ===');
     console.log('User from DB:', {
       name: user.name,
@@ -419,6 +450,15 @@ const UserManagement = () => {
   // Active/deactivated status removed; no toggle function
 
   const handleDeleteUser = async (userId) => {
+    if (userId === currentUserId) {
+      setError('You cannot delete your own account');
+      return;
+    }
+    const targetUser = users.find(u => u._id === userId);
+    if (targetUser && !canEditUser(tokenUser?.role, targetUser.role)) {
+      setError('You can only delete users with lower authority levels');
+      return;
+    }
     try {
       const token = localStorage.getItem('token');
 
@@ -1029,14 +1069,13 @@ const UserManagement = () => {
                             };
                           });
                         }}
-                        disabled={!isSuperAdmin && (editingUser.role === 'superadmin' || editingUser.role === 'admin')}
                       >
-                        <option value="employee">Employee</option>
-                        <option value="manager">Manager</option>
-                        <option value="assistantmanager">Assistant Manager</option>
-                        <option value="custom">Custom</option>
-                        <option value="admin" disabled={!isSuperAdmin}>Admin</option>
-                        <option value="superadmin" disabled={!isSuperAdmin}>Superadmin</option>
+                        {getAllowedRoles(tokenUser?.role).map(role => (
+                          <option key={role} value={role}>
+                            {role === 'assistantmanager' ? 'Assistant Manager' : 
+                             role.charAt(0).toUpperCase() + role.slice(1)}
+                          </option>
+                        ))}
                       </select>
                       {editingUser.role === 'custom' && (
                         <input
@@ -1249,31 +1288,18 @@ const UserManagement = () => {
               <div style={{display:'flex', gap:12, alignItems:'center', flexWrap:'wrap'}}>
                 <label style={{fontSize:12, fontWeight:600}}>Role</label>
                 <div style={{display:'flex', gap:8, alignItems:'center'}}>
-                  {isSuperAdmin ? (
-                    <select 
-                      value={newUser.role} 
-                      onChange={(e) => setNewUser(prev => ({ ...prev, role: e.target.value, customRoleName: e.target.value === 'custom' ? prev.customRoleName : '' }))} 
-                      style={{padding:'8px 10px', borderRadius:6, border:'1px solid var(--kt-border)', fontSize:15}}
-                    >
-                      <option value="employee">Employee</option>
-                      <option value="manager">Manager</option>
-                      <option value="assistantmanager">Assistant Manager</option>
-                      <option value="custom">Custom</option>
-                      <option value="admin">Admin</option>
-                      <option value="superadmin">Superadmin</option>
-                    </select>
-                  ) : (
-                    <select 
-                      value={newUser.role} 
-                      onChange={(e) => setNewUser(prev => ({ ...prev, role: e.target.value, customRoleName: e.target.value === 'custom' ? prev.customRoleName : '' }))} 
-                      style={{padding:'8px 10px', borderRadius:6, border:'1px solid var(--kt-border)', fontSize:15}}
-                    >
-                      <option value="employee">Employee</option>
-                      <option value="manager">Manager</option>
-                      <option value="assistantmanager">Assistant Manager</option>
-                      <option value="custom">Custom</option>
-                    </select>
-                  )}
+                  <select 
+                    value={newUser.role} 
+                    onChange={(e) => setNewUser(prev => ({ ...prev, role: e.target.value, customRoleName: e.target.value === 'custom' ? prev.customRoleName : '' }))} 
+                    style={{padding:'8px 10px', borderRadius:6, border:'1px solid var(--kt-border)', fontSize:15}}
+                  >
+                    {getAllowedRoles(tokenUser?.role).filter(role => role !== 'superadmin').map(role => (
+                      <option key={role} value={role}>
+                        {role === 'assistantmanager' ? 'Assistant Manager' : 
+                         role.charAt(0).toUpperCase() + role.slice(1)}
+                      </option>
+                    ))}
+                  </select>
                   {newUser.role === 'custom' && (
                     <input
                       type="text"
