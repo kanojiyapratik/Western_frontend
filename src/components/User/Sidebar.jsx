@@ -8,11 +8,16 @@ const UserSidebar = ({ collapsed, onToggle }) => {
   const { user, logout } = useAuth();
 
   const canViewModels = !!(user?.permissions?.modelUpload || user?.permissions?.modelManageUpload || user?.permissions?.modelManageEdit || user?.permissions?.modelManageDelete);
+  const canManageUsers = !!(user?.permissions?.userManagement || user?.permissions?.userManageCreate || user?.permissions?.userManageEdit || user?.permissions?.userManageDelete);
+  
   const menuItems = [
     { path: '/user/dashboard', icon: '📊', label: 'Dashboard' },
     { path: '/user/viewer', icon: '🧭', label: 'Viewer' },
     ...(canViewModels ? [
       { path: '/user/model-management', icon: '🧩', label: 'Model Management' },
+    ] : []),
+    ...(canManageUsers ? [
+      { path: '/user/user-management', icon: '👥', label: 'User Management' },
     ] : []),
     { path: '/user/change-password', icon: '🔒', label: 'Change Password' },
   ];

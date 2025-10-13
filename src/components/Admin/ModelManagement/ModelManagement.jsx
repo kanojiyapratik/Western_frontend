@@ -425,7 +425,7 @@ const ModelManagement = () => {
           {canUpload && (
             <button className="btn-primary" onClick={()=>setShowAdd(true)}>Add Model</button>
           )}
-          <button className="btn-secondary" onClick={() => setShowAddMultiAsset(true)}>Add Multi-Asset</button>
+         
         </div>
       </div>
       

@@ -5,6 +5,10 @@ const ROLE_DEFAULT_PERMISSIONS = {
     modelManageUpload: true,
     modelManageEdit: true,
     modelManageDelete: true,
+    userManagement: true,
+    userManageCreate: true,
+    userManageEdit: true,
+    userManageDelete: true,
     doorPresets: true,
     doorToggles: true,
     drawerToggles: true,
@@ -28,6 +32,10 @@ const ROLE_DEFAULT_PERMISSIONS = {
     modelManageUpload: false,
     modelManageEdit: true,
     modelManageDelete: false,
+    userManagement: false,
+    userManageCreate: false,
+    userManageEdit: false,
+    userManageDelete: false,
     doorPresets: true,
     doorToggles: true,
     drawerToggles: true,
@@ -51,6 +59,10 @@ const ROLE_DEFAULT_PERMISSIONS = {
     modelManageUpload: false,
     modelManageEdit: false,
     modelManageDelete: false,
+    userManagement: false,
+    userManageCreate: false,
+    userManageEdit: false,
+    userManageDelete: false,
     doorPresets: true,
     doorToggles: true,
     drawerToggles: true,
@@ -74,6 +86,10 @@ const ROLE_DEFAULT_PERMISSIONS = {
     modelManageUpload: false,
     modelManageEdit: false,
     modelManageDelete: false,
+    userManagement: false,
+    userManageCreate: false,
+    userManageEdit: false,
+    userManageDelete: false,
     doorPresets: true,
     doorToggles: true,
     drawerToggles: true,
@@ -99,6 +115,7 @@ const arePermissionsEqual = (a, b) => {
   // Only compare core permission properties, not metadata like presetAccess
   const corePermissionKeys = [
     'modelUpload', 'modelManageUpload', 'modelManageEdit', 'modelManageDelete',
+    'userManagement', 'userManageCreate', 'userManageEdit', 'userManageDelete',
     'doorPresets', 'doorToggles', 'drawerToggles', 'textureWidget', 'lightWidget',
     'globalTextureWidget', 'screenshotWidget', 'saveConfig', 'canRotate', 'canPan',
     'canZoom', 'canMove', 'reflectionWidget', 'movementWidget', 'customWidget', 
@@ -111,9 +128,13 @@ const arePermissionsEqual = (a, b) => {
     
     // Handle arrays (like imageDownloadQualities)
     if (Array.isArray(aVal) && Array.isArray(bVal)) {
-      if (aVal.length !== bVal.length || aVal.some(v => !bVal.includes(v))) {
+      if (aVal.length !== bVal.length || !aVal.every(v => bVal.includes(v)) || !bVal.every(v => aVal.includes(v))) {
         return false;
       }
+    }
+    // Handle arrays vs non-arrays
+    else if (Array.isArray(aVal) !== Array.isArray(bVal)) {
+      return false;
     }
     // Handle boolean/other values
     else if (aVal !== bVal) {
@@ -231,37 +252,46 @@ const UserManagement = () => {
   };
 
   const handleEditUser = (user) => {
-    console.log('DEBUG: Opening edit modal for user:', user.name);
-    console.log('DEBUG: User role from DB:', user.role);
-    console.log('DEBUG: User permissions from DB:', user.permissions);
-    console.log('DEBUG: User customRoleName from DB:', user.customRoleName);
+    console.log('=== EDIT USER DEBUG ===');
+    console.log('User from DB:', {
+      name: user.name,
+      role: user.role,
+      customRoleName: user.customRoleName,
+      permissions: user.permissions
+    });
     
-    let completePermissions = { ...user.permissions, presetAccess: user.permissions?.presetAccess || {} };
+    // Use the permissions from database exactly as they are - don't modify them
+    const dbPermissions = user.permissions || {};
     
-    // For users with 'employee' role but manager/other permissions, detect the intended role
-    let actualRole = user.role || 'employee';
-    let actualCustomName = user.customRoleName || '';
+    console.log('=== PERMISSIONS DEBUG ===');
+    console.log('User:', user.name, 'Role:', user.role);
+    console.log('Raw permissions from DB:', user.permissions);
+    console.log('User management permissions from DB:', {
+      userManagement: dbPermissions.userManagement,
+      userManageCreate: dbPermissions.userManageCreate,
+      userManageEdit: dbPermissions.userManageEdit,
+      userManageDelete: dbPermissions.userManageDelete
+    });
     
-    // If user has 'employee' role but permissions match a predefined role, suggest that role in edit
-    if (actualRole === 'employee' && user.permissions) {
-      for (const [roleName, rolePerms] of Object.entries(ROLE_DEFAULT_PERMISSIONS)) {
-        if (arePermissionsEqual(user.permissions, rolePerms)) {
-          actualRole = roleName;
-          break;
-        }
-      }
-      // If no exact match found but has custom permissions, set to custom
-      if (actualRole === 'employee' && Object.keys(user.permissions).length > 0) {
-        actualRole = 'custom';
-        actualCustomName = actualCustomName || 'Custom Employee';
-      }
-    }
+    // Only add presetAccess if it doesn't exist
+    let completePermissions = {
+      ...dbPermissions,
+      presetAccess: dbPermissions.presetAccess || {}
+    };
+    
+    console.log('Complete permissions being set in edit form:', completePermissions);
+    console.log('User management in complete permissions:', {
+      userManagement: completePermissions.userManagement,
+      userManageCreate: completePermissions.userManageCreate,
+      userManageEdit: completePermissions.userManageEdit,
+      userManageDelete: completePermissions.userManageDelete
+    });
     
     setEditingUser({
       ...user,
-      role: actualRole,
+      role: user.role || 'employee',
       permissions: completePermissions,
-      customRoleName: actualCustomName,
+      customRoleName: user.customRoleName || '',
     });
     setShowEditModal(true);
     setTimeout(() => loadModelPresets(), 10);
@@ -318,7 +348,16 @@ const UserManagement = () => {
         role: editingUser.role || 'employee',
         customRoleName: editingUser.customRoleName || '',
       };
-      console.log('Sending update for user:', editingUser.name, 'payload:', payload);
+      console.log('=== UPDATE USER DEBUG ===');
+      console.log('User:', editingUser.name);
+      console.log('Role being saved:', payload.role);
+      console.log('All permissions being saved:', payload.permissions);
+      console.log('User management permissions being saved:', {
+        userManagement: payload.permissions.userManagement,
+        userManageCreate: payload.permissions.userManageCreate,
+        userManageEdit: payload.permissions.userManageEdit,
+        userManageDelete: payload.permissions.userManageDelete
+      });
       
       const response = await fetch(`${API_BASE_URL}/api/admin-dashboard/users/${editingUser._id}/permissions`, {
         method: 'PUT',
@@ -335,6 +374,17 @@ const UserManagement = () => {
 
       const updatedUser = await response.json();
       console.log('Server response:', updatedUser);
+      console.log('Updated user permissions:', updatedUser.user?.permissions);
+      
+      console.log('=== POST-UPDATE DEBUG ===');
+      console.log('Updated user from server:', updatedUser.user);
+      console.log('Updated user permissions from server:', updatedUser.user?.permissions);
+      console.log('User management permissions from server response:', {
+        userManagement: updatedUser.user?.permissions?.userManagement,
+        userManageCreate: updatedUser.user?.permissions?.userManageCreate,
+        userManageEdit: updatedUser.user?.permissions?.userManageEdit,
+        userManageDelete: updatedUser.user?.permissions?.userManageDelete
+      });
       
       // Update the users state with the new user data
       setUsers(prevUsers => prevUsers.map(user => 
@@ -446,13 +496,44 @@ const UserManagement = () => {
   };
 
   const handlePermissionChange = (permission, value) => {
-    setEditingUser(prev => ({
-      ...prev,
-      permissions: {
+    setEditingUser(prev => {
+      const newPermissions = {
         ...prev.permissions,
         [permission]: value
+      };
+      
+      // Auto-check main checkboxes when sub-permissions are enabled
+      if (permission.startsWith('userManage') && value) {
+        newPermissions.userManagement = true;
       }
-    }));
+      if (permission.startsWith('modelManage') && value) {
+        newPermissions.modelUpload = true;
+      }
+      
+      // Auto-uncheck main checkbox when all sub-permissions are disabled
+      if (permission === 'userManagement' && !value) {
+        newPermissions.userManageCreate = false;
+        newPermissions.userManageEdit = false;
+        newPermissions.userManageDelete = false;
+      }
+      if (permission === 'modelUpload' && !value) {
+        newPermissions.modelManageUpload = false;
+        newPermissions.modelManageEdit = false;
+        newPermissions.modelManageDelete = false;
+      }
+      
+      // Ensure all permissions have boolean values (not undefined)
+      Object.keys(newPermissions).forEach(key => {
+        if (newPermissions[key] === undefined) {
+          newPermissions[key] = false;
+        }
+      });
+      
+      return {
+        ...prev,
+        permissions: newPermissions
+      };
+    });
   };
 
   const handleQualityChange = (quality, checked) => {
@@ -507,9 +588,14 @@ const UserManagement = () => {
   const handleCreateSubmit = async (e) => {
     e.preventDefault();
     setCreateSuccess('');
-    // Force non-superadmin creators to only create 'employee' role accounts
-    const payload = { ...newUser };
-    if (!isSuperAdmin) payload.role = 'employee';
+    
+    // Get default permissions for the selected role
+    const defaultPermissions = ROLE_DEFAULT_PERMISSIONS[newUser.role] || ROLE_DEFAULT_PERMISSIONS['employee'];
+    
+    const payload = { 
+      ...newUser, 
+      permissions: defaultPermissions 
+    };
     const errs = validateCreateForm(payload);
     setCreateErrors(errs);
     if (Object.keys(errs).length > 0) return;
@@ -534,7 +620,7 @@ const UserManagement = () => {
       setCreateSuccess('User created successfully');
       await fetchUsers();
       // reset form but keep createdPassword visible for copy
-      setNewUser({ name: '', email: '', password: '', role: 'employee' });
+      setNewUser({ name: '', email: '', password: '', role: 'employee', customRoleName: '' });
       setShowCreateModal(false);
     } catch (err) {
       console.error('Create user error', err);
@@ -916,34 +1002,32 @@ const UserManagement = () => {
                         value={editingUser.role}
                         onChange={e => {
                           const newRole = e.target.value;
-                          console.log('Role changed to:', newRole);
-                          if (newRole === 'custom') {
-                            setEditingUser(prev => {
-                              // For custom role, use current permissions if they exist, otherwise use custom defaults
-                              const currentPerms = prev.permissions || {};
-                              const hasValidPermissions = Object.keys(currentPerms).length > 0;
-                              const customDefaults = ROLE_DEFAULT_PERMISSIONS[newRole] || {};
-                              
-                              return { 
-                                ...prev, 
-                                role: 'custom', 
-                                customRoleName: prev.customRoleName || '', 
-                                permissions: hasValidPermissions ? { ...currentPerms } : { ...customDefaults }
-                              };
-                            });
-                          } else {
-                            const defaultPerms = ROLE_DEFAULT_PERMISSIONS[newRole] || {};
-                            console.log('Setting default permissions for role:', newRole, defaultPerms);
-                            setEditingUser(prev => ({ 
+                          console.log('Role changed from', editingUser.role, 'to:', newRole);
+                          
+                          // Only apply default permissions if the role actually changed
+                          if (newRole === editingUser.role) {
+                            console.log('Role unchanged, keeping existing permissions');
+                            return;
+                          }
+                          
+                          setEditingUser(prev => {
+                            const defaultPerms = { ...ROLE_DEFAULT_PERMISSIONS[newRole] } || {};
+                            console.log('Default permissions for', newRole, ':', defaultPerms);
+                            
+                            const completePerms = {
+                              ...defaultPerms,
+                              presetAccess: prev.permissions?.presetAccess || {}
+                            };
+                            
+                            console.log('Complete permissions being set:', completePerms);
+                            
+                            return { 
                               ...prev, 
                               role: newRole, 
-                              customRoleName: '', // Clear custom name when switching to predefined role
-                              permissions: { 
-                                ...defaultPerms, 
-                                presetAccess: prev.permissions?.presetAccess || {} 
-                              }
-                            }));
-                          }
+                              customRoleName: newRole === 'custom' ? (prev.customRoleName || '') : '',
+                              permissions: completePerms
+                            };
+                          });
                         }}
                         disabled={!isSuperAdmin && (editingUser.role === 'superadmin' || editingUser.role === 'admin')}
                       >
@@ -963,66 +1047,7 @@ const UserManagement = () => {
                           style={{flex: 1, padding:'8px 10px', borderRadius:6, border:'1px solid var(--kt-border)', fontSize:15}}
                         />
                       )}
-                      {(() => {
-                        // Only show custom indicator if role is not custom and permissions differ
-                        if (editingUser.role === 'custom') return null;
-                        
-                        const defaultPerms = ROLE_DEFAULT_PERMISSIONS[editingUser.role] || {};
-                        const currentPerms = editingUser.permissions || {};
-                        const hasCustomizations = !arePermissionsEqual(currentPerms, defaultPerms);
-                        
-                        // Debug logging to understand why custom shows
-                        if (hasCustomizations) {
-                          console.log('Custom indicator showing for:', editingUser.name, {
-                            role: editingUser.role,
-                            currentPerms: currentPerms,
-                            defaultPerms: defaultPerms,
-                            hasCustomizations
-                          });
-                        }
-                        
-                        return hasCustomizations ? (
-                          <div style={{display: 'flex', gap: 4, alignItems: 'center'}}>
-                            <span 
-                              style={{
-                                fontSize: 11,
-                                background: 'var(--kt-warning)',
-                                color: 'white',
-                                padding: '2px 6px',
-                                borderRadius: 4
-                              }}
-                              title="This role has custom permissions applied"
-                            >
-                              Custom
-                            </span>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                const defaultPerms = ROLE_DEFAULT_PERMISSIONS[editingUser.role] || {};
-                                setEditingUser(prev => ({
-                                  ...prev,
-                                  permissions: {
-                                    ...defaultPerms,
-                                    presetAccess: prev.permissions?.presetAccess || {}
-                                  }
-                                }));
-                              }}
-                              style={{
-                                fontSize: 10,
-                                padding: '2px 6px',
-                                background: 'var(--kt-primary)',
-                                color: 'white',
-                                border: 'none',
-                                borderRadius: 4,
-                                cursor: 'pointer'
-                              }}
-                              title="Reset to default permissions for this role"
-                            >
-                              Reset
-                            </button>
-                          </div>
-                        ) : null;
-                      })()}
+
                     </div>
                   </div>
                   {/* Active flag removed */}
@@ -1070,7 +1095,50 @@ const UserManagement = () => {
                     </label>
                   </div>
                 )}
-          </div>
+              </div>
+
+              {/* High-level: User Management permissions (collapsible) */}
+              <div className="kt-card" style={{boxShadow:'none', border:'1px dashed var(--kt-border)'}}>
+                <div className="kt-card-header" style={{marginBottom:12, display:'flex', alignItems:'center', justifyContent:'space-between'}}>
+                  <div style={{display:'flex', alignItems:'center', gap:10}}>
+                    <label style={{display:'flex', gap:6, alignItems:'center', fontSize:12}}>
+                      <input type="checkbox" checked={!!editingUser.permissions.userManagement} onChange={(e) => handlePermissionChange('userManagement', e.target.checked)} />
+                      <div>
+                        <div style={{fontWeight:600}}>User Management</div>
+                        <div style={{fontSize:11, color:'var(--kt-text-soft)'}}>If only this is on, user can view users</div>
+                      </div>
+                    </label>
+                  </div>
+                  <button type="button" className="kt-btn outline sm" onClick={() => setEditingUser(prev => ({...prev, __umOpen: !prev?.__umOpen}))}>
+                    {editingUser?.__umOpen ? 'Hide actions' : 'Choose actions'}
+                  </button>
+                </div>
+                {editingUser?.__umOpen && (
+                  <div style={{display:'grid', gap:10, gridTemplateColumns:'repeat(auto-fill,minmax(240px,1fr))'}}>
+                    <label style={{display:'flex', gap:6, alignItems:'center', fontSize:12, background:'var(--kt-surface-alt)', padding:'10px 12px', borderRadius:6, border:'1px solid var(--kt-border)'}}>
+                      <input type="checkbox" checked={!!editingUser.permissions.userManageCreate} onChange={(e) => handlePermissionChange('userManageCreate', e.target.checked)} />
+                      <div>
+                        <div style={{fontWeight:600}}>Allow Create</div>
+                        <div style={{fontSize:11, color:'var(--kt-text-soft)'}}>Create new users</div>
+                      </div>
+                    </label>
+                    <label style={{display:'flex', gap:6, alignItems:'center', fontSize:12, background:'var(--kt-surface-alt)', padding:'10px 12px', borderRadius:6, border:'1px solid var(--kt-border)'}}>
+                      <input type="checkbox" checked={!!editingUser.permissions.userManageEdit} onChange={(e) => handlePermissionChange('userManageEdit', e.target.checked)} />
+                      <div>
+                        <div style={{fontWeight:600}}>Allow Edit</div>
+                        <div style={{fontSize:11, color:'var(--kt-text-soft)'}}>Edit user permissions and roles</div>
+                      </div>
+                    </label>
+                    <label style={{display:'flex', gap:6, alignItems:'center', fontSize:12, background:'var(--kt-surface-alt)', padding:'10px 12px', borderRadius:6, border:'1px solid var(--kt-border)'}}>
+                      <input type="checkbox" checked={!!editingUser.permissions.userManageDelete} onChange={(e) => handlePermissionChange('userManageDelete', e.target.checked)} />
+                      <div>
+                        <div style={{fontWeight:600}}>Allow Delete</div>
+                        <div style={{fontSize:11, color:'var(--kt-text-soft)'}}>Delete users and transfer data</div>
+                      </div>
+                    </label>
+                  </div>
+                )}
+              </div>
 
               {/* Other feature permissions */}
               <div className="kt-card" style={{boxShadow:'none', border:'1px dashed var(--kt-border)'}}>
@@ -1083,7 +1151,7 @@ const UserManagement = () => {
                 </div>
                 <div style={{display:'grid', gap:10, gridTemplateColumns:'repeat(auto-fill,minmax(160px,1fr))'}}>
                   {Object.entries(editingUser.permissions)
-                    .filter(([key]) => !["reflectionWidget","movementWidget","customWidget","imageDownloadQualities","modelUpload","modelManageUpload","modelManageEdit","modelManageDelete"].includes(key))
+                    .filter(([key]) => !["reflectionWidget","movementWidget","customWidget","imageDownloadQualities","modelUpload","modelManageUpload","modelManageEdit","modelManageDelete","userManagement","userManageCreate","userManageEdit","userManageDelete"].includes(key))
                     .map(([key, value]) => (
                       <label key={key} style={{display:'flex', gap:6, alignItems:'center', fontSize:12, background:'var(--kt-surface-alt)', padding:'6px 8px', borderRadius:6, border:'1px solid var(--kt-border)'}}>
                         <input
@@ -1134,7 +1202,7 @@ const UserManagement = () => {
 
               <div className="flex" style={{justifyContent:'flex-end', gap:12}}>
                 <button type="button" className="kt-btn outline" onClick={() => setShowEditModal(false)}>Cancel</button>
-                <button type="submit" className="kt-btn primary">Update User</button>
+                <button type="submit" className="kt-btn primary" onClick={() => console.log('UPDATE CLICKED - Current permissions:', editingUser.permissions)}>Update User</button>
               </div>
             </form>
           </div>

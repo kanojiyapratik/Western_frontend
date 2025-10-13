@@ -8,6 +8,7 @@ import '../Admin/admin-theme.css';
 import '../Admin/AdminLayout.css';
 import AddModelModalMultiAsset from '../Admin/ModelManagement/AddModelModal_MultiAsset';
 import ModelManagement from '../Admin/ModelManagement/ModelManagement';
+import UserManagement from '../Admin/UserManagement/UserManagement';
 import PasswordReset from '../../components/Auth/PasswordReset';
 
 // replaced with PasswordReset component
@@ -28,6 +29,7 @@ const UserShell = () => {
   const pageTitleMap = {
     '/user/dashboard': 'Dashboard',
     '/user/viewer': 'Viewer',
+    '/user/user-management': 'User Management',
     '/user/change-password': 'Change Password',
   };
   const pageTitle = pageTitleMap[location.pathname] || 'Dashboard';
@@ -46,6 +48,7 @@ const UserShell = () => {
             <Route path="/viewer" element={<MainApp />} />
             <Route path="/upload-model" element={<UserUpload />} />
             <Route path="/model-management" element={<UserModelManagement />} />
+            <Route path="/user-management" element={<UserUserManagement />} />
             <Route path="/change-password" element={<PasswordReset />} />
             <Route path="*" element={<Navigate to="/user/dashboard" replace />} />
           </Routes>
@@ -84,6 +87,13 @@ const UserModelManagement = () => {
   const canView = !!(user?.role === 'admin' || user?.role === 'superadmin' || user?.permissions?.modelUpload || user?.permissions?.modelManageUpload || user?.permissions?.modelManageEdit || user?.permissions?.modelManageDelete);
   if (!canView) return <div className="kt-card">You do not have permission to manage models.</div>;
   return <ModelManagement />;
+};
+
+const UserUserManagement = () => {
+  const { user } = useAuth();
+  const canView = !!(user?.role === 'admin' || user?.role === 'superadmin' || user?.permissions?.userManagement || user?.permissions?.userManageCreate || user?.permissions?.userManageEdit || user?.permissions?.userManageDelete);
+  if (!canView) return <div className="kt-card">You do not have permission to manage users.</div>;
+  return <UserManagement />;
 };
 
 export default UserLayout;
