@@ -36,6 +36,13 @@ const UserSidebar = ({ collapsed, onToggle }) => {
             to={item.path}
             className={`kt-nav-link ${location.pathname === item.path ? 'active' : ''}`}
             title={collapsed ? item.label : ''}
+            onClick={(e) => {
+              // Force page reload when navigating from viewer to prevent routing issues
+              if (location.pathname === '/user/viewer' && item.path !== '/user/viewer') {
+                e.preventDefault();
+                window.location.href = item.path;
+              }
+            }}
           >
             <span className="kt-icon">{item.icon}</span>
             <span className="kt-text">{item.label}</span>

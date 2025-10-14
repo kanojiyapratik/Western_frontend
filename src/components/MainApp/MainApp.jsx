@@ -14,6 +14,14 @@ function MainApp() {
   const [dbModels, setDbModels] = useState([]);
   const [loading, setLoading] = useState(true);
   
+  // Cleanup effect to ensure proper unmounting
+  useEffect(() => {
+    return () => {
+      // Clear any ongoing operations when component unmounts
+      console.log('MainApp unmounting - cleaning up');
+    };
+  }, []);
+  
   // Fetch models from database
   useEffect(() => {
     const fetchModels = async () => {

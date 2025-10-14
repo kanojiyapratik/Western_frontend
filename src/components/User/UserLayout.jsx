@@ -20,6 +20,7 @@ const UserShell = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const { user } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     document.body.classList.add('admin-mode');
