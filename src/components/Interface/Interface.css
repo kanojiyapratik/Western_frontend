@@ -60,12 +60,12 @@
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 0.5rem;
   /* Sidebar sizing */
-  flex: 0 0 440px;
-  width: 440px;
+  flex: 0 0 24rem;
+  width: 24rem;
   max-width: 95vw;
-  padding: 16px;
+  padding: 0.75rem;
   box-sizing: border-box;
   /* Make this pane the scrollable area. Use --interface-offset to leave space for headers/footers */
  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
@@ -570,13 +570,13 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 0.5rem;
   background: #ffffff;
-  border: 1px solid #e2e8f0;
-  padding: 12px 10px;
-  min-height: 56px;
-  border-radius: 10px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+  border: 0.0625rem solid #e2e8f0;
+  padding: 0.375rem 0.5rem;
+  min-height: 2rem;
+  border-radius: 0.25rem;
+  box-shadow: 0 0.125rem 0.375rem rgba(0,0,0,0.06);
 }
 
 .toolbar-center { 
@@ -586,6 +586,7 @@
   justify-content: flex-start; 
   min-width: 0;
   height: 100%;
+  gap: 0.5rem;
 }
 .toolbar-center.left { justify-content: flex-start; }
 .toolbar-right { 
@@ -614,32 +615,51 @@
 }
 
 .toolbar-select.enhanced {
-  min-width: 100px;
-  max-width: 220px;
-  flex: 0 1 140px;
-  padding: 8px 32px 8px 12px;
-  height: 36px;
-  line-height: 20px;
-  background: linear-gradient(135deg,#f8fafc,#f1f5f9);
-  border: 1px solid #cbd5e1;
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 500;
-  color: #1e293b;
+  min-width: 6rem;
+  max-width: 10rem;
+  flex: 0 1 8rem;
+  padding: 0.5rem 1.5rem 0.5rem 0.75rem;
+  height: auto;
+  line-height: 1.25;
+  background: #ffffff;
+  border: 0.0625rem solid #cbd5e1;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #000000;
   appearance: none;
   position: relative;
-  transition: all .18s ease;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.04),0 0 0 0 rgba(99,102,241,0);
-  background-image: url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M6 8L10 12L14 8' stroke='%2363748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  transition: all 0.2s ease;
+  box-shadow: 0 0.0625rem 0.1875rem rgba(0,0,0,0.1);
+  background-image: url("data:image/svg+xml,%3Csvg width='12' height='12' viewBox='0 0 12 12' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M3 4.5L6 7.5L9 4.5' stroke='%23000000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
-  background-position: right 8px center;
-  background-size: 16px;
+  background-position: right 0.5rem center;
+  background-size: 0.75rem;
 }
 
-.toolbar-select.enhanced:hover { border-color: #94a3b8; background: linear-gradient(135deg,#ffffff,#f1f5f9); }
-.toolbar-select.enhanced:focus { border-color:#6366f1; box-shadow:0 0 0 3px rgba(99,102,241,.25); outline:none; }
+.toolbar-select.enhanced:hover { 
+  border-color: #4f46e5; 
+  background: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(79, 70, 229, 0.2);
+}
 
-.toolbar-select.enhanced option { font-size: 13px; }
+.toolbar-select.enhanced:focus { 
+  border-color: #4f46e5; 
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2); 
+  outline: none;
+  background: #ffffff;
+}
+
+.toolbar-select.enhanced option { 
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #000000;
+  padding: 0.5rem 0.75rem;
+  background: #ffffff;
+  border: none;
+  line-height: 1.25;
+}
 
 .toolbar-logout {
   height: 34px;
@@ -695,13 +715,13 @@
 /* Compact Widget Cards */
 .widget-container {
   background: #ffffff !important;
-  border-radius: 12px;
-  padding: 16px;
-  margin-bottom: 12px;
+  border-radius: 0.25rem;
+  padding: 0.5rem;
+  margin-bottom: 0.25rem;
   box-shadow: 
-    0 2px 8px rgba(0, 0, 0, 0.04),
-    0 1px 2px rgba(0, 0, 0, 0.06);
-  border: 1px solid rgba(226, 232, 240, 0.8);
+    0 0.0625rem 0.25rem rgba(0, 0, 0, 0.04),
+    0 0.0625rem 0.125rem rgba(0, 0, 0, 0.06);
+  border: 0.0625rem solid rgba(226, 232, 240, 0.8);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   /* allow internal scrolling; keep overall card clipped by grid cell */
@@ -729,16 +749,16 @@
 
 .widget-title {
   color: #1f2937;
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 600;
-  margin-bottom: 16px;
-  padding-bottom: 8px;
+  margin-bottom: 10px;
+  padding-bottom: 6px;
   border-bottom: 1px solid #f3f4f6;
   text-transform: none;
   letter-spacing: -0.025em;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   position: relative;
 }
 
@@ -775,7 +795,7 @@
 
 /* Compact Form Controls */
 .form-group {
-  margin-bottom: 16px;
+  margin-bottom: 10px;
 }
 
 .form-label, .interface-label {
@@ -791,11 +811,11 @@
 /* Compact Select Dropdown */
 .interface-select, .form-select {
   width: 100%;
-  padding: 10px 14px;
+  padding: 8px 12px;
   border: 1px solid #d1d5db;
-  border-radius: 8px;
+  border-radius: 6px;
   background: #ffffff;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   color: #374151;
   cursor: pointer;
@@ -803,9 +823,9 @@
   appearance: none;
   background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
   background-repeat: no-repeat;
-  background-position: right 12px center;
-  background-size: 16px;
-  padding-right: 40px;
+  background-position: right 10px center;
+  background-size: 14px;
+  padding-right: 32px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
@@ -1307,7 +1327,7 @@ input:checked + .slider:before {
 .widgets-container {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
 }
 
 /* Compact Responsive Design */
