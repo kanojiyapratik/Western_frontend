@@ -160,6 +160,7 @@ const ModelManagement = () => {
         section: typeof model.section === 'string' ? model.section.trim() : model.section,
         type: model.type,
         configUrl: model.configUrl,
+        thumbnail: model.thumbnail, // Add thumbnail field
         interactionGroups: model.interactionGroups || [],
         metadata: model.metadata || {},
         uploadedBy: model.uploadedBy,
@@ -433,6 +434,7 @@ const ModelManagement = () => {
         <table className="models-table kt-table" role="table" aria-label="Model Management Table">
           <thead>
             <tr>
+              <th>Thumbnail</th>
               <th>Name</th>
               <th>Section</th>
               <th>Type</th>
@@ -444,11 +446,30 @@ const ModelManagement = () => {
           <tbody>
             {modelEntries.length === 0 ? (
               <tr>
-                <td colSpan={6} className="empty-state">No models match your search or filter.</td>
+                <td colSpan={7} className="empty-state">No models match your search or filter.</td>
               </tr>
             ) : (
               modelEntries.map(([modelName, config]) => (
                 <tr key={modelName}>
+                  <td style={{ width: '80px', textAlign: 'center' }}>
+                    <div className="model-thumbnail">
+                      <img 
+                        src={config.thumbnail ? `${API_BASE_URL}/thumbnails/${config.thumbnail}` : '/placeholder-3d.svg'}
+                        alt={`${modelName} thumbnail`}
+                        style={{
+                          width: '64px',
+                          height: '64px',
+                          objectFit: 'cover',
+                          borderRadius: '8px',
+                          border: '2px solid #e5e7eb',
+                          backgroundColor: '#f9fafb'
+                        }}
+                        onError={(e) => {
+                          e.target.src = '/placeholder-3d.svg';
+                        }}
+                      />
+                    </div>
+                  </td>
                   <td style={{ whiteSpace: 'nowrap', maxWidth: 240, overflow: 'hidden', textOverflow: 'ellipsis' }}>{modelName}</td>
                   <td>{config.section || '-'}</td>
                   <td>{config.type || '-'}</td>
