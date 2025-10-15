@@ -37,8 +37,12 @@ const Dashboard = () => {
       setLoading(true);
       const token = localStorage.getItem('token');
       
+      const API_BASE_URL = import.meta.env.VITE_API_BASE?.replace('/api', '') || 
+        (import.meta.env.MODE === 'production' 
+          ? 'https://threed-configurator-backend-7pwk.onrender.com' 
+          : 'http://192.168.1.7:5000');
       // Fetch user stats
-  const usersResponse = await fetch('/api/admin-dashboard/users', {
+      const usersResponse = await fetch(`${API_BASE_URL}/api/admin-dashboard/users`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -59,7 +63,7 @@ const Dashboard = () => {
       }
 
       // Fetch model stats
-  const modelsResponse = await fetch('/api/admin/models', {
+      const modelsResponse = await fetch(`${API_BASE_URL}/api/admin/models`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -75,7 +79,7 @@ const Dashboard = () => {
       }
 
       // Fetch activity stats
-  const activityResponse = await fetch('/api/activity/stats', {
+      const activityResponse = await fetch(`${API_BASE_URL}/api/activity/stats`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',

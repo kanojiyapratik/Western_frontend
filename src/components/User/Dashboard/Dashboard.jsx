@@ -24,7 +24,11 @@ const UserDashboard = () => {
     // Try to fetch models count available to users
     const load = async () => {
       try {
-        const res = await fetch('/api/models');
+        const API_BASE_URL = import.meta.env.VITE_API_BASE?.replace('/api', '') || 
+          (import.meta.env.MODE === 'production' 
+            ? 'https://threed-configurator-backend-7pwk.onrender.com' 
+            : 'http://192.168.1.7:5000');
+        const res = await fetch(`${API_BASE_URL}/api/models`);
         if (res.ok) {
           const models = await res.json();
           setStats((s) => ({ ...s, totalModels: models.length || 0 }));
