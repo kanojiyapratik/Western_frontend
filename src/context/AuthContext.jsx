@@ -1,6 +1,9 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-const API_BASE_URL = 'http://192.168.1.7:5000';
+const API_BASE_URL = import.meta.env.VITE_API_BASE || 
+  (import.meta.env.MODE === 'production' 
+    ? 'https://threed-configurator-backend-7pwk.onrender.com' 
+    : 'http://localhost:5000');
 
 const AuthContext = createContext();
 
