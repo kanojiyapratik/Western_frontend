@@ -1,8 +1,11 @@
 // src/api/user.js
 import axios from "axios";
 
-// Use Vite proxy via relative path to avoid CORS and IP issues
-const API_BASE = import.meta.env.VITE_API_BASE || "/api";
+// Use environment variable for API base URL
+const API_BASE = import.meta.env.VITE_API_BASE || 
+  (import.meta.env.MODE === 'production' 
+    ? 'https://threed-configurator-backend-7pwk.onrender.com/api' 
+    : 'http://localhost:5000/api');
 
 const api = axios.create({
   baseURL: API_BASE,
