@@ -2,10 +2,18 @@
 import axios from "axios";
 
 // Use environment variable for API base URL
+console.log('Environment variables:', {
+  VITE_API_BASE: import.meta.env.VITE_API_BASE,
+  MODE: import.meta.env.MODE,
+  NODE_ENV: import.meta.env.NODE_ENV
+});
+
 const API_BASE = import.meta.env.VITE_API_BASE || 
   (import.meta.env.MODE === 'production' 
     ? 'https://threed-configurator-backend-7pwk.onrender.com/api' 
     : 'http://localhost:5000/api');
+
+console.log('Using API_BASE:', API_BASE);
 
 const api = axios.create({
   baseURL: API_BASE,
