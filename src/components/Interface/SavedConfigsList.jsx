@@ -16,12 +16,16 @@ const SavedConfigsList = ({ isOpen, onClose, onLoad, modelName, userId }) => {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
+      const API_BASE_URL = import.meta.env.VITE_API_BASE?.replace('/api', '') || 
+        (import.meta.env.MODE === 'production' 
+          ? 'https://threed-configurator-backend-7pwk.onrender.com' 
+          : 'http://192.168.1.7:5000');
       // If userId is provided and we're an admin, fetch via admin endpoint for that user
       const url = userId
-        ? `http://192.168.1.7:5000/api/admin/user-configs/${userId}${modelName ? `?modelName=${encodeURIComponent(modelName)}` : ''}`
+        ? `${API_BASE_URL}/api/admin/user-configs/${userId}${modelName ? `?modelName=${encodeURIComponent(modelName)}` : ''}`
         : modelName
-          ? `http://192.168.1.7:5000/api/configs/user?modelName=${encodeURIComponent(modelName)}`
-          : 'http://192.168.1.7:5000/api/configs/user';
+          ? `${API_BASE_URL}/api/configs/user?modelName=${encodeURIComponent(modelName)}`
+          : `${API_BASE_URL}/api/configs/user`;
         
       const response = await fetch(url, {
         headers: {
@@ -47,7 +51,11 @@ const SavedConfigsList = ({ isOpen, onClose, onLoad, modelName, userId }) => {
   const handleLoadConfig = async (config) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://192.168.1.7:5000/api/configs/${config._id}`, {
+      const API_BASE_URL = import.meta.env.VITE_API_BASE?.replace('/api', '') || 
+        (import.meta.env.MODE === 'production' 
+          ? 'https://threed-configurator-backend-7pwk.onrender.com' 
+          : 'http://192.168.1.7:5000');
+      const response = await fetch(`${API_BASE_URL}/api/configs/${config._id}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -74,7 +82,11 @@ const SavedConfigsList = ({ isOpen, onClose, onLoad, modelName, userId }) => {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://192.168.1.7:5000/api/configs/${configId}`, {
+      const API_BASE_URL = import.meta.env.VITE_API_BASE?.replace('/api', '') || 
+        (import.meta.env.MODE === 'production' 
+          ? 'https://threed-configurator-backend-7pwk.onrender.com' 
+          : 'http://192.168.1.7:5000');
+      const response = await fetch(`${API_BASE_URL}/api/configs/${configId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
