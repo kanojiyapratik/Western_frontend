@@ -7,7 +7,10 @@ import AddModelModalMultiAsset from './AddModelModal_MultiAsset.jsx';
 import './ModelManagement.css';
 import { useAuth } from '../../../context/AuthContext';
 
-const API_BASE_URL = 'http://192.168.1.7:5000';
+const API_BASE_URL = import.meta.env.VITE_API_BASE?.replace('/api', '') || 
+  (import.meta.env.MODE === 'production' 
+    ? 'https://threed-configurator-backend-7pwk.onrender.com' 
+    : 'http://192.168.1.7:5000');
 
 const ModelCard = ({ modelName, config, onDelete, onEdit, isDbModel }) => {
   const [open, setOpen] = useState(false);

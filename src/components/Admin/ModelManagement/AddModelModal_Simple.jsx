@@ -1,7 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
 // ...existing code...
 
-const API_BASE_URL = 'http://192.168.1.7:5000';
+const API_BASE_URL = import.meta.env.VITE_API_BASE?.replace('/api', '') || 
+  (import.meta.env.MODE === 'production' 
+    ? 'https://threed-configurator-backend-7pwk.onrender.com' 
+    : 'http://192.168.1.7:5000');
 
 export default function AddModelModalSimple({ onClose, onAdd, editModel = null, isEditMode = false, onOpenMultiAsset = null }) {
   // For config file editing

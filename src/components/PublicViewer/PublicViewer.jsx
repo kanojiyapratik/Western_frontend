@@ -3,7 +3,10 @@ import { Canvas } from "@react-three/fiber";
 import { Experience } from "../Experience/Experience.jsx";
 import './PublicViewer.css';
 
-const API_BASE_URL = 'http://192.168.1.7:5000';
+const API_BASE_URL = import.meta.env.VITE_API_BASE?.replace('/api', '') || 
+  (import.meta.env.MODE === 'production' 
+    ? 'https://threed-configurator-backend-7pwk.onrender.com' 
+    : 'http://192.168.1.7:5000');
 
 function PublicViewer() {
   const [dbModels, setDbModels] = useState([]);
