@@ -172,7 +172,7 @@ const getRoleDisplayName = (user) => {
   const role = user.role || 'employee';
   
   // Debug: Log what we're actually getting from the database
-  console.log('getRoleDisplayName - User:', user.name, 'Role from DB:', user.role, 'Permissions keys:', user.permissions ? Object.keys(user.permissions) : 'none');
+  // console.log('getRoleDisplayName - User:', user.name, 'Role from DB:', user.role, 'Permissions keys:', user.permissions ? Object.keys(user.permissions) : 'none');
   
   // Handle custom roles
   if (role === 'custom') {
@@ -247,6 +247,8 @@ const UserManagement = () => {
       }
 
       const data = await response.json();
+      console.log('🔍 Fetched users:', data.length, 'users');
+      console.log('🔍 User emails:', data.map(u => u.email));
       setUsers(data);
       // Fetch saved-config counts for each user (show in table)
       (async () => {
