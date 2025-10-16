@@ -767,7 +767,7 @@ const UserManagement = () => {
                 onClick={() => setSelectedTab('employees')}
                 style={{minWidth:110}}
               >
-                Employees ({users.filter(u => u.role === 'employee').length})
+                Employees ({users.filter(u => u.role !== 'admin' && u.role !== 'superadmin').length})
               </button>
             </div>
             <div style={{fontSize:13, color:'var(--kt-text-soft)'}}>Select a list to manage</div>
@@ -787,7 +787,7 @@ const UserManagement = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {users.filter(u => (u.role === 'admin' || u.role === 'superadmin') && String(u._id) !== String(currentUserId)).map(user => (
+                    {users.filter(u => (u.role === 'admin' || u.role === 'superadmin')).map(user => (
                       <tr key={user._id}>
                         <td style={{display:'flex', alignItems:'center', gap:8}}>
                           <div className="kt-avatar" style={{width:34, height:34, fontSize:13}}>{user.name.charAt(0).toUpperCase()}</div>
@@ -826,7 +826,7 @@ const UserManagement = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {users.filter(u => u.role === 'employee').map(user => (
+                    {users.filter(u => u.role !== 'admin' && u.role !== 'superadmin').map(user => (
                       <tr key={user._id}>
                         <td style={{display:'flex', alignItems:'center', gap:8}}>
                           <div className="kt-avatar" style={{width:34, height:34, fontSize:13}}>{user.name.charAt(0).toUpperCase()}</div>
