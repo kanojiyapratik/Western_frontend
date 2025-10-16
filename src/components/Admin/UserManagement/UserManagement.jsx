@@ -787,7 +787,7 @@ const UserManagement = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {users.filter(u => (u.role === 'admin' || u.role === 'superadmin')).map(user => (
+                    {users.filter(u => (u.role === 'admin' || u.role === 'superadmin') && String(u._id) !== String(currentUserId)).map(user => (
                       <tr key={user._id}>
                         <td style={{display:'flex', alignItems:'center', gap:8}}>
                           <div className="kt-avatar" style={{width:34, height:34, fontSize:13}}>{user.name.charAt(0).toUpperCase()}</div>
