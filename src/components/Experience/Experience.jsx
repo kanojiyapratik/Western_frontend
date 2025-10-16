@@ -1589,7 +1589,8 @@ export function Experience({
             const formData = new FormData();
             formData.append('texture', fileOrPath);
             try {
-              const uploadResponse = await fetch('http://192.168.1.7:5000/api/upload-texture', {
+              const baseUrl = import.meta.env.VITE_API_BASE?.replace('/api', '') || (import.meta.env.MODE === 'production' ? 'https://threed-configurator-backend-7pwk.onrender.com' : 'http://192.168.1.7:5000');
+              const uploadResponse = await fetch(`${baseUrl}/api/upload-texture`, {
                 method: 'POST',
                 headers: {
                   'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -2194,7 +2195,8 @@ export function Experience({
               formData.append('texture', texture);
 
               try {
-                const uploadResponse = await fetch('http://192.168.1.7:5000/api/upload-texture', {
+                const baseUrl = import.meta.env.VITE_API_BASE?.replace('/api', '') || (import.meta.env.MODE === 'production' ? 'https://threed-configurator-backend-7pwk.onrender.com' : 'http://192.168.1.7:5000');
+                const uploadResponse = await fetch(`${baseUrl}/api/upload-texture`, {
                   method: 'POST',
                   headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
