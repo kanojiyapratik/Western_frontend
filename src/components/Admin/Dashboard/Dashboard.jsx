@@ -37,10 +37,16 @@ const Dashboard = () => {
       setLoading(true);
       const token = localStorage.getItem('token');
       
-      const API_BASE_URL = import.meta.env.VITE_API_BASE?.replace('/api', '') || 
-        (import.meta.env.MODE === 'production' 
-          ? 'https://threed-configurator-backend-7pwk.onrender.com' 
-          : 'http://192.168.1.7:5000');
+      function getApiBaseUrl() {
+        if (import.meta.env.VITE_API_BASE) {
+          return import.meta.env.VITE_API_BASE.replace('/api', '');
+        } else if (import.meta.env.MODE === 'production') {
+          return 'https://threed-configurator-backend-7pwk.onrender.com';
+        } else {
+          return 'http://192.168.1.7:5000';
+        }
+      }
+      const API_BASE_URL = getApiBaseUrl();
       // Fetch user stats
       const usersResponse = await fetch(`${API_BASE_URL}/api/admin-dashboard/users`, {
         headers: {
@@ -244,8 +250,8 @@ const Dashboard = () => {
       <div className="kt-card">
         <div style={{fontSize:'12px', fontWeight:'600', color:'var(--kt-text-soft)', marginBottom:'12px'}}>🎯 Quick Actions</div>
         <div style={{display:'flex', gap:'8px', flexWrap:'wrap'}}>
-          <button className="kt-btn primary sm" onClick={() => window.location.href = '/admin/users'}>👥 Manage Users</button>
-          <button className="kt-btn info sm" onClick={() => window.location.href = '/admin/models'}>🧩 Model Management</button>
+          <button className="kt-btn primary sm" onClick={() => typeof window !== 'undefined' && (window.location.href = '/admin/users')}>👥 Manage Users</button>
+          <button className="kt-btn info sm" onClick={() => typeof window !== 'undefined' && (window.location.href = '/admin/models')}>🧩 Model Management</button>
           <button className="kt-btn outline sm" onClick={fetchDashboardStats}>🔄 Refresh Dashboard</button>
         </div>
       </div>

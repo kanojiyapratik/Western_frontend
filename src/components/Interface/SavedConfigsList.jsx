@@ -16,10 +16,16 @@ const SavedConfigsList = ({ isOpen, onClose, onLoad, modelName, userId }) => {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const API_BASE_URL = import.meta.env.VITE_API_BASE?.replace('/api', '') || 
-        (import.meta.env.MODE === 'production' 
-          ? 'https://threed-configurator-backend-7pwk.onrender.com' 
-          : 'http://192.168.1.7:5000');
+      function getApiBaseUrl() {
+        if (import.meta.env.VITE_API_BASE) {
+          return import.meta.env.VITE_API_BASE.replace('/api', '');
+        } else if (import.meta.env.MODE === 'production') {
+          return 'https://threed-configurator-backend-7pwk.onrender.com';
+        } else {
+          return 'http://192.168.1.7:5000';
+        }
+      }
+      const API_BASE_URL = getApiBaseUrl();
       // If userId is provided and we're an admin, fetch via admin endpoint for that user
       const url = userId
         ? `${API_BASE_URL}/api/admin/user-configs/${userId}${modelName ? `?modelName=${encodeURIComponent(modelName)}` : ''}`
@@ -51,11 +57,16 @@ const SavedConfigsList = ({ isOpen, onClose, onLoad, modelName, userId }) => {
   const handleLoadConfig = async (config) => {
     try {
       const token = localStorage.getItem('token');
-      const API_BASE_URL = import.meta.env.VITE_API_BASE?.replace('/api', '') || 
-        (import.meta.env.MODE === 'production' 
-          ? 'https://threed-configurator-backend-7pwk.onrender.com' 
-          : 'http://192.168.1.7:5000');
-      const response = await fetch(`${API_BASE_URL}/api/configs/${config._id}`, {
+      function getApiBaseUrl() {
+        if (import.meta.env.VITE_API_BASE) {
+          return import.meta.env.VITE_API_BASE.replace('/api', '');
+        } else if (import.meta.env.MODE === 'production') {
+          return 'https://threed-configurator-backend-7pwk.onrender.com';
+        } else {
+          return 'http://192.168.1.7:5000';
+        }
+      }
+      const response = await fetch(`${getApiBaseUrl()}/api/configs/${config._id}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -82,11 +93,16 @@ const SavedConfigsList = ({ isOpen, onClose, onLoad, modelName, userId }) => {
 
     try {
       const token = localStorage.getItem('token');
-      const API_BASE_URL = import.meta.env.VITE_API_BASE?.replace('/api', '') || 
-        (import.meta.env.MODE === 'production' 
-          ? 'https://threed-configurator-backend-7pwk.onrender.com' 
-          : 'http://192.168.1.7:5000');
-      const response = await fetch(`${API_BASE_URL}/api/configs/${configId}`, {
+      function getApiBaseUrl() {
+        if (import.meta.env.VITE_API_BASE) {
+          return import.meta.env.VITE_API_BASE.replace('/api', '');
+        } else if (import.meta.env.MODE === 'production') {
+          return 'https://threed-configurator-backend-7pwk.onrender.com';
+        } else {
+          return 'http://192.168.1.7:5000';
+        }
+      }
+      const response = await fetch(`${getApiBaseUrl()}/api/configs/${configId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
