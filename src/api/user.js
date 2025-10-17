@@ -1,34 +1,25 @@
 // src/api/user.js
 import axios from "axios";
 
-// Use environment variable for API base URL
-console.log('Environment variables:', {
-  VITE_API_BASE: import.meta.env.VITE_API_BASE,
-  MODE: import.meta.env.MODE,
-  NODE_ENV: import.meta.env.NODE_ENV,
-  hostname: window.location.hostname
-});
-
-let API_BASE;
-
-// Check for explicit environment variable first
-if (import.meta.env.VITE_API_BASE) {
-  API_BASE = import.meta.env.VITE_API_BASE;
-} else if (window.location.hostname.includes('vercel.app') || window.location.hostname.includes('netlify.app')) {
-  // Production deployment detected by hostname
-  API_BASE = 'https://threed-configurator-backend-7pwk.onrender.com/api';
-} else if (import.meta.env.MODE === 'production') {
-  // Fallback production check
-  API_BASE = 'https://threed-configurator-backend-7pwk.onrender.com/api';
-} else {
-  // Development
-  API_BASE = 'http://192.168.1.7:5000/api';
+// Lazy API URL resolution to prevent React error #310
+function getApiBase() {
+  // Check for explicit environment variable first
+  if (import.meta.env.VITE_API_BASE) {
+    return import.meta.env.VITE_API_BASE;
+  } else if (typeof window !== 'undefined' && (window.location.hostname.includes('vercel.app') || window.location.hostname.includes('netlify.app'))) {
+    // Production deployment detected by hostname
+    return 'https://threed-configurator-backend-7pwk.onrender.com/api';
+  } else if (import.meta.env.MODE === 'production') {
+    // Fallback production check
+    return 'https://threed-configurator-backend-7pwk.onrender.com/api';
+  } else {
+    // Development
+    return 'http://192.168.1.7:5000/api';
+  }
 }
 
-console.log('Using API_BASE:', API_BASE);
-
 const api = axios.create({
-  baseURL: API_BASE,
+  get baseURL() { return getApiBase(); },
   timeout: 10000,
 });
 

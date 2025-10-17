@@ -7,23 +7,22 @@ import AddModelModalMultiAsset from './AddModelModal_MultiAsset.jsx';
 import './ModelManagement.css';
 import { useAuth } from '../../../context/AuthContext';
 
-let API_BASE_URL;
-
-// Check for explicit environment variable first
-if (import.meta.env.VITE_API_BASE) {
-  API_BASE_URL = import.meta.env.VITE_API_BASE.replace('/api', '');
-} else if (window.location.hostname.includes('vercel.app') || window.location.hostname.includes('netlify.app')) {
-  // Production deployment detected by hostname
-  API_BASE_URL = 'https://threed-configurator-backend-7pwk.onrender.com';
-} else if (import.meta.env.MODE === 'production') {
-  // Fallback production check
-  API_BASE_URL = 'https://threed-configurator-backend-7pwk.onrender.com';
-} else {
-  // Development
-  API_BASE_URL = 'http://192.168.1.7:5000';
+// Lazy API URL resolution to prevent React error #310
+function getApiBaseUrl() {
+  // Check for explicit environment variable first
+  if (import.meta.env.VITE_API_BASE) {
+    return import.meta.env.VITE_API_BASE.replace('/api', '');
+  } else if (typeof window !== 'undefined' && (window.location.hostname.includes('vercel.app') || window.location.hostname.includes('netlify.app'))) {
+    // Production deployment detected by hostname
+    return 'https://threed-configurator-backend-7pwk.onrender.com';
+  } else if (import.meta.env.MODE === 'production') {
+    // Fallback production check
+    return 'https://threed-configurator-backend-7pwk.onrender.com';
+  } else {
+    // Development
+    return 'http://192.168.1.7:5000';
+  }
 }
-
-console.log('ModelManagement API_BASE_URL:', API_BASE_URL, 'hostname:', window.location.hostname);
 
 const ModelCard = ({ modelName, config, onDelete, onEdit, isDbModel }) => {
   const [open, setOpen] = useState(false);
@@ -171,7 +170,7 @@ const ModelManagement = () => {
     dbModels.forEach(model => {
       formatted[model.name] = {
         id: model._id,
-        path: `${API_BASE_URL}/models/${model.file}`,
+        path: `${getApiBaseUrl()}/models/${model.file}`,
         displayName: model.displayName,
         section: typeof model.section === 'string' ? model.section.trim() : model.section,
         type: model.type,
@@ -242,7 +241,7 @@ const ModelManagement = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      const response = await fetch(`${API_BASE_URL}/api/admin/models`, {
+      const response = await fetch(`${getApiBaseUrl()}/api/admin/models`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -254,7 +253,7 @@ const ModelManagement = () => {
         // Preload the newest model file if present
         const newModel = models[models.length - 1];
         if (newModel && newModel.file) {
-          try { useGLTF.preload(`${API_BASE_URL}/models/${newModel.file}`); } catch (e) { console.warn('Failed to preload model:', e); }
+          try { useGLTF.preload(`${getApiBaseUrl()}/models/${newModel.file}`); } catch (e) { console.warn('Failed to preload model:', e); }
         }
         // Notify other parts of app
         window.dispatchEvent(new Event('modelsUpdated'));
@@ -274,7 +273,7 @@ const ModelManagement = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      const response = await fetch(`${API_BASE_URL}/api/admin/models`, {
+      const response = await fetch(`${getApiBaseUrl()}/api/admin/models`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -288,7 +287,7 @@ const ModelManagement = () => {
         const updated = models.find(m => m._id === editModel?._id);
         if (updated) {
           try {
-            useGLTF.preload(`${API_BASE_URL}/models/${updated.file}`);
+            useGLTF.preload(`${getApiBaseUrl()}/models/${updated.file}`);
           } catch (e) {
             console.warn('Failed to preload updated model:', e);
           }
@@ -326,7 +325,7 @@ const ModelManagement = () => {
     setError(null);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${API_BASE_URL}/api/admin/models/${modelId}`, {
+      const response = await fetch(`${getApiBaseUrl()}/api/admin/models/${modelId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -470,7 +469,7 @@ const ModelManagement = () => {
                   <td style={{ width: '80px', textAlign: 'center' }}>
                     <div className="model-thumbnail">
                       <img 
-                        src={config.thumbnail ? `${API_BASE_URL}/thumbnails/${config.thumbnail}` : '/placeholder-3d.svg'}
+                        src={config.thumbnail ? `${getApiBaseUrl()}/thumbnails/${config.thumbnail}` : '/placeholder-3d.svg'}
                         alt={`${modelName} thumbnail`}
                         style={{
                           width: '64px',

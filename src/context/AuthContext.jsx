@@ -1,30 +1,21 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-// Ensure API_BASE_URL doesn't end with /api to avoid double /api in URLs
-let API_BASE_URL;
-
-// Check for explicit environment variable first
-if (import.meta.env.VITE_API_BASE) {
-  API_BASE_URL = import.meta.env.VITE_API_BASE;
-} else if (window.location.hostname.includes('vercel.app') || window.location.hostname.includes('netlify.app')) {
-  // Production deployment detected by hostname
-  API_BASE_URL = 'https://threed-configurator-backend-7pwk.onrender.com';
-} else if (import.meta.env.MODE === 'production') {
-  // Fallback production check
-  API_BASE_URL = 'https://threed-configurator-backend-7pwk.onrender.com';
-} else {
-  // Development
-  API_BASE_URL = 'http://192.168.1.7:5000';
+// Lazy API URL resolution to prevent React error #310
+function getApiBaseUrl() {
+  // Check for explicit environment variable first
+  if (import.meta.env.VITE_API_BASE) {
+    return import.meta.env.VITE_API_BASE.replace(/\/api$/, '');
+  } else if (typeof window !== 'undefined' && (window.location.hostname.includes('vercel.app') || window.location.hostname.includes('netlify.app'))) {
+    // Production deployment detected by hostname
+    return 'https://threed-configurator-backend-7pwk.onrender.com';
+  } else if (import.meta.env.MODE === 'production') {
+    // Fallback production check
+    return 'https://threed-configurator-backend-7pwk.onrender.com';
+  } else {
+    // Development
+    return 'http://192.168.1.7:5000';
+  }
 }
-
-console.log('API_BASE_URL detected:', API_BASE_URL, 'hostname:', window.location.hostname, 'mode:', import.meta.env.MODE);
-
-// Remove trailing /api if present to avoid double /api in requests
-if (API_BASE_URL.endsWith('/api')) {
-  API_BASE_URL = API_BASE_URL.slice(0, -4);
-}
-
-console.log('Final API_BASE_URL:', API_BASE_URL);
 
 const AuthContext = createContext();
 
@@ -65,7 +56,7 @@ export const AuthProvider = ({ children }) => {
     const token = localStorage.getItem('token');
     if (!token) return;
     try {
-      es = new EventSource(`${API_BASE_URL}/api/stream?token=${token}`);
+      es = new EventSource(`${getApiBaseUrl()}/api/stream?token=${token}`);
     } catch (err) {
       console.warn('SSE init failed', err);
       return;
@@ -100,7 +91,7 @@ export const AuthProvider = ({ children }) => {
       const token = localStorage.getItem('token');
       if (token) {
         // Verify token with backend
-  const response = await fetch(`${API_BASE_URL}/api/auth/verify`, {
+  const response = await fetch(`${getApiBaseUrl()}/api/auth/verify`, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',
@@ -126,7 +117,7 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-  const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+  const response = await fetch(`${getApiBaseUrl()}/api/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

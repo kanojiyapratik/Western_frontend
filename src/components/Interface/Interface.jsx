@@ -143,7 +143,7 @@ export function Interface({
       let apiUrl;
       if (import.meta.env.VITE_API_BASE) {
         apiUrl = import.meta.env.VITE_API_BASE;
-      } else if (window.location.hostname.includes('vercel.app') || window.location.hostname.includes('netlify.app')) {
+      } else if (typeof window !== 'undefined' && (window.location.hostname.includes('vercel.app') || window.location.hostname.includes('netlify.app'))) {
         apiUrl = 'https://threed-configurator-backend-7pwk.onrender.com/api';
       } else if (import.meta.env.MODE === 'production') {
         apiUrl = 'https://threed-configurator-backend-7pwk.onrender.com/api';

@@ -401,6 +401,7 @@ export function Experience({
   // Optional in-page perf overlay & manual perf-mode via URL param: `?perf=1`
   useEffect(() => {
     try {
+      if (typeof window === 'undefined') return;
       const params = new URLSearchParams(window.location.search);
       if (!params.has('perf')) return;
       // Enable performance mode when overlay requested
@@ -2373,6 +2374,7 @@ export function Experience({
 
   // Instrument history methods and log mount/unmount to diagnose navigation issues
   useEffect(() => {
+    if (typeof window === 'undefined') return;
     console.log('▶️ Experience mounted for model:', modelName, 'location:', window.location.href);
     let origPush = history.pushState;
     let origReplace = history.replaceState;

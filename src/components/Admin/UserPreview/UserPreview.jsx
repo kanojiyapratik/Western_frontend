@@ -45,18 +45,7 @@ function UserPreview() {
   useEffect(() => {
     const fetchDbModels = async () => {
       try {
-        // Determine API base URL
-        let apiUrl;
-        if (import.meta.env.VITE_API_BASE) {
-          apiUrl = import.meta.env.VITE_API_BASE.replace('/api', '');
-        } else if (window.location.hostname.includes('vercel.app') || window.location.hostname.includes('netlify.app')) {
-          apiUrl = 'https://threed-configurator-backend-7pwk.onrender.com';
-        } else if (import.meta.env.MODE === 'production') {
-          apiUrl = 'https://threed-configurator-backend-7pwk.onrender.com';
-        } else {
-          apiUrl = 'http://192.168.1.7:5000';
-        }
-        
+        const apiUrl = getApiBaseUrl();
         const response = await fetch(`${apiUrl}/api/models`);
         if (response.ok) {
           const models = await response.json();
@@ -73,18 +62,7 @@ function UserPreview() {
   useEffect(() => {
     const handler = async () => {
       try {
-        // Determine API base URL
-        let apiUrl;
-        if (import.meta.env.VITE_API_BASE) {
-          apiUrl = import.meta.env.VITE_API_BASE.replace('/api', '');
-        } else if (window.location.hostname.includes('vercel.app') || window.location.hostname.includes('netlify.app')) {
-          apiUrl = 'https://threed-configurator-backend-7pwk.onrender.com';
-        } else if (import.meta.env.MODE === 'production') {
-          apiUrl = 'https://threed-configurator-backend-7pwk.onrender.com';
-        } else {
-          apiUrl = 'http://192.168.1.7:5000';
-        }
-        
+        const apiUrl = getApiBaseUrl();
         const response = await fetch(`${apiUrl}/api/models`);
         if (response.ok) {
           const models = await response.json();
@@ -109,9 +87,9 @@ function UserPreview() {
         if (model.file.startsWith('http://') || model.file.startsWith('https://')) {
           normalizedPath = model.file;
         } else if (model.file.startsWith('/models/')) {
-          normalizedPath = `${API_BASE_URL}${model.file}`;
+          normalizedPath = `${getApiBaseUrl()}${model.file}`;
         } else {
-          normalizedPath = `${API_BASE_URL}/models/${model.file}`;
+          normalizedPath = `${getApiBaseUrl()}/models/${model.file}`;
         }
       }
 
@@ -151,27 +129,26 @@ function UserPreview() {
     return () => window.removeEventListener('customModelsUpdated', handler);
   }, []);
   // --- External config fetch/merge logic (copied from MainApp) ---
-  // Determine API base URL
-  let API_BASE_URL;
-  if (import.meta.env.VITE_API_BASE) {
-    API_BASE_URL = import.meta.env.VITE_API_BASE.replace('/api', '');
-  } else if (window.location.hostname.includes('vercel.app') || window.location.hostname.includes('netlify.app')) {
-    API_BASE_URL = 'https://threed-configurator-backend-7pwk.onrender.com';
-  } else if (import.meta.env.MODE === 'production') {
-    API_BASE_URL = 'https://threed-configurator-backend-7pwk.onrender.com';
-  } else {
-    API_BASE_URL = 'http://192.168.1.7:5000';
+  // Lazy API URL resolution to prevent React error #310
+  function getApiBaseUrl() {
+    if (import.meta.env.VITE_API_BASE) {
+      return import.meta.env.VITE_API_BASE.replace('/api', '');
+    } else if (typeof window !== 'undefined' && (window.location.hostname.includes('vercel.app') || window.location.hostname.includes('netlify.app'))) {
+      return 'https://threed-configurator-backend-7pwk.onrender.com';
+    } else if (import.meta.env.MODE === 'production') {
+      return 'https://threed-configurator-backend-7pwk.onrender.com';
+    } else {
+      return 'http://192.168.1.7:5000';
+    }
   }
-  
-  console.log('UserPreview API_BASE_URL:', API_BASE_URL, 'hostname:', window.location.hostname);
   const normalizeModelUrls = useCallback((cfg) => {
     if (!cfg || typeof cfg !== 'object') return cfg;
     const out = { ...cfg };
     const fix = (val) => {
       if (!val || typeof val !== 'string') return val;
       if (val.startsWith('http://') || val.startsWith('https://')) return val;
-      if (val.startsWith('/models/')) return `${API_BASE_URL}${val}`;
-      if (val.startsWith('models/')) return `${API_BASE_URL}/${val}`;
+      if (val.startsWith('/models/')) return `${getApiBaseUrl()}${val}`;
+      if (val.startsWith('models/')) return `${getApiBaseUrl()}/${val}`;
       return val;
     };
     if (out.path) out.path = fix(out.path);
@@ -217,7 +194,7 @@ function UserPreview() {
           candidates.push(`/configs/config-${safe(name)}.json`);
           for (let c of candidates) {
             try {
-              const full = c.startsWith('http') ? c : `${API_BASE_URL}${c.startsWith('/') ? '' : '/'}${c}`;
+              const full = c.startsWith('http') ? c : `${getApiBaseUrl()}${c.startsWith('/') ? '' : '/'}${c}`;
               const res = await fetch(full);
               if (!res.ok) continue;
               const json = await res.json();
@@ -246,7 +223,7 @@ function UserPreview() {
         if (!url) return;
 
         try {
-          const fullUrl = url.startsWith('http') ? url : `${API_BASE_URL}${url.startsWith('/') ? '' : '/'}${url}`;
+          const fullUrl = url.startsWith('http') ? url : `${getApiBaseUrl()}${url.startsWith('/') ? '' : '/'}${url}`;
           const res = await fetch(fullUrl);
           if (!res.ok) throw new Error(`Fetch ${fullUrl} failed ${res.status}`);
           const json = await res.json();
