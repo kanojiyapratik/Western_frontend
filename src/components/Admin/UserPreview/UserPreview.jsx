@@ -45,8 +45,7 @@ function UserPreview() {
   useEffect(() => {
     const fetchDbModels = async () => {
       try {
-        const apiUrl = getApiBaseUrl();
-        const response = await fetch(`${apiUrl}/api/models`);
+        const response = await fetch(`${API_BASE_URL}/api/models`);
         if (response.ok) {
           const models = await response.json();
           setDbModels(models);
@@ -56,14 +55,13 @@ function UserPreview() {
       }
     };
     fetchDbModels();
-  }, []);
+  }, [API_BASE_URL]);
 
   // Listen for model updates from admin panel (like MainApp)
   useEffect(() => {
     const handler = async () => {
       try {
-        const apiUrl = getApiBaseUrl();
-        const response = await fetch(`${apiUrl}/api/models`);
+        const response = await fetch(`${API_BASE_URL}/api/models`);
         if (response.ok) {
           const models = await response.json();
           setDbModels(models);
@@ -129,18 +127,26 @@ function UserPreview() {
     return () => window.removeEventListener('customModelsUpdated', handler);
   }, []);
   // --- External config fetch/merge logic (copied from MainApp) ---
-  // Lazy API URL resolution to prevent React error #310
-  function getApiBaseUrl() {
+  // API URL resolution based on environment
+  const API_BASE_URL = useMemo(() => {
     if (import.meta.env.VITE_API_BASE) {
       return import.meta.env.VITE_API_BASE.replace('/api', '');
-    } else if (typeof window !== 'undefined' && (window.location.hostname.includes('vercel.app') || window.location.hostname.includes('netlify.app'))) {
-      return 'https://threed-configurator-backend-7pwk.onrender.com';
-    } else if (import.meta.env.MODE === 'production') {
-      return 'https://threed-configurator-backend-7pwk.onrender.com';
-    } else {
-      return 'http://192.168.1.7:5000';
     }
-  }
+    
+    if (typeof window !== 'undefined') {
+      if (window.location.hostname.includes('vercel.app') || window.location.hostname.includes('netlify.app')) {
+        return 'https://threed-configurator-backend-7pwk.onrender.com';
+      }
+    }
+    
+    if (import.meta.env.MODE === 'production') {
+      return 'https://threed-configurator-backend-7pwk.onrender.com';
+    }
+    
+    return 'http://192.168.1.7:5000';
+  }, []);
+
+  const getApiBaseUrl = useCallback(() => API_BASE_URL, [API_BASE_URL]);
   const normalizeModelUrls = useCallback((cfg) => {
     if (!cfg || typeof cfg !== 'object') return cfg;
     const out = { ...cfg };
