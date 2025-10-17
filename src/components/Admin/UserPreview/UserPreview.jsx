@@ -45,7 +45,19 @@ function UserPreview() {
   useEffect(() => {
     const fetchDbModels = async () => {
       try {
-        const response = await fetch(`http://192.168.1.7:5000/api/models`);
+        // Determine API base URL
+        let apiUrl;
+        if (import.meta.env.VITE_API_BASE) {
+          apiUrl = import.meta.env.VITE_API_BASE.replace('/api', '');
+        } else if (window.location.hostname.includes('vercel.app') || window.location.hostname.includes('netlify.app')) {
+          apiUrl = 'https://threed-configurator-backend-7pwk.onrender.com';
+        } else if (import.meta.env.MODE === 'production') {
+          apiUrl = 'https://threed-configurator-backend-7pwk.onrender.com';
+        } else {
+          apiUrl = 'http://192.168.1.7:5000';
+        }
+        
+        const response = await fetch(`${apiUrl}/api/models`);
         if (response.ok) {
           const models = await response.json();
           setDbModels(models);
@@ -61,7 +73,19 @@ function UserPreview() {
   useEffect(() => {
     const handler = async () => {
       try {
-        const response = await fetch(`http://192.168.1.7:5000/api/models`);
+        // Determine API base URL
+        let apiUrl;
+        if (import.meta.env.VITE_API_BASE) {
+          apiUrl = import.meta.env.VITE_API_BASE.replace('/api', '');
+        } else if (window.location.hostname.includes('vercel.app') || window.location.hostname.includes('netlify.app')) {
+          apiUrl = 'https://threed-configurator-backend-7pwk.onrender.com';
+        } else if (import.meta.env.MODE === 'production') {
+          apiUrl = 'https://threed-configurator-backend-7pwk.onrender.com';
+        } else {
+          apiUrl = 'http://192.168.1.7:5000';
+        }
+        
+        const response = await fetch(`${apiUrl}/api/models`);
         if (response.ok) {
           const models = await response.json();
           setDbModels(models);
@@ -127,7 +151,19 @@ function UserPreview() {
     return () => window.removeEventListener('customModelsUpdated', handler);
   }, []);
   // --- External config fetch/merge logic (copied from MainApp) ---
-  const API_BASE_URL = 'http://192.168.1.7:5000';
+  // Determine API base URL
+  let API_BASE_URL;
+  if (import.meta.env.VITE_API_BASE) {
+    API_BASE_URL = import.meta.env.VITE_API_BASE.replace('/api', '');
+  } else if (window.location.hostname.includes('vercel.app') || window.location.hostname.includes('netlify.app')) {
+    API_BASE_URL = 'https://threed-configurator-backend-7pwk.onrender.com';
+  } else if (import.meta.env.MODE === 'production') {
+    API_BASE_URL = 'https://threed-configurator-backend-7pwk.onrender.com';
+  } else {
+    API_BASE_URL = 'http://192.168.1.7:5000';
+  }
+  
+  console.log('UserPreview API_BASE_URL:', API_BASE_URL, 'hostname:', window.location.hostname);
   const normalizeModelUrls = useCallback((cfg) => {
     if (!cfg || typeof cfg !== 'object') return cfg;
     const out = { ...cfg };

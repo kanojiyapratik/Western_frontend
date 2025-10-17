@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { widgetRegistry } from './widgets/index.jsx';
 import SaveConfigModal from './SaveConfigModal.jsx';
 import SavedConfigsList from './SavedConfigsList.jsx';
+import { getApiUrl } from '../../utils/apiConfig.js';
 import './Interface.css';
 
 export function Interface({
@@ -139,7 +140,7 @@ export function Interface({
       }
       
       const token = localStorage.getItem('token');
-      const response = await fetch('http://192.168.1.7:5000/api/configs/save', {
+      const response = await fetch(getApiUrl('configs/save'), {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
