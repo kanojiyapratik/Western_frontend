@@ -12,22 +12,19 @@ function UserPreview() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   
-  // API URL resolution using useMemo to ensure consistent value
-  const apiBaseUrl = useMemo(() => {
+  // API URL resolution function (lazy evaluation to avoid module-level window access)
+  const getApiBaseUrl = useCallback(() => {
     if (import.meta.env.VITE_API_BASE) {
       return import.meta.env.VITE_API_BASE.replace('/api', '');
     }
-    
+    if (import.meta.env.MODE === 'production') {
+      return 'https://threed-configurator-backend-7pwk.onrender.com';
+    }
     if (typeof window !== 'undefined' && 
       (window.location.hostname.includes('vercel.app') || 
        window.location.hostname.includes('netlify.app'))) {
       return 'https://threed-configurator-backend-7pwk.onrender.com';
     }
-    
-    if (import.meta.env.MODE === 'production') {
-      return 'https://threed-configurator-backend-7pwk.onrender.com';
-    }
-    
     return 'http://192.168.1.7:5000';
   }, []);
   
@@ -64,7 +61,7 @@ function UserPreview() {
   useEffect(() => {
     const fetchDbModels = async () => {
       try {
-        const response = await fetch(`${apiBaseUrl}/api/models`);
+        const response = await fetch(`${getApiBaseUrl()}/api/models`);
         if (response.ok) {
           const models = await response.json();
           setDbModels(models);
@@ -74,13 +71,13 @@ function UserPreview() {
       }
     };
     fetchDbModels();
-  }, [apiBaseUrl]);
+  }, [getApiBaseUrl]);
 
   // Listen for model updates from admin panel (like MainApp)
   useEffect(() => {
     const handler = async () => {
       try {
-        const response = await fetch(`${apiBaseUrl}/api/models`);
+        const response = await fetch(`${getApiBaseUrl()}/api/models`);
         if (response.ok) {
           const models = await response.json();
           setDbModels(models);
@@ -104,9 +101,9 @@ function UserPreview() {
         if (model.file.startsWith('http://') || model.file.startsWith('https://')) {
           normalizedPath = model.file;
         } else if (model.file.startsWith('/models/')) {
-          normalizedPath = `${apiBaseUrl}${model.file}`;
+          normalizedPath = `${getApiBaseUrl()}${model.file}`;
         } else {
-          normalizedPath = `${apiBaseUrl}/models/${model.file}`;
+          normalizedPath = `${getApiBaseUrl()}/models/${model.file}`;
         }
       }
 
@@ -152,8 +149,8 @@ function UserPreview() {
     const fix = (val) => {
       if (!val || typeof val !== 'string') return val;
       if (val.startsWith('http://') || val.startsWith('https://')) return val;
-      if (val.startsWith('/models/')) return `${apiBaseUrl}${val}`;
-      if (val.startsWith('models/')) return `${apiBaseUrl}/${val}`;
+      if (val.startsWith('/models/')) return `${getApiBaseUrl()}${val}`;
+      if (val.startsWith('models/')) return `${getApiBaseUrl()}/${val}`;
       return val;
     };
     if (out.path) out.path = fix(out.path);
@@ -164,7 +161,7 @@ function UserPreview() {
       });
     }
     return out;
-  }, [apiBaseUrl]);
+  }, [getApiBaseUrl]);
 
   // Helper to unwrap external configs that might be nested
   const unwrapExternalConfig = useCallback((name, json) => {
@@ -199,7 +196,7 @@ function UserPreview() {
           candidates.push(`/configs/config-${safe(name)}.json`);
           for (let c of candidates) {
             try {
-              const full = c.startsWith('http') ? c : `${apiBaseUrl}${c.startsWith('/') ? '' : '/'}${c}`;
+              const full = c.startsWith('http') ? c : `${getApiBaseUrl()}${c.startsWith('/') ? '' : '/'}${c}`;
               const res = await fetch(full);
               if (!res.ok) continue;
               const json = await res.json();
