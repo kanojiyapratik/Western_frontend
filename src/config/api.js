@@ -21,5 +21,3 @@ export function getApiBaseUrl() {
   return cachedApiUrl;
 }
 
-// Legacy export for backward compatibility
-export const API_BASE_URL = getApiBaseUrl();

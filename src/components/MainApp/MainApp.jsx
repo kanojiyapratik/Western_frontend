@@ -7,10 +7,18 @@ import { useAuth } from "../../context/AuthContext";
 import { ActivityLog } from "../ActivityLog/ActivityLog";
 import './MainApp.css';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE?.replace('/api', '') || 
-  (import.meta.env.MODE === 'production' 
-    ? 'https://threed-configurator-backend-7pwk.onrender.com' 
-    : 'http://localhost:5000');
+// Lazy API URL resolution to prevent React error #310
+function getApiBaseUrl() {
+  if (import.meta.env.VITE_API_BASE) {
+    return import.meta.env.VITE_API_BASE.replace('/api', '');
+  } else if (typeof window !== 'undefined' && (window.location.hostname.includes('vercel.app') || window.location.hostname.includes('netlify.app'))) {
+    return 'https://threed-configurator-backend-7pwk.onrender.com';
+  } else if (import.meta.env.MODE === 'production') {
+    return 'https://threed-configurator-backend-7pwk.onrender.com';
+  } else {
+    return 'http://192.168.1.7:5000';
+  }
+}
 
 function MainApp() {
   const { user, logout } = useAuth();
@@ -29,7 +37,7 @@ function MainApp() {
   useEffect(() => {
     const fetchModels = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/api/models`);
+        const response = await fetch(`${getApiBaseUrl()}/api/models`);
         
         if (response.ok) {
           const models = await response.json();
@@ -51,7 +59,7 @@ function MainApp() {
   useEffect(() => {
     const handler = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/api/models`);
+        const response = await fetch(`${getApiBaseUrl()}/api/models`);
         if (response.ok) {
           const models = await response.json();
           setDbModels(models);
@@ -73,8 +81,8 @@ function MainApp() {
     const fix = (val) => {
       if (!val || typeof val !== 'string') return val;
       if (val.startsWith('http://') || val.startsWith('https://')) return val;
-      if (val.startsWith('/models/')) return `${API_BASE_URL}${val}`;
-      if (val.startsWith('models/')) return `${API_BASE_URL}/${val}`;
+      if (val.startsWith('/models/')) return `${getApiBaseUrl()}${val}`;
+      if (val.startsWith('models/')) return `${getApiBaseUrl()}/${val}`;
       return val;
     };
     if (out.path) out.path = fix(out.path);
@@ -123,9 +131,9 @@ function MainApp() {
         if (model.file.startsWith('http://') || model.file.startsWith('https://')) {
           normalizedPath = model.file;
         } else if (model.file.startsWith('/models/')) {
-          normalizedPath = `${API_BASE_URL}${model.file}`;
+          normalizedPath = `${getApiBaseUrl()}${model.file}`;
         } else {
-          normalizedPath = `${API_BASE_URL}/models/${model.file}`;
+          normalizedPath = `${getApiBaseUrl()}/models/${model.file}`;
         }
       }
       const baseModelFields = {
@@ -154,7 +162,7 @@ function MainApp() {
         const url = base.__configUrl;
         if (!url) return; // no external config attached
         try {
-          const fullUrl = url.startsWith('http') ? url : `${API_BASE_URL}${url.startsWith('/') ? '' : '/'}${url}`;
+          const fullUrl = url.startsWith('http') ? url : `${getApiBaseUrl()}${url.startsWith('/') ? '' : '/'}${url}`;
           console.log(`[ConfigFetch] ${name} → ${fullUrl}`);
           const res = await fetch(fullUrl);
           if (!res.ok) throw new Error(`Fetch ${fullUrl} failed ${res.status}`);
@@ -292,7 +300,7 @@ function MainApp() {
       const token = localStorage.getItem("token");
       if (!token) return;
 
-  await fetch(`${API_BASE_URL}/api/activity/log`, {
+  await fetch(`${getApiBaseUrl()}/api/activity/log`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
