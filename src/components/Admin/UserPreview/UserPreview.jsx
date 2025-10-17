@@ -12,21 +12,23 @@ function UserPreview() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   
-  // API URL resolution function (lazy evaluation to avoid module-level window access)
-  const getApiBaseUrl = useCallback(() => {
-    if (import.meta.env.VITE_API_BASE) {
-      return import.meta.env.VITE_API_BASE.replace('/api', '');
-    }
-    if (import.meta.env.MODE === 'production') {
-      return 'https://threed-configurator-backend-7pwk.onrender.com';
-    }
-    if (typeof window !== 'undefined' && 
-      (window.location.hostname.includes('vercel.app') || 
-       window.location.hostname.includes('netlify.app'))) {
-      return 'https://threed-configurator-backend-7pwk.onrender.com';
-    }
-    return 'http://192.168.1.7:5000';
-  }, []);
+  // API URL resolution function moved outside component to avoid re-renders
+  const getApiBaseUrl = useMemo(() => {
+    return () => {
+      if (import.meta.env.VITE_API_BASE) {
+        return import.meta.env.VITE_API_BASE.replace('/api', '');
+      }
+      if (import.meta.env.MODE === 'production') {
+        return 'https://threed-configurator-backend-7pwk.onrender.com';
+      }
+      if (typeof window !== 'undefined' && 
+        (window.location.hostname.includes('vercel.app') || 
+         window.location.hostname.includes('netlify.app'))) {
+        return 'https://threed-configurator-backend-7pwk.onrender.com';
+      }
+      return 'http://192.168.1.7:5000';
+    };
+  }, []); // Empty deps as this never changes
   
   // Simplified full permissions object
   const fullPermissions = {
@@ -58,38 +60,29 @@ function UserPreview() {
   // Load database models just like MainApp
   const [dbModels, setDbModels] = useState([]);
   
-  useEffect(() => {
-    const fetchDbModels = async () => {
-      try {
-        const response = await fetch(`${getApiBaseUrl()}/api/models`);
-        if (response.ok) {
-          const models = await response.json();
-          setDbModels(models);
-        }
-      } catch (err) {
-        console.error('Error fetching models:', err);
+  const fetchDbModels = useCallback(async () => {
+    try {
+      const response = await fetch(`${getApiBaseUrl()}/api/models`);
+      if (response.ok) {
+        const models = await response.json();
+        setDbModels(models);
       }
-    };
-    fetchDbModels();
+    } catch (err) {
+      console.error('Error fetching models:', err);
+    }
   }, [getApiBaseUrl]);
 
-  // Listen for model updates from admin panel (like MainApp)
+  // Initial fetch
   useEffect(() => {
-    const handler = async () => {
-      try {
-        const response = await fetch(`${getApiBaseUrl()}/api/models`);
-        if (response.ok) {
-          const models = await response.json();
-          setDbModels(models);
-        }
-      } catch (err) {
-        console.error('Error refreshing models in UserPreview:', err);
-      }
-    };
-    
+    fetchDbModels();
+  }, [fetchDbModels]);
+
+  // Listen for model updates from admin panel
+  useEffect(() => {
+    const handler = () => fetchDbModels();
     window.addEventListener('modelsUpdated', handler);
     return () => window.removeEventListener('modelsUpdated', handler);
-  }, []);
+  }, [fetchDbModels]);
 
   // Convert database models to the format expected by Experience component
   const dbModelsFormatted = useMemo(() => {
@@ -264,24 +257,36 @@ function UserPreview() {
     });
     return merged;
   }, [dbModelsFormatted, externalConfigs, normalizeModelUrls]);
-  const [selectedModel, setSelectedModel] = useState(() => {
-    const saved = localStorage.getItem('selectedModel');
-    return saved && (dbModelsFormatted[saved] || customModels[saved]) ? saved : 'Undercounter';
-  });
-
-  // After DB models load, ensure we have a valid selection; prefer a DB model (often the one just created)
+  const [selectedModel, setSelectedModel] = useState('Undercounter');
+  
+  // Initialize selected model from localStorage after dbModels are loaded
   useEffect(() => {
-    const allKeys = Object.keys(mergedModels);
-    if (!allKeys.length) return;
-
-    if (!mergedModels[selectedModel]) {
-      // Prefer first DB model if available
-      const dbKeys = Object.keys(dbModelsFormatted);
-      const next = dbKeys[0] || allKeys[0];
-      setSelectedModel(next);
-      try { localStorage.setItem('selectedModel', next); } catch(_) {}
-      console.log('🔁 Auto-selected model in UserPreview:', next);
+    const saved = localStorage.getItem('selectedModel');
+    if (saved && (dbModelsFormatted[saved] || customModels[saved])) {
+      setSelectedModel(saved);
     }
+  }, [dbModelsFormatted, customModels]);
+
+  // After models are loaded, ensure we have a valid selection
+  useEffect(() => {
+    const validateAndSetModel = () => {
+      const allKeys = Object.keys(mergedModels);
+      if (!allKeys.length) return;
+
+      if (!mergedModels[selectedModel]) {
+        const dbKeys = Object.keys(dbModelsFormatted);
+        const next = dbKeys[0] || allKeys[0];
+        setSelectedModel(next);
+        try {
+          localStorage.setItem('selectedModel', next);
+        } catch(_) {
+          console.warn('Failed to save selected model to localStorage');
+        }
+        console.log('🔁 Auto-selected model in UserPreview:', next);
+      }
+    };
+
+    validateAndSetModel();
   }, [mergedModels, dbModelsFormatted, selectedModel]);
   const [api, setApi] = useState(null);
   const [showActivityLog, setShowActivityLog] = useState(false);
