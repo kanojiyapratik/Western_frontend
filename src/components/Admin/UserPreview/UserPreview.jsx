@@ -8,9 +8,30 @@ import { useAuth } from "../../../context/AuthContext";
 import { ActivityLog } from "../../ActivityLog/ActivityLog";
 import './UserPreview.css';
 
+const getBaseUrl = () => {
+  if (import.meta.env.VITE_API_BASE) {
+    return import.meta.env.VITE_API_BASE.replace('/api', '');
+  }
+  
+  if (typeof window !== 'undefined' && 
+    (window.location.hostname.includes('vercel.app') || 
+     window.location.hostname.includes('netlify.app'))) {
+    return 'https://threed-configurator-backend-7pwk.onrender.com';
+  }
+  
+  if (import.meta.env.MODE === 'production') {
+    return 'https://threed-configurator-backend-7pwk.onrender.com';
+  }
+  
+  return 'http://192.168.1.7:5000';
+};
+
 function UserPreview() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  
+  // Store API base URL in state to ensure it's available throughout the component
+  const [apiBaseUrl] = useState(getBaseUrl);
   
   // Simplified full permissions object
   const fullPermissions = {
@@ -45,23 +66,23 @@ function UserPreview() {
   useEffect(() => {
     const fetchDbModels = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/api/models`);
+        const response = await fetch(`${apiBaseUrl}/api/models`);
         if (response.ok) {
           const models = await response.json();
           setDbModels(models);
         }
       } catch (err) {
-        console.error('Error fetching database models:', err);
+        console.error('Error fetching models:', err);
       }
     };
     fetchDbModels();
-  }, [API_BASE_URL]);
+  }, [apiBaseUrl]);
 
   // Listen for model updates from admin panel (like MainApp)
   useEffect(() => {
     const handler = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/api/models`);
+        const response = await fetch(`${apiBaseUrl}/api/models`);
         if (response.ok) {
           const models = await response.json();
           setDbModels(models);
@@ -153,8 +174,8 @@ function UserPreview() {
     const fix = (val) => {
       if (!val || typeof val !== 'string') return val;
       if (val.startsWith('http://') || val.startsWith('https://')) return val;
-      if (val.startsWith('/models/')) return `${getApiBaseUrl()}${val}`;
-      if (val.startsWith('models/')) return `${getApiBaseUrl()}/${val}`;
+      if (val.startsWith('/models/')) return `${apiBaseUrl}${val}`;
+      if (val.startsWith('models/')) return `${apiBaseUrl}/${val}`;
       return val;
     };
     if (out.path) out.path = fix(out.path);
@@ -200,7 +221,7 @@ function UserPreview() {
           candidates.push(`/configs/config-${safe(name)}.json`);
           for (let c of candidates) {
             try {
-              const full = c.startsWith('http') ? c : `${getApiBaseUrl()}${c.startsWith('/') ? '' : '/'}${c}`;
+              const full = c.startsWith('http') ? c : `${apiBaseUrl}${c.startsWith('/') ? '' : '/'}${c}`;
               const res = await fetch(full);
               if (!res.ok) continue;
               const json = await res.json();
@@ -229,7 +250,7 @@ function UserPreview() {
         if (!url) return;
 
         try {
-          const fullUrl = url.startsWith('http') ? url : `${getApiBaseUrl()}${url.startsWith('/') ? '' : '/'}${url}`;
+          const fullUrl = url.startsWith('http') ? url : `${apiBaseUrl}${url.startsWith('/') ? '' : '/'}${url}`;
           const res = await fetch(fullUrl);
           if (!res.ok) throw new Error(`Fetch ${fullUrl} failed ${res.status}`);
           const json = await res.json();
