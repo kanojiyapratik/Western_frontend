@@ -8,30 +8,28 @@ import { useAuth } from "../../../context/AuthContext";
 import { ActivityLog } from "../../ActivityLog/ActivityLog";
 import './UserPreview.css';
 
-const getBaseUrl = () => {
-  if (import.meta.env.VITE_API_BASE) {
-    return import.meta.env.VITE_API_BASE.replace('/api', '');
-  }
-  
-  if (typeof window !== 'undefined' && 
-    (window.location.hostname.includes('vercel.app') || 
-     window.location.hostname.includes('netlify.app'))) {
-    return 'https://threed-configurator-backend-7pwk.onrender.com';
-  }
-  
-  if (import.meta.env.MODE === 'production') {
-    return 'https://threed-configurator-backend-7pwk.onrender.com';
-  }
-  
-  return 'http://192.168.1.7:5000';
-};
-
 function UserPreview() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   
-  // Store API base URL in state to ensure it's available throughout the component
-  const [apiBaseUrl] = useState(getBaseUrl);
+  // API URL resolution using useMemo to ensure consistent value
+  const apiBaseUrl = useMemo(() => {
+    if (import.meta.env.VITE_API_BASE) {
+      return import.meta.env.VITE_API_BASE.replace('/api', '');
+    }
+    
+    if (typeof window !== 'undefined' && 
+      (window.location.hostname.includes('vercel.app') || 
+       window.location.hostname.includes('netlify.app'))) {
+      return 'https://threed-configurator-backend-7pwk.onrender.com';
+    }
+    
+    if (import.meta.env.MODE === 'production') {
+      return 'https://threed-configurator-backend-7pwk.onrender.com';
+    }
+    
+    return 'http://192.168.1.7:5000';
+  }, []);
   
   // Simplified full permissions object
   const fullPermissions = {
@@ -106,9 +104,9 @@ function UserPreview() {
         if (model.file.startsWith('http://') || model.file.startsWith('https://')) {
           normalizedPath = model.file;
         } else if (model.file.startsWith('/models/')) {
-          normalizedPath = `${getApiBaseUrl()}${model.file}`;
+          normalizedPath = `${apiBaseUrl}${model.file}`;
         } else {
-          normalizedPath = `${getApiBaseUrl()}/models/${model.file}`;
+          normalizedPath = `${apiBaseUrl}/models/${model.file}`;
         }
       }
 
@@ -148,26 +146,6 @@ function UserPreview() {
     return () => window.removeEventListener('customModelsUpdated', handler);
   }, []);
   // --- External config fetch/merge logic (copied from MainApp) ---
-  // API URL resolution based on environment
-  const API_BASE_URL = useMemo(() => {
-    if (import.meta.env.VITE_API_BASE) {
-      return import.meta.env.VITE_API_BASE.replace('/api', '');
-    }
-    
-    if (typeof window !== 'undefined') {
-      if (window.location.hostname.includes('vercel.app') || window.location.hostname.includes('netlify.app')) {
-        return 'https://threed-configurator-backend-7pwk.onrender.com';
-      }
-    }
-    
-    if (import.meta.env.MODE === 'production') {
-      return 'https://threed-configurator-backend-7pwk.onrender.com';
-    }
-    
-    return 'http://192.168.1.7:5000';
-  }, []);
-
-  const getApiBaseUrl = useCallback(() => API_BASE_URL, [API_BASE_URL]);
   const normalizeModelUrls = useCallback((cfg) => {
     if (!cfg || typeof cfg !== 'object') return cfg;
     const out = { ...cfg };
@@ -186,7 +164,7 @@ function UserPreview() {
       });
     }
     return out;
-  }, []);
+  }, [apiBaseUrl]);
 
   // Helper to unwrap external configs that might be nested
   const unwrapExternalConfig = useCallback((name, json) => {
