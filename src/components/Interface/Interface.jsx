@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { widgetRegistry } from './widgets/index.jsx';
 import SaveConfigModal from './SaveConfigModal.jsx';
 import SavedConfigsList from './SavedConfigsList.jsx';
-import { getApiUrl } from '../../utils/apiConfig.js';
 import './Interface.css';
 
 export function Interface({
@@ -140,7 +139,19 @@ export function Interface({
       }
       
       const token = localStorage.getItem('token');
-      const response = await fetch(getApiUrl('configs/save'), {
+      // Determine API URL
+      let apiUrl;
+      if (import.meta.env.VITE_API_BASE) {
+        apiUrl = import.meta.env.VITE_API_BASE;
+      } else if (window.location.hostname.includes('vercel.app') || window.location.hostname.includes('netlify.app')) {
+        apiUrl = 'https://threed-configurator-backend-7pwk.onrender.com/api';
+      } else if (import.meta.env.MODE === 'production') {
+        apiUrl = 'https://threed-configurator-backend-7pwk.onrender.com/api';
+      } else {
+        apiUrl = 'http://192.168.1.7:5000/api';
+      }
+      
+      const response = await fetch(`${apiUrl}/configs/save`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
