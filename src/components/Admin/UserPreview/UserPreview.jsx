@@ -101,9 +101,11 @@ function UserPreview() {
         if (model.file.startsWith('http://') || model.file.startsWith('https://')) {
           normalizedPath = model.file;
         } else if (model.file.startsWith('/models/')) {
-          normalizedPath = `${getApiBaseUrl()}${model.file}`;
+          const apiUrl = getApiBaseUrl();
+          normalizedPath = `${apiUrl}${model.file}`;
         } else {
-          normalizedPath = `${getApiBaseUrl()}/models/${model.file}`;
+          const apiUrl = getApiBaseUrl();
+          normalizedPath = `${apiUrl}/models/${model.file}`;
         }
       }
 
@@ -225,7 +227,7 @@ function UserPreview() {
         if (!url) return;
 
         try {
-          const fullUrl = url.startsWith('http') ? url : `${apiBaseUrl}${url.startsWith('/') ? '' : '/'}${url}`;
+          const fullUrl = url.startsWith('http') ? url : `${getApiBaseUrl()}${url.startsWith('/') ? '' : '/'}${url}`;
           const res = await fetch(fullUrl);
           if (!res.ok) throw new Error(`Fetch ${fullUrl} failed ${res.status}`);
           const json = await res.json();
