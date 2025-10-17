@@ -7,14 +7,14 @@ const getApiBaseUrl = () => {
     return import.meta.env.VITE_API_BASE;
   }
   if (import.meta.env.MODE === 'production') {
-    return 'https://threed-configurator-backend-7pwk.onrender.com/api';
+    return 'https://threed-configurator-backend-7pwk.onrender.com';
   }
   if (typeof window !== 'undefined' && 
     (window.location.hostname.includes('vercel.app') || 
      window.location.hostname.includes('netlify.app'))) {
-    return 'https://threed-configurator-backend-7pwk.onrender.com/api';
+    return 'https://threed-configurator-backend-7pwk.onrender.com';
   }
-  return 'http://192.168.1.7:5000/api';
+  return 'http://192.168.1.7:5000';
 };
 
 export default function PasswordReset() {
@@ -38,7 +38,7 @@ export default function PasswordReset() {
     setLoading(true);
     setMessage('');
     try {
-      const res = await fetch(`${getApiBaseUrl()}/auth/request-password-reset`, {
+      const res = await fetch(`${getApiBaseUrl()}/api/auth/request-password-reset`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email })
@@ -56,7 +56,7 @@ export default function PasswordReset() {
     setLoading(true);
     setMessage('');
     try {
-      const res = await fetch(`${getApiBaseUrl()}/auth/reset-password`, {
+      const res = await fetch(`${getApiBaseUrl()}/api/auth/reset-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, otp, newPassword })
