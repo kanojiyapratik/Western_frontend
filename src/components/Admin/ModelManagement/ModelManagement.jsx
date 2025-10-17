@@ -7,10 +7,23 @@ import AddModelModalMultiAsset from './AddModelModal_MultiAsset.jsx';
 import './ModelManagement.css';
 import { useAuth } from '../../../context/AuthContext';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE?.replace('/api', '') || 
-  (import.meta.env.MODE === 'production' 
-    ? 'https://threed-configurator-backend-7pwk.onrender.com' 
-    : 'http://192.168.1.7:5000');
+let API_BASE_URL;
+
+// Check for explicit environment variable first
+if (import.meta.env.VITE_API_BASE) {
+  API_BASE_URL = import.meta.env.VITE_API_BASE.replace('/api', '');
+} else if (window.location.hostname.includes('vercel.app') || window.location.hostname.includes('netlify.app')) {
+  // Production deployment detected by hostname
+  API_BASE_URL = 'https://threed-configurator-backend-7pwk.onrender.com';
+} else if (import.meta.env.MODE === 'production') {
+  // Fallback production check
+  API_BASE_URL = 'https://threed-configurator-backend-7pwk.onrender.com';
+} else {
+  // Development
+  API_BASE_URL = 'http://192.168.1.7:5000';
+}
+
+console.log('ModelManagement API_BASE_URL:', API_BASE_URL, 'hostname:', window.location.hostname);
 
 const ModelCard = ({ modelName, config, onDelete, onEdit, isDbModel }) => {
   const [open, setOpen] = useState(false);
