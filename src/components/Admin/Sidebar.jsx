@@ -34,7 +34,9 @@ const Sidebar = ({ collapsed, onToggle }) => {
               // Force page reload when navigating from user-preview to prevent routing issues
               if (location.pathname === '/admin/user-preview' && item.path !== '/admin/user-preview') {
                 e.preventDefault();
-                window.location.href = item.path;
+                if (typeof window !== 'undefined') {
+                  window.location.href = item.path;
+                }
               }
             }}
           >

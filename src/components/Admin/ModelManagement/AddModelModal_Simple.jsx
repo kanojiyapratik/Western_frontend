@@ -1,10 +1,18 @@
 import React, { useEffect, useRef, useState } from 'react';
 // ...existing code...
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE?.replace('/api', '') || 
-  (import.meta.env.MODE === 'production' 
-    ? 'https://threed-configurator-backend-7pwk.onrender.com' 
-    : 'http://192.168.1.7:5000');
+const getApiBaseUrl = () => {
+  if (import.meta.env.VITE_API_BASE) {
+    return import.meta.env.VITE_API_BASE.replace('/api', '');
+  }
+  if (import.meta.env.MODE === 'production') {
+    return 'https://threed-configurator-backend-7pwk.onrender.com';
+  }
+  if (typeof window !== 'undefined' && (window.location.hostname.includes('vercel.app') || window.location.hostname.includes('netlify.app'))) {
+    return 'https://threed-configurator-backend-7pwk.onrender.com';
+  }
+  return 'http://192.168.1.7:5000';
+};
 
 export default function AddModelModalSimple({ onClose, onAdd, editModel = null, isEditMode = false, onOpenMultiAsset = null }) {
   // For config file editing
@@ -21,7 +29,7 @@ export default function AddModelModalSimple({ onClose, onAdd, editModel = null, 
       const fetchConfig = async () => {
         try {
           setConfigLoadError('');
-          const url = configUrl.startsWith('http') ? configUrl : `${API_BASE_URL}${configUrl}`;
+          const url = configUrl.startsWith('http') ? configUrl : `${getApiBaseUrl()}${configUrl}`;
           const res = await fetch(url);
           if (!res.ok) throw new Error(`Failed to fetch config: ${res.status}`);
           const json = await res.json();
@@ -55,7 +63,7 @@ export default function AddModelModalSimple({ onClose, onAdd, editModel = null, 
       }
 
       try {
-        const response = await fetch(`${API_BASE_URL}/api/auth/verify`, {
+        const response = await fetch(`${getApiBaseUrl()}/api/auth/verify`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -153,7 +161,7 @@ export default function AddModelModalSimple({ onClose, onAdd, editModel = null, 
     }
     
     const endpoint = subPath === 'configs' ? '/api/upload-config' : '/api/upload';
-    const res = await fetch(`${API_BASE_URL}${endpoint}`, {
+    const res = await fetch(`${getApiBaseUrl()}${endpoint}`, {
       method: 'POST',
       headers: token ? { 'Authorization': `Bearer ${token}` } : undefined,
       body: formData
@@ -208,7 +216,7 @@ export default function AddModelModalSimple({ onClose, onAdd, editModel = null, 
         const filename = configUrl.split('/configs/')[1];
         if (!filename) throw new Error('Invalid local config path');
         const token = localStorage.getItem('token');
-        const res = await fetch(`${API_BASE_URL}/api/configs/${filename}`, {
+        const res = await fetch(`${getApiBaseUrl()}/api/configs/${filename}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -376,14 +384,14 @@ export default function AddModelModalSimple({ onClose, onAdd, editModel = null, 
       const headers = token ? { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' } : { 'Content-Type': 'application/json' };
 
       if (isEditMode && editModel?._id) {
-        const res = await fetch(`${API_BASE_URL}/api/admin/models/${editModel._id}`, {
+        const res = await fetch(`${getApiBaseUrl()}/api/admin/models/${editModel._id}`, {
           method: 'PUT',
           headers,
           body: JSON.stringify(modelData)
         });
         if (!res.ok) throw new Error(`Update failed (${res.status})`);
       } else {
-        const res = await fetch(`${API_BASE_URL}/api/admin/models`, {
+        const res = await fetch(`${getApiBaseUrl()}/api/admin/models`, {
           method: 'POST',
           headers,
           body: JSON.stringify(modelData)
@@ -477,7 +485,7 @@ export default function AddModelModalSimple({ onClose, onAdd, editModel = null, 
                       setUploadingConfig(true);
                       const filename = configUrl.split('/configs/')[1];
                       const token = localStorage.getItem('token');
-                      const res = await fetch(`${API_BASE_URL}/api/configs/${filename}`, {
+                      const res = await fetch(`${getApiBaseUrl()}/api/configs/${filename}`, {
                         method: 'DELETE',
                         headers: {
                           ...(token ? { 'Authorization': `Bearer ${token}` } : {})

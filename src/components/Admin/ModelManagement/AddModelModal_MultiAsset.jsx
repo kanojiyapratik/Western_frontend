@@ -5,10 +5,18 @@
 
 import React, { useState, useEffect } from 'react';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE?.replace('/api', '') || 
-  (import.meta.env.MODE === 'production' 
-    ? 'https://threed-configurator-backend-7pwk.onrender.com' 
-    : 'http://192.168.1.7:5000');
+const getApiBaseUrl = () => {
+  if (import.meta.env.VITE_API_BASE) {
+    return import.meta.env.VITE_API_BASE.replace('/api', '');
+  }
+  if (import.meta.env.MODE === 'production') {
+    return 'https://threed-configurator-backend-7pwk.onrender.com';
+  }
+  if (typeof window !== 'undefined' && (window.location.hostname.includes('vercel.app') || window.location.hostname.includes('netlify.app'))) {
+    return 'https://threed-configurator-backend-7pwk.onrender.com';
+  }
+  return 'http://192.168.1.7:5000';
+};
 
 export default function AddModelModalMultiAsset({ onClose, onAdd }) {
   const [name, setName] = useState('');
@@ -44,7 +52,7 @@ export default function AddModelModalMultiAsset({ onClose, onAdd }) {
       }
 
       try {
-        const response = await fetch(`${API_BASE_URL}/api/auth/verify`, {
+        const response = await fetch(`${getApiBaseUrl()}/api/auth/verify`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -116,7 +124,7 @@ export default function AddModelModalMultiAsset({ onClose, onAdd }) {
       });
 
       const token = localStorage.getItem('token');
-      const response = await fetch(`${API_BASE_URL}/api/admin/models/upload`, {
+      const response = await fetch(`${getApiBaseUrl()}/api/admin/models/upload`, {
         method: 'POST',
         headers: token ? { 'Authorization': `Bearer ${token}` } : undefined,
         body: formData

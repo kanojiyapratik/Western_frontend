@@ -24,10 +24,19 @@ const UserDashboard = () => {
     // Try to fetch models count available to users
     const load = async () => {
       try {
-        const API_BASE_URL = import.meta.env.VITE_API_BASE?.replace('/api', '') || 
-          (import.meta.env.MODE === 'production' 
-            ? 'https://threed-configurator-backend-7pwk.onrender.com' 
-            : 'http://192.168.1.7:5000');
+        const getApiBaseUrl = () => {
+          if (import.meta.env.VITE_API_BASE) {
+            return import.meta.env.VITE_API_BASE.replace('/api', '');
+          }
+          if (import.meta.env.MODE === 'production') {
+            return 'https://threed-configurator-backend-7pwk.onrender.com';
+          }
+          if (typeof window !== 'undefined' && (window.location.hostname.includes('vercel.app') || window.location.hostname.includes('netlify.app'))) {
+            return 'https://threed-configurator-backend-7pwk.onrender.com';
+          }
+          return 'http://192.168.1.7:5000';
+        };
+        const API_BASE_URL = getApiBaseUrl();
         const res = await fetch(`${API_BASE_URL}/api/models`);
         if (res.ok) {
           const models = await res.json();

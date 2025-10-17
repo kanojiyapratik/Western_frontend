@@ -40,7 +40,9 @@ const UserSidebar = ({ collapsed, onToggle }) => {
               // Force page reload when navigating from viewer to prevent routing issues
               if (location.pathname === '/user/viewer' && item.path !== '/user/viewer') {
                 e.preventDefault();
-                window.location.href = item.path;
+                if (typeof window !== 'undefined') {
+                  window.location.href = item.path;
+                }
               }
             }}
           >

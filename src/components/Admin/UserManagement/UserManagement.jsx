@@ -194,10 +194,18 @@ import { ActivityLog } from '../../ActivityLog/ActivityLog';
 import SavedConfigsList from '../../Interface/SavedConfigsList';
 import SendPasswordReset from '../SendPasswordReset';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE?.replace('/api', '') || 
-  (import.meta.env.MODE === 'production' 
-    ? 'https://threed-configurator-backend-7pwk.onrender.com' 
-    : 'http://192.168.1.7:5000');
+const getApiBaseUrl = () => {
+  if (import.meta.env.VITE_API_BASE) {
+    return import.meta.env.VITE_API_BASE.replace('/api', '');
+  }
+  if (import.meta.env.MODE === 'production') {
+    return 'https://threed-configurator-backend-7pwk.onrender.com';
+  }
+  if (typeof window !== 'undefined' && (window.location.hostname.includes('vercel.app') || window.location.hostname.includes('netlify.app'))) {
+    return 'https://threed-configurator-backend-7pwk.onrender.com';
+  }
+  return 'http://192.168.1.7:5000';
+};
 
 const UserManagement = () => {
   const [users, setUsers] = useState([]);
@@ -235,7 +243,7 @@ const UserManagement = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-  const response = await fetch(`${API_BASE_URL}/api/admin-dashboard/users`, {
+  const response = await fetch(`${getApiBaseUrl()}/api/admin-dashboard/users`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -256,7 +264,7 @@ const UserManagement = () => {
           const counts = {};
           await Promise.all(data.map(async (u) => {
             try {
-              const r = await fetch(`${API_BASE_URL}/api/admin/user-configs/${u._id}`, {
+              const r = await fetch(`${getApiBaseUrl()}/api/admin/user-configs/${u._id}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
               });
               if (!r.ok) { counts[u._id] = 0; return; }
@@ -342,7 +350,7 @@ const UserManagement = () => {
       const selectedModel = localStorage.getItem('selectedModel');
       if (!selectedModel) return setModelPresets([]);
       const token = localStorage.getItem('token');
-      const res = await fetch(`${API_BASE_URL}/api/models`, {
+      const res = await fetch(`${getApiBaseUrl()}/api/models`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -354,7 +362,7 @@ const UserManagement = () => {
       if (!found) return setModelPresets([]);
       const cfgUrl = found.configUrl;
       if (!cfgUrl) return setModelPresets([]);
-      const fullUrl = cfgUrl.startsWith('http') ? cfgUrl : `${API_BASE_URL}${cfgUrl.startsWith('/') ? '' : '/'}${cfgUrl}`;
+      const fullUrl = cfgUrl.startsWith('http') ? cfgUrl : `${getApiBaseUrl()}${cfgUrl.startsWith('/') ? '' : '/'}${cfgUrl}`;
       const cfgRes = await fetch(fullUrl);
       if (!cfgRes.ok) return setModelPresets([]);
       const json = await cfgRes.json();
@@ -395,7 +403,7 @@ const UserManagement = () => {
         userManageDelete: payload.permissions.userManageDelete
       });
       
-      const response = await fetch(`${API_BASE_URL}/api/admin-dashboard/users/${editingUser._id}/permissions`, {
+      const response = await fetch(`${getApiBaseUrl()}/api/admin-dashboard/users/${editingUser._id}/permissions`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -468,7 +476,7 @@ const UserManagement = () => {
       const token = localStorage.getItem('token');
 
       // Query the admin endpoint that returns the user's saved-widget configs array
-      const cfgResp = await fetch(`${API_BASE_URL}/api/admin/user-configs/${userId}`, {
+      const cfgResp = await fetch(`${getApiBaseUrl()}/api/admin/user-configs/${userId}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (!cfgResp.ok) throw new Error('Failed to query user saved configurations');
@@ -480,7 +488,7 @@ const UserManagement = () => {
       if (count === 0) {
         // No saved configs - ask confirmation and delete immediately
         if (!window.confirm('This user has no saved configurations. Delete account?')) return;
-        const delResp = await fetch(`${API_BASE_URL}/api/admin-dashboard/users/${userId}`, {
+        const delResp = await fetch(`${getApiBaseUrl()}/api/admin-dashboard/users/${userId}`, {
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -517,8 +525,8 @@ const UserManagement = () => {
     try {
       const token = localStorage.getItem('token');
       const url = transferTargetUserId
-        ? `${API_BASE_URL}/api/admin-dashboard/users/${transferSourceUser._id}?transferTo=${transferTargetUserId}`
-        : `${API_BASE_URL}/api/admin-dashboard/users/${transferSourceUser._id}`;
+        ? `${getApiBaseUrl()}/api/admin-dashboard/users/${transferSourceUser._id}?transferTo=${transferTargetUserId}`
+        : `${getApiBaseUrl()}/api/admin-dashboard/users/${transferSourceUser._id}`;
       const response = await fetch(url, {
         method: 'DELETE',
         headers: {
@@ -647,7 +655,7 @@ const UserManagement = () => {
     setCreating(true);
     try {
       const token = localStorage.getItem('token');
-      const resp = await fetch(`${API_BASE_URL}/api/admin-dashboard/users`, {
+      const resp = await fetch(`${getApiBaseUrl()}/api/admin-dashboard/users`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

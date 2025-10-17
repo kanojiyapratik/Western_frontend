@@ -3,10 +3,18 @@ import { Canvas } from "@react-three/fiber";
 import { Experience } from "../Experience/Experience.jsx";
 import './PublicViewer.css';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE?.replace('/api', '') || 
-  (import.meta.env.MODE === 'production' 
-    ? 'https://threed-configurator-backend-7pwk.onrender.com' 
-    : 'http://192.168.1.7:5000');
+const getApiBaseUrl = () => {
+  if (import.meta.env.VITE_API_BASE) {
+    return import.meta.env.VITE_API_BASE.replace('/api', '');
+  }
+  if (import.meta.env.MODE === 'production') {
+    return 'https://threed-configurator-backend-7pwk.onrender.com';
+  }
+  if (typeof window !== 'undefined' && (window.location.hostname.includes('vercel.app') || window.location.hostname.includes('netlify.app'))) {
+    return 'https://threed-configurator-backend-7pwk.onrender.com';
+  }
+  return 'http://192.168.1.7:5000';
+};
 
 function PublicViewer() {
   const [dbModels, setDbModels] = useState([]);
@@ -16,10 +24,12 @@ function PublicViewer() {
 
   // Get model ID from URL parameters
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const modelId = urlParams.get('model');
-    if (modelId) {
-      setSelectedModel(modelId);
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const modelId = urlParams.get('model');
+      if (modelId) {
+        setSelectedModel(modelId);
+      }
     }
   }, []);
 
@@ -32,7 +42,7 @@ function PublicViewer() {
       }
 
       try {
-        const response = await fetch(`${API_BASE_URL}/api/public/model/${selectedModel}`);
+        const response = await fetch(`${getApiBaseUrl()}/api/public/model/${selectedModel}`);
         
         if (response.ok) {
           const model = await response.json();
@@ -60,8 +70,8 @@ function PublicViewer() {
     const fix = (val) => {
       if (!val || typeof val !== 'string') return val;
       if (val.startsWith('http://') || val.startsWith('https://')) return val;
-      if (val.startsWith('/models/')) return `${API_BASE_URL}${val}`;
-      if (val.startsWith('models/')) return `${API_BASE_URL}/${val}`;
+      if (val.startsWith('/models/')) return `${getApiBaseUrl()}${val}`;
+      if (val.startsWith('models/')) return `${getApiBaseUrl()}/${val}`;
       return val;
     };
     if (out.path) out.path = fix(out.path);
@@ -127,7 +137,7 @@ function PublicViewer() {
         const url = base.__configUrl;
         if (!url) return;
         try {
-          const fullUrl = url.startsWith('http') ? url : `${API_BASE_URL}${url.startsWith('/') ? '' : '/'}${url}`;
+          const fullUrl = url.startsWith('http') ? url : `${getApiBaseUrl()}${url.startsWith('/') ? '' : '/'}${url}`;
           const res = await fetch(fullUrl);
           if (!res.ok) throw new Error(`Fetch ${fullUrl} failed ${res.status}`);
           const json = await res.json();

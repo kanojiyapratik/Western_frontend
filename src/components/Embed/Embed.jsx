@@ -4,10 +4,18 @@ import { Experience } from "../Experience/Experience.jsx";
 import { useSearchParams } from "react-router-dom";
 import './Embed.css';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE?.replace('/api', '') || 
-  (import.meta.env.MODE === 'production' 
-    ? 'https://threed-configurator-backend-7pwk.onrender.com' 
-    : 'http://192.168.1.7:5000');
+const getApiBaseUrl = () => {
+  if (import.meta.env.VITE_API_BASE) {
+    return import.meta.env.VITE_API_BASE.replace('/api', '');
+  }
+  if (import.meta.env.MODE === 'production') {
+    return 'https://threed-configurator-backend-7pwk.onrender.com';
+  }
+  if (typeof window !== 'undefined' && (window.location.hostname.includes('vercel.app') || window.location.hostname.includes('netlify.app'))) {
+    return 'https://threed-configurator-backend-7pwk.onrender.com';
+  }
+  return 'http://192.168.1.7:5000';
+};
 
 function Embed() {
   const [searchParams] = useSearchParams();
@@ -42,7 +50,7 @@ function Embed() {
       }
 
       try {
-        const response = await fetch(`${API_BASE_URL}/api/embed/resolve?token=${token}`);
+        const response = await fetch(`${getApiBaseUrl()}/api/embed/resolve?token=${token}`);
         const data = await response.json();
 
         if (data.success && data.model) {

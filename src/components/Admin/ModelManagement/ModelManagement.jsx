@@ -139,7 +139,7 @@ const ModelManagement = () => {
     const fetchModels = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch(`${API_BASE_URL}/api/admin/models`, {
+        const response = await fetch(`${getApiBaseUrl()}/api/admin/models`, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'

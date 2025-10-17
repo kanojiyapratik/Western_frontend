@@ -2196,7 +2196,19 @@ export function Experience({
               formData.append('texture', texture);
 
               try {
-                const baseUrl = import.meta.env.VITE_API_BASE?.replace('/api', '') || (import.meta.env.MODE === 'production' ? 'https://threed-configurator-backend-7pwk.onrender.com' : 'http://192.168.1.7:5000');
+                const getBaseUrl = () => {
+                  if (import.meta.env.VITE_API_BASE) {
+                    return import.meta.env.VITE_API_BASE.replace('/api', '');
+                  }
+                  if (import.meta.env.MODE === 'production') {
+                    return 'https://threed-configurator-backend-7pwk.onrender.com';
+                  }
+                  if (typeof window !== 'undefined' && (window.location.hostname.includes('vercel.app') || window.location.hostname.includes('netlify.app'))) {
+                    return 'https://threed-configurator-backend-7pwk.onrender.com';
+                  }
+                  return 'http://192.168.1.7:5000';
+                };
+                const baseUrl = getBaseUrl();
                 const uploadResponse = await fetch(`${baseUrl}/api/upload-texture`, {
                   method: 'POST',
                   headers: {
