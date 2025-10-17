@@ -1,9 +1,30 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE || 
-  (import.meta.env.MODE === 'production' 
-    ? 'https://threed-configurator-backend-7pwk.onrender.com' 
-    : 'http://localhost:5000');
+// Ensure API_BASE_URL doesn't end with /api to avoid double /api in URLs
+let API_BASE_URL;
+
+// Check for explicit environment variable first
+if (import.meta.env.VITE_API_BASE) {
+  API_BASE_URL = import.meta.env.VITE_API_BASE;
+} else if (window.location.hostname.includes('vercel.app') || window.location.hostname.includes('netlify.app')) {
+  // Production deployment detected by hostname
+  API_BASE_URL = 'https://threed-configurator-backend-7pwk.onrender.com';
+} else if (import.meta.env.MODE === 'production') {
+  // Fallback production check
+  API_BASE_URL = 'https://threed-configurator-backend-7pwk.onrender.com';
+} else {
+  // Development
+  API_BASE_URL = 'http://192.168.1.7:5000';
+}
+
+console.log('API_BASE_URL detected:', API_BASE_URL, 'hostname:', window.location.hostname, 'mode:', import.meta.env.MODE);
+
+// Remove trailing /api if present to avoid double /api in requests
+if (API_BASE_URL.endsWith('/api')) {
+  API_BASE_URL = API_BASE_URL.slice(0, -4);
+}
+
+console.log('Final API_BASE_URL:', API_BASE_URL);
 
 const AuthContext = createContext();
 
