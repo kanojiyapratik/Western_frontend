@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Routes, Route, NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import MainApp from '../MainApp/MainApp';
 
 import './superadmin.css';
 
@@ -17,6 +18,7 @@ function SuperAdminLayout() {
   const pageTitleMap = {
     '/superadmin/dashboard': 'Super Admin Dashboard',
     '/superadmin/admins': 'Admins',
+    '/superadmin/viewer': 'Viewer',
   };
   const pageTitle = pageTitleMap[location.pathname] || 'Super Admin';
 
@@ -27,6 +29,7 @@ function SuperAdminLayout() {
         <nav className="sa-nav">
           <NavLink to="/superadmin/dashboard" className={({ isActive }) => isActive ? 'active' : ''}>Dashboard</NavLink>
           <NavLink to="/superadmin/admins" className={({ isActive }) => isActive ? 'active' : ''}>Admins</NavLink>
+          <NavLink to="/superadmin/viewer" className={({ isActive }) => isActive ? 'active' : ''}>Viewer</NavLink>
         </nav>
       </aside>
       <main className="sa-main">
@@ -44,6 +47,7 @@ function SuperAdminLayout() {
             <Route path="/" element={<SuperDashboard />} />
             <Route path="/dashboard" element={<SuperDashboard />} />
             <Route path="/admins" element={<AdminsPlaceholder />} />
+            <Route path="/viewer" element={<MainApp />} />
           </Routes>
         </div>
       </main>

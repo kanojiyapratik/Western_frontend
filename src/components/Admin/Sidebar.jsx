@@ -12,7 +12,7 @@ const Sidebar = ({ collapsed, onToggle }) => {
     { path: '/admin/users', icon: '👥', label: 'Users' },
     { path: '/admin/models', icon: '🧩', label: 'Models' },
   // { path: '/admin/models/generator', icon: '🧰', label: 'Model Generator' },
-    { path: '/viewer', icon: '👁️', label: 'Viewer' },
+    { path: '/admin/viewer', icon: '👁️', label: 'Viewer' },
     { path: '/admin/change-password', icon: '🔑', label: 'Change Password' }
   ];
 

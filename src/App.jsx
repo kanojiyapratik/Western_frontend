@@ -32,7 +32,6 @@ function App() {
         {(user.role === 'admin' || user.role === 'superadmin') && (
           <>
             <Route path="/admin/*" element={<AdminLayout />} />
-            <Route path="/viewer" element={<MainApp />} />
           </>
         )}
         {user.role === 'superadmin' && (

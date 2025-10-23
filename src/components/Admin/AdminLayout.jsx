@@ -58,6 +58,7 @@ const AdminShell = () => {
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/users" element={<UserManagement />} />
             <Route path="/models" element={<ModelManagement />} />
+            <Route path="/viewer" element={<MainApp />} />
             {/* Model Generator removed */}
             <Route path="/change-password" element={<PasswordReset />} />
           </Routes>
