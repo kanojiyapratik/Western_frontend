@@ -210,6 +210,11 @@ export function Interface({
 
   // Permission helpers (backend uses specific keys; derive common intents)
   const hasPermission = (permission) => {
+    // Grant full access to admin and superadmin roles
+    if (userPermissions && (userPermissions.role === 'admin' || userPermissions.role === 'superadmin')) {
+      return true;
+    }
+
     if (!userPermissions) return false;
     // Support old keys used earlier (canEdit/canTexture)
     if (permission === 'canEdit') {

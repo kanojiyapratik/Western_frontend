@@ -30,12 +30,15 @@ function App() {
       <Routes>
         {/* Admin & Superadmin Routes */}
         {(user.role === 'admin' || user.role === 'superadmin') && (
-          <Route path="/admin/*" element={<AdminLayout />} />
+          <>
+            <Route path="/admin/*" element={<AdminLayout />} />
+            <Route path="/viewer" element={<MainApp />} />
+          </>
         )}
         {user.role === 'superadmin' && (
           <Route path="/superadmin/*" element={<SuperAdminLayout />} />
         )}
-        
+
         {/* Regular user routes: for users, employees, managers, and other custom roles */}
         {(user.role === 'user' || user.role === 'employee' || user.role === 'manager' || user.role === 'assistantmanager' || user.role === 'custom') && (
           <>
@@ -44,20 +47,20 @@ function App() {
             <Route path="/app" element={<MainApp />} />
           </>
         )}
-        
+
         {/* Redirect based on role */}
-        <Route 
-          path="*" 
+        <Route
+          path="*"
           element={
-            <Navigate 
+            <Navigate
               to={
                 user.role === 'admin' || user.role === 'superadmin'
                   ? '/admin/dashboard'
                   : '/user/dashboard'
-              } 
-              replace 
+              }
+              replace
             />
-          } 
+          }
         />
       </Routes>
     </div>

@@ -12,7 +12,7 @@ const Sidebar = ({ collapsed, onToggle }) => {
     { path: '/admin/users', icon: '👥', label: 'Users' },
     { path: '/admin/models', icon: '🧩', label: 'Models' },
   // { path: '/admin/models/generator', icon: '🧰', label: 'Model Generator' },
-    { path: '/admin/user-preview', icon: '👁️', label: 'User-Preview' },
+    { path: '/viewer', icon: '👁️', label: 'Viewer' },
     { path: '/admin/change-password', icon: '🔑', label: 'Change Password' }
   ];
 
@@ -31,8 +31,8 @@ const Sidebar = ({ collapsed, onToggle }) => {
             className={`kt-nav-link ${location.pathname === item.path ? 'active' : ''}`}
             title={collapsed ? item.label : ''}
             onClick={(e) => {
-              // Force page reload when navigating from user-preview to prevent routing issues
-              if (location.pathname === '/admin/user-preview' && item.path !== '/admin/user-preview') {
+              // Force page reload when navigating from viewer to prevent routing issues
+              if (location.pathname === '/viewer' && item.path !== '/viewer') {
                 e.preventDefault();
                 if (typeof window !== 'undefined') {
                   window.location.href = item.path;

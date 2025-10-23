@@ -4,7 +4,6 @@ import Sidebar from './Sidebar';
 import Dashboard from './Dashboard/Dashboard';
 import UserManagement from './UserManagement/UserManagement';
 import ModelManagement from './ModelManagement/ModelManagement';
-import UserPreview from './UserPreview/UserPreview';
 import PasswordReset from '../Auth/PasswordReset';
 import { useAuth } from '../../context/AuthContext';
 import './admin-theme.css';
@@ -45,7 +44,6 @@ const AdminShell = () => {
     '/admin/models': 'Model Management',
   // '/admin/activity-log': 'Activity Logs',
   // '/admin/models/generator': 'Model Generator',
-    '/admin/user-preview': 'User-Preview',
     '/admin/change-password': 'Change Password'
   };
   const pageTitle = pathMap[location.pathname] || 'Dashboard';
@@ -61,7 +59,6 @@ const AdminShell = () => {
             <Route path="/users" element={<UserManagement />} />
             <Route path="/models" element={<ModelManagement />} />
             {/* Model Generator removed */}
-            <Route path="/user-preview" element={<UserPreview />} />
             <Route path="/change-password" element={<PasswordReset />} />
           </Routes>
         </div>

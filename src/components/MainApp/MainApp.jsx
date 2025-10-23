@@ -283,8 +283,34 @@ function MainApp() {
   // Get current model configuration from merged set
   const currentModel = mergedModels[selectedModel] || mergedModels["Undercounter"];
 
-  // User permissions
-  const userPermissions = user?.permissions || {};
+  // User permissions - grant full access to admin/superadmin
+  const userPermissions = user?.role === 'admin' || user?.role === 'superadmin'
+    ? {
+        canRotate: true,
+        canZoom: true,
+        canPan: true,
+        canChangeDoors: true,
+        canChangeDrawers: true,
+        canChangeReflection: true,
+        canChangeTextures: true,
+        canChangeModels: true,
+        canChangeColors: true,
+        canChangeLighting: true,
+        canChangeEnvironment: true,
+        canUseMeasurements: true,
+        canExportData: true,
+        canSaveConfig: true,
+        canViewActivityLog: true,
+        doorPresets: true,
+        doorToggles: true,
+        drawerToggles: true,
+        textureWidget: true,
+        globalTextureWidget: true,
+        lightWidget: true,
+        saveConfig: true,
+        role: user?.role
+      }
+    : user?.permissions || {};
 
   // Update position when changing models
   useEffect(() => {
