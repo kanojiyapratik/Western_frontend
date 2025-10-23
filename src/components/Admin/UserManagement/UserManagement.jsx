@@ -234,6 +234,10 @@ const UserManagement = () => {
   const [selectedTab, setSelectedTab] = useState('admins'); // 'admins' | 'employees'
   const currentUserId = tokenUser?.id || tokenUser?._id || (tokenUser?._id && tokenUser._id.toString && tokenUser._id.toString());
 
+  // Notification state
+  const [notification, setNotification] = useState(null);
+  const [showSuccessAnimation, setShowSuccessAnimation] = useState(false);
+
   useEffect(() => {
     fetchUsers();
     loadModelPresets();
@@ -383,6 +387,12 @@ const UserManagement = () => {
     }
   };
 
+  // Show notification
+  const showNotification = (message, type = 'success') => {
+    setNotification({ message, type });
+    setTimeout(() => setNotification(null), 4000); // Auto-hide after 4 seconds
+  };
+
   const handleUpdateUser = async (e) => {
     e.preventDefault();
     try {
@@ -402,7 +412,7 @@ const UserManagement = () => {
         userManageEdit: payload.permissions.userManageEdit,
         userManageDelete: payload.permissions.userManageDelete
       });
-      
+
       const response = await fetch(`${getApiBaseUrl()}/api/admin-dashboard/users/${editingUser._id}/permissions`, {
         method: 'PUT',
         headers: {
@@ -419,7 +429,7 @@ const UserManagement = () => {
       const updatedUser = await response.json();
       console.log('Server response:', updatedUser);
       console.log('Updated user permissions:', updatedUser.user?.permissions);
-      
+
       console.log('=== POST-UPDATE DEBUG ===');
       console.log('Updated user from server:', updatedUser.user);
       console.log('Updated user permissions from server:', updatedUser.user?.permissions);
@@ -429,20 +439,27 @@ const UserManagement = () => {
         userManageEdit: updatedUser.user?.permissions?.userManageEdit,
         userManageDelete: updatedUser.user?.permissions?.userManageDelete
       });
-      
+
       // Update the users state with the new user data
-      setUsers(prevUsers => prevUsers.map(user => 
+      setUsers(prevUsers => prevUsers.map(user =>
         user._id === editingUser._id ? updatedUser.user : user
       ));
-      
+
       // Refresh the entire users list to ensure consistency
       await fetchUsers();
-      
-      setShowEditModal(false);
-      setEditingUser(null);
+
+      // Show success animation instead of notification
+      setShowSuccessAnimation(true);
+
+      // Close modal after animation starts
+      setTimeout(() => {
+        setShowEditModal(false);
+        setEditingUser(null);
+        setShowSuccessAnimation(false);
+      }, 2000); // Show animation for 2 seconds
     } catch (error) {
       console.error('Error updating user:', error);
-      setError('Failed to update user');
+      showNotification('Failed to update user: ' + error.message, 'error');
     }
   };
 
@@ -720,6 +737,93 @@ const UserManagement = () => {
 
   return (
     <div className="kt-stack gap-16">
+      {/* Notification Toast */}
+      {notification && (
+        <div
+          className={`notification-toast ${notification.type}`}
+          style={{
+            position: 'fixed',
+            top: '20px',
+            right: '20px',
+            padding: '16px 20px',
+            borderRadius: '12px',
+            boxShadow: '0 10px 40px rgba(0, 0, 0, 0.15)',
+            zIndex: 10000,
+            minWidth: '300px',
+            maxWidth: '500px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            fontSize: '14px',
+            fontWeight: '500',
+            backdropFilter: 'blur(12px)',
+            border: notification.type === 'success'
+              ? '1px solid rgba(34, 197, 94, 0.2)'
+              : '1px solid rgba(239, 68, 68, 0.2)',
+            background: notification.type === 'success'
+              ? 'linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(22, 163, 74, 0.05))'
+              : 'linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(220, 38, 38, 0.05))',
+            color: notification.type === 'success' ? '#16a34a' : '#dc2626',
+            animation: 'slideInRight 0.3s ease-out'
+          }}
+        >
+          <span style={{ fontSize: '18px' }}>
+            {notification.type === 'success' ? '✅' : '❌'}
+          </span>
+          <span style={{ flex: 1 }}>{notification.message}</span>
+          <button
+            onClick={() => setNotification(null)}
+            style={{
+              background: 'none',
+              border: 'none',
+              fontSize: '18px',
+              cursor: 'pointer',
+              opacity: 0.7,
+              padding: '0',
+              margin: '0',
+              color: 'inherit'
+            }}
+            onMouseEnter={(e) => e.target.style.opacity = '1'}
+            onMouseLeave={(e) => e.target.style.opacity = '0.7'}
+          >
+            ×
+          </button>
+        </div>
+      )}
+
+      <style jsx>{`
+        @keyframes slideInRight {
+          from {
+            transform: translateX(100%);
+            opacity: 0;
+          }
+          to {
+            transform: translateX(0);
+            opacity: 1;
+          }
+        }
+
+        @keyframes successShrink {
+          0% {
+            transform: scale(1);
+            opacity: 1;
+          }
+          50% {
+            transform: scale(0.95);
+            opacity: 0.8;
+          }
+          100% {
+            transform: scale(0.1);
+            opacity: 0;
+          }
+        }
+
+        .success-animation {
+          animation: successShrink 2s ease-in-out forwards;
+          pointer-events: none;
+        }
+      `}</style>
+
       {/* DEBUG: show last delete-flow message and modal state for troubleshooting */}
       {debugMessage && (
         <div style={{padding:8, background:'rgba(15,23,42,0.04)', border:'1px solid var(--kt-border)', borderRadius:6}}>
@@ -1030,12 +1134,24 @@ const UserManagement = () => {
 
       {showEditModal && editingUser && (
         <div className="modal-overlay" style={{position:'fixed', inset:0, background:'rgba(15,23,42,.55)', backdropFilter:'blur(4px)', display:'flex', alignItems:'flex-start', justifyContent:'center', padding:'60px 20px', zIndex:200}}>
-          <div className="kt-card" style={{width:'min(920px,100%)', maxHeight:'80vh', overflow:'auto'}}>
+          <div className={`kt-card ${showSuccessAnimation ? 'success-animation' : ''}`} style={{width:'min(920px,100%)', maxHeight:'80vh', overflow:'auto'}}>
             <div className="flex" style={{justifyContent:'space-between', alignItems:'center'}}>
-              <div className="kt-card-header" style={{marginBottom:0}}>Edit User: {editingUser.name}</div>
-              <button onClick={() => setShowEditModal(false)} style={{border:'none', background:'transparent', fontSize:24, lineHeight:1, cursor:'pointer'}}>×</button>
+              <div className="kt-card-header" style={{marginBottom:0}}>
+                {showSuccessAnimation ? (
+                  <div style={{display:'flex', alignItems:'center', gap:'12px', color:'#16a34a', fontSize:'18px', fontWeight:'600'}}>
+                    <span style={{fontSize:'24px'}}>✅</span>
+                    User "{editingUser.name}" updated successfully!
+                  </div>
+                ) : (
+                  <>Edit User: {editingUser.name}</>
+                )}
+              </div>
+              {!showSuccessAnimation && (
+                <button onClick={() => setShowEditModal(false)} style={{border:'none', background:'transparent', fontSize:24, lineHeight:1, cursor:'pointer'}}>×</button>
+              )}
             </div>
-            <form onSubmit={handleUpdateUser} className="flex flex-col gap-16" style={{marginTop:12}}>
+            {!showSuccessAnimation && (
+              <form onSubmit={handleUpdateUser} className="flex flex-col gap-16" style={{marginTop:12}}>
               <div className="kt-card" style={{boxShadow:'none', border:'1px dashed var(--kt-border)'}}>
                 <div className="kt-card-header" style={{marginBottom:12}}>Basic Information</div>
                 <div className="flex gap-16" style={{flexWrap:'wrap'}}>
@@ -1257,6 +1373,7 @@ const UserManagement = () => {
                 <button type="submit" className="kt-btn primary" onClick={() => console.log('UPDATE CLICKED - Current permissions:', editingUser.permissions)}>Update User</button>
               </div>
             </form>
+            )}
           </div>
         </div>
       )}

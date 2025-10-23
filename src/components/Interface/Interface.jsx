@@ -344,14 +344,24 @@ export function Interface({
 
     if (!WidgetComponent) {
       console.error(`❌ Widget type "${widget.type}" not found in registry`);
-      return <div style={{color: 'red', padding: '10px', border: '1px solid red', marginBottom: '12px'}}>
-        ❌ Widget "{widget.type}" not found
+      return <div style={{
+        color: '#dc2626',
+        padding: '16px',
+        border: '2px solid #fecaca',
+        borderRadius: '12px',
+        marginBottom: '16px',
+        background: 'linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%)',
+        fontSize: '14px',
+        fontWeight: '500',
+        textAlign: 'center'
+      }}>
+        ⚠️ Widget "{widget.type}" not found
       </div>;
     }
 
     try {
       return (
-        <div key={`${widget.type}-${index}`} style={{marginBottom: '12px'}}>
+        <div key={`${widget.type}-${index}`} className="widget-wrapper">
           <WidgetComponent
             config={config}
             api={api}
@@ -366,8 +376,18 @@ export function Interface({
       );
     } catch (error) {
       console.error(`❌ Error rendering ${widget.type}:`, error);
-      return <div style={{color: 'red', padding: '10px', border: '1px solid red', marginBottom: '12px'}}>
-        ❌ Error rendering {widget.type}: {error.message}
+      return <div style={{
+        color: '#dc2626',
+        padding: '16px',
+        border: '2px solid #fecaca',
+        borderRadius: '12px',
+        marginBottom: '16px',
+        background: 'linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%)',
+        fontSize: '14px',
+        fontWeight: '500',
+        textAlign: 'center'
+      }}>
+        ⚠️ Error rendering {widget.type}: {error.message}
       </div>;
     }
   };
@@ -488,8 +508,18 @@ export function Interface({
             )}
           </div>
         </div>
-        {/* Right side intentionally left empty per request (no username/logout) */}
-        <div className="toolbar-right" />
+        <div className="toolbar-right">
+          <div className="user-info">
+            <span className="user-label">{userName || 'User'}</span>
+            <button
+              className="toolbar-logout"
+              onClick={onLogout}
+              title="Logout"
+            >
+              <span>🚪</span>
+            </button>
+          </div>
+        </div>
       </div>
       
       <div className="widgets-container">

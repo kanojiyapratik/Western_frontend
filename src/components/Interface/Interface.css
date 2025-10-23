@@ -155,7 +155,7 @@
    max-height: 450px;
    display: flex;
    flex-direction: column;
-   box-shadow: 
+   box-shadow:
      0 8px 32px rgba(0, 0, 0, 0.08),
      0 2px 8px rgba(0, 0, 0, 0.04);
    border: 1px solid rgba(255, 255, 255, 0.2);
@@ -177,10 +177,34 @@
 
  .widget-container:hover {
    transform: translateY(-6px) scale(1.02);
-   box-shadow: 
+   box-shadow:
      0 16px 48px rgba(0, 0, 0, 0.12),
      0 4px 16px rgba(79, 70, 229, 0.15);
    border-color: rgba(79, 70, 229, 0.3);
+ }
+
+ /* Modern Widget Grid Layout */
+ .widgets-container {
+   display: grid;
+   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+   gap: 20px;
+   align-items: start;
+   padding: 0;
+ }
+
+ /* Responsive grid adjustments */
+ @media (max-width: 1200px) {
+   .widgets-container {
+     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+     gap: 16px;
+   }
+ }
+
+ @media (max-width: 768px) {
+   .widgets-container {
+     grid-template-columns: 1fr;
+     gap: 16px;
+   }
  }
 
  /* Enhanced Widget Titles */
@@ -589,13 +613,24 @@
   gap: 0.5rem;
 }
 .toolbar-center.left { justify-content: flex-start; }
-.toolbar-right { 
-  display: flex; 
-  align-items: center; 
-  gap: 10px; 
-  flex: 0 1 auto; 
+.toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 0 1 auto;
   min-width: 0;
   height: 100%;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 20px;
+  border: 1px solid rgba(226, 232, 240, 0.6);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
 .interface-toolbar.compact { gap: 16px; }
@@ -988,6 +1023,14 @@
 }
 
 .widget-content { overflow: auto; flex: 1 1 auto; }
+
+.widget-wrapper {
+  margin-bottom: 16px;
+}
+
+.widget-wrapper:last-child {
+  margin-bottom: 0;
+}
 
 /* Ensure preset-controls (door presets) can scroll when their content exceeds available space */
 .preset-controls {
