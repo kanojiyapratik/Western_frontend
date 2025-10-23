@@ -12,8 +12,8 @@ function getApiBaseUrl() {
     // Fallback production check
     return 'https://threed-configurator-backend-7pwk.onrender.com';
   } else {
-    // Development
-    return 'http://192.168.1.7:5000';
+    // Development - use localhost instead of network IP for better compatibility
+    return 'http://localhost:5000';
   }
 }
 

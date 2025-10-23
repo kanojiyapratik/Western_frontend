@@ -3,7 +3,7 @@ let cachedApiUrl = null;
 
 export function getApiBaseUrl() {
   if (cachedApiUrl) return cachedApiUrl;
-  
+
   // Check for explicit environment variable first
   if (import.meta.env.VITE_API_BASE) {
     cachedApiUrl = import.meta.env.VITE_API_BASE;
@@ -14,10 +14,10 @@ export function getApiBaseUrl() {
     // Fallback production check
     cachedApiUrl = 'https://threed-configurator-backend-7pwk.onrender.com/api';
   } else {
-    // Development
-    cachedApiUrl = 'http://192.168.1.7:5000/api';
+    // Development - use localhost instead of network IP for better compatibility
+    cachedApiUrl = 'http://localhost:5000/api';
   }
-  
+
   return cachedApiUrl;
 }
 
