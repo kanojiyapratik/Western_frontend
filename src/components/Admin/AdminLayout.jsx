@@ -5,6 +5,7 @@ import Dashboard from './Dashboard/Dashboard';
 import UserManagement from './UserManagement/UserManagement';
 import ModelManagement from './ModelManagement/ModelManagement';
 import PasswordReset from '../Auth/PasswordReset';
+import MainApp from '../MainApp/MainApp';
 import { useAuth } from '../../context/AuthContext';
 import './admin-theme.css';
 import './AdminLayout.css';
