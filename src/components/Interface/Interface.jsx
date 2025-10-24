@@ -144,6 +144,8 @@ export function Interface({
       const apiUrl = getApiBaseUrl();
 
       console.log('🔗 Save config API call:', `${apiUrl}/configs/save`);
+      console.log('🔗 apiUrl value:', apiUrl);
+      console.log('🔗 Full URL being called:', `${apiUrl}/configs/save`);
 
       const response = await fetch(`${apiUrl}/configs/save`, {
         method: 'POST',

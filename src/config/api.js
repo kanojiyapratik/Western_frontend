@@ -2,6 +2,9 @@
 let cachedApiUrl = null;
 
 export function getApiBaseUrl() {
+  // Force re-evaluation for debugging
+  cachedApiUrl = null;
+
   if (cachedApiUrl) return cachedApiUrl;
 
   // Check for explicit environment variable first
