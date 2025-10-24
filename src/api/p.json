@@ -1,160 +1,370 @@
 {
-  "hideDoorsByDefault": false,
-  "debugLogs": false,
-  "lights": [
-    {
-      "name": "Point",
-      "defaultState": "off",
-      "intensity": 1,
-      "glowMeshes": [
-        "Cylinder001",
-        "Insidestrip1",
-        "Insidestrip2",
-        "Insidestrip3",
-        "Insidestrip4",
-        "Insidestrip5",
-        "Insidestrip6"
-      ],
-      "glowIntensity": 2.2,
-      "glowColor": "#ffffff"
-    }
+  "name": "QW",
+  "path": "https://res.cloudinary.com/dltnu6gm2/image/upload/v1761303469/models/QW_base.glb",
+  "assets": {
+    "base": "https://res.cloudinary.com/dltnu6gm2/image/upload/v1761303469/models/QW_base.glb",
+    "doors": "https://res.cloudinary.com/dltnu6gm2/image/upload/v1761303471/models/QW_doors.glb",
+    "glassDoors": "https://res.cloudinary.com/dltnu6gm2/image/upload/v1761303479/models/QW_glassDoors.glb"
+  },
+  "modelPosition": [
+    0,
+    0.5,
+    0
+  ],
+  "camera": {
+    "position": [
+      0,
+      2,
+      5
+    ],
+    "target": [
+      0,
+      1,
+      0
+    ],
+    "fov": 50
+  },
+  "placementMode": "autofit",
+  "hiddenInitially": [
+    "Door_01",
+    "Door_02",
+    "Door_03",
+    "GlassDoor-01",
+    "GlassDoor-02",
+    "GlassDoor-03",
+    "Door_Inside_Panel__01",
+    "Door_Inside_Panel_02",
+    "Door_Inside_Panel__03",
+    "GlassDoorHinges1",
+    "GlassDoorHinges2",
+    "GlassDoorHinges3"
   ],
   "interactionGroups": [
     {
       "type": "doors",
-      "label": "Door",
+      "label": "Doors",
       "parts": [
-        { "name": "Door", "rotationAxis": "x", "openAngle": 90 }
+        {
+          "name": "Door_01",
+          "rotationAxis": "y",
+          "openAngle": 90
+        },
+        {
+          "name": "Door_02",
+          "rotationAxis": "z",
+          "openAngle": -90
+        },
+        {
+          "name": "Door_03",
+          "rotationAxis": "z",
+          "openAngle": -90
+        },
+        {
+          "name": "GlassDoor-01",
+          "rotationAxis": "x",
+          "openAngle": 90
+        },
+        {
+          "name": "GlassDoor-02",
+          "rotationAxis": "z",
+          "openAngle": -90
+        },
+        {
+          "name": "GlassDoor-03",
+          "rotationAxis": "x",
+          "openAngle": 90
+        }
       ]
     },
     {
-      "type": "toggles",
-      "label": "Point",
+      "type": "drawers",
+      "label": "Drawers",
       "parts": [
-        { "name": "Point", "label": "LED Light" }
+        {
+          "name": "Drawer-01",
+          "positionAxis": "z",
+          "openPosition": 0.7,
+          "initialState": {
+            "position": {
+              "z": 0.4
+            }
+          }
+        },
+        {
+          "name": "Drawer-02",
+          "positionAxis": "z",
+          "openPosition": 0.7,
+          "initialState": {
+            "position": {
+              "z": 0.4
+            }
+          }
+        },
+        {
+          "name": "Drawer-03",
+          "positionAxis": "z",
+          "openPosition": 0.7,
+          "initialState": {
+            "position": {
+              "z": 0.4
+            }
+          }
+        },
+        {
+          "name": "Drawer-04",
+          "positionAxis": "z",
+          "openPosition": 0.7,
+          "initialState": {
+            "position": {
+              "z": 0.4
+            }
+          }
+        },
+        {
+          "name": "Drawer-05",
+          "positionAxis": "z",
+          "openPosition": 0.7,
+          "initialState": {
+            "position": {
+              "z": 0.4
+            }
+          }
+        },
+        {
+          "name": "Drawer-06",
+          "positionAxis": "z",
+          "openPosition": 0.7,
+          "initialState": {
+            "position": {
+              "z": 0.4
+            }
+          }
+        },
+        {
+          "name": "Drawer-07",
+          "positionAxis": "z",
+          "openPosition": 0.7,
+          "initialState": {
+            "position": {
+              "z": 0.4
+            }
+          }
+        },
+        {
+          "name": "Drawer-08",
+          "positionAxis": "z",
+          "openPosition": 0.7,
+          "initialState": {
+            "position": {
+              "z": 0.4
+            }
+          }
+        },
+        {
+          "name": "Drawer-09",
+          "positionAxis": "z",
+          "openPosition": 0.7,
+          "initialState": {
+            "position": {
+              "z": 0.4
+            }
+          }
+        }
       ]
     }
   ],
   "uiWidgets": [
-    { "type": "presetWidget", "title": "Presets" },
-    { "type": "lightWidget", "title": "Light Control" },
+    
     {
-      "type": "textureWidget",
-      "title": "Textures",
-      "options": {
-        "parts": [
-          {
-            "name": "InsideStrips",
-            "label": "Inside Strips (group)",
-            "targets": [
-              { "type": "mesh", "name": "Insidestrip1" },
-              { "type": "mesh", "name": "Insidestrip2" },
-              { "type": "mesh", "name": "Insidestrip3" },
-              { "type": "mesh", "name": "Insidestrip4" },
-              { "type": "mesh", "name": "Insidestrip5" },
-              { "type": "mesh", "name": "Insidestrip6" }
-            ],
-            "mapping": {
-              "offset": { "x": 0, "y": -0.25 },
-              "center": { "x": 0.5, "y": -0.05 },
-              "flipY": false,
-              "repeat": { "x": 1, "y": 1.9 },
-              "wrapS": "ClampToEdgeWrapping",
-              "wrapT": "ClampToEdgeWrapping"
-            }
-          },
-          {
-            "name": "SidepannelRight"
-            
-          },
-          {
-            "name": "SidepannelLeft"
-          
-          },
-          {
-            "name": "Cylinder001"
-          }
-        ],
-        "textures": [
-          { "name": "canopy", "path": "/texture/pepsicanopy.jpg" },
-          { "name": "Glass Clear", "path": "/textures/clear_glass.jpg" }
-        ]
-      }
-    },
-    {
-      "type": "colorPicker",
-      "title": "Color Picker",
-      "options": {
-        "parts": [
-          {
-            "name": "BodyMaterial",
-            "label": "Body (material)",
-            "type": "material",
-            "materialName": "FridgeColor"
-          },
-          {
-            "name": "handlecolor",
-            "label": "Door Handle (material)",
-            "type": "material",
-            "materialName": "handlecolor"
-          }
-        ]
-      }
+      "type": "doorPresetWidget",
+      "title": "Door Presets"
     },
     {
       "type": "screenshotWidget",
       "title": "Screenshot"
     }
   ],
-  "camera": { "position": [0, 2.5, 7], "target": [0, 1, 0], "fov": 50 },
+ 
+  
+ 
+  "presets": {
+    "doorSelections": {
+      "1": {
+        "1": {
+          "label": "Left",
+          "doors": [
+            "Door_01"
+          ],
+          "panels": [],
+          "hide": [
+            "Drawer-01",
+            "Drawer-02",
+            "Drawer-03",
+            "Door_02",
+            "Door_03",
+            "Drawer-01_Inside_Panal",
+            "Door_Inside_Panel__02",
+            "Door_Inside_Panel__03"
+          ]
+        },
+        "2": {
+          "label": "Center",
+          "doors": [
+            "Door_02"
+          ],
+          "panels": [],
+          "hide": [
+            "Drawer-04",
+            "Drawer-05",
+            "Drawer-06",
+            "Door_03",
+            "Door_01",
+            "Drawer-02_Inside_Panal"
+          ]
+        },
+        "3": {
+          "label": "Right",
+          "doors": [
+            "Door_03"
+          ],
+          "panels": [],
+          "hide": [
+            "Drawer-07",
+            "Drawer-08",
+            "Drawer-09",
+            "Door_01",
+            "Door_02",
+            "Drawer-03_Inside_Panal",
+            "Logo"
+          ]
+        }
+      },
+      "2": {
+        "1": {
+          "label": "Left + Center",
+          "doors": [
+            "Door_01",
+            "Door_02"
+          ],
+          "panels": [],
+          "hide": [
+            "Drawer-01",
+            "Drawer-02",
+            "Drawer-03",
+            "Drawer-04",
+            "Drawer-05",
+            "Drawer-06",
+            "Door_03",
+            "Drawer-01_Inside_Panal",
+            "Drawer-02_Inside_Panal"
+          ]
+        },
+        "2": {
+          "label": "Left + Right",
+          "doors": [
+            "Door_01",
+            "Door_03"
+          ],
+          "panels": [],
+          "hide": [
+            "Drawer-01",
+            "Drawer-02",
+            "Drawer-03",
+            "Drawer-07",
+            "Drawer-08",
+            "Drawer-09",
+            "Door_02",
+            "Drawer-01_Inside_Panal",
+            "Drawer-03_Inside_Panal"
+          ]
+        },
+        "3": {
+          "label": "Center + Right",
+          "doors": [
+            "Door_02",
+            "Door_03"
+          ],
+          "panels": [],
+          "hide": [
+            "Drawer-08",
+            "Drawer-09",
+            "Drawer-07",
+            "Drawer-06",
+            "Drawer-05",
+            "Drawer-04",
+            "Drawer-03_Inside_Panal",
+            "Door_01",
+            "Drawer-03_Inside_Panal",
+            "Drawer-02_Inside_Panal"
+          ]
+        }
+      },
+      "3": {
+        "1": {
+          "label": "Left + Center + Right",
+          "doors": [
+            "Door_01",
+            "Door_02",
+            "Door_03"
+          ],
+          "panels": [],
+          "hide": [
+            "Drawer-01",
+            "Drawer-02",
+            "Drawer-03",
+            "Drawer-04",
+            "Drawer-05",
+            "Drawer-06",
+            "Drawer-07",
+            "Drawer-08",
+            "Drawer-09",
+            "Drawer-01_Inside_Panal",
+            "Drawer-02_Inside_Panal",
+            "Drawer-03_Inside_Panal",
+            "Logo"
+          ]
+        }
+      }
+    }
+  },
+  "doorTypeMap": {
+    "toGlass": {
+      "Door_01": "GlassDoor-01",
+      "Door_02": "GlassDoor-02",
+      "Door_03": "GlassDoor-03"
+    },
+    "toSolid": {
+      "GlassDoor-01": "Door_01",
+      "GlassDoor-02": "Door_02",
+      "GlassDoor-03": "Door_03"
+    }
+  },
+  "metadata": {
+    "solidDoorMeshPrefixes": [],
+    "panels": [],
+    "glassPanels": [],
+    "drawers": {
+      "targetGroups": [],
+      "closedZ": 0,
+      "openZ": 0
+    }
+  },
   "shadows": {
     "enabled": true,
     "position": [0, -0.5, 0],
     "opacity": 0.4,
-    "scale": 8,
+    "scale": 10,
     "blur": 2.5,
     "far": 4.5,
-    "resolution": 512,
+    "resolution": 256,
     "color": "#000000"
-  },
-  "presets": [
-    {
-      "id": "coke",
-      "label": "Coke Look",
-      "buttonColor": "#e41b17",
-      "buttonTextColor": "#ffffff",
-      "actions": [
-        { "part": "Cylinder002", "texture": "/cokelogo.jpg", "mapping": { "repeat": { "x": 1, "y": 1 } } },
-        { "part": "Insidestrip1", "texture": "/cokestrip.jpg" },
-        { "part": "Insidestrip2", "texture": "/cokestrip.jpg" },
-        { "part": "Insidestrip3", "texture": "/cokestrip.jpg" },
-        { "part": "Insidestrip4", "texture": "/cokestrip.jpg" },
-        { "part": "Insidestrip5", "texture": "/cokestrip.jpg" },
-        { "part": "Insidestrip6", "texture": "/cokestrip.jpg" },
-        { "part": "sidepannelRight", "texture": "/cocacolaside1.jpg" },
-        { "part": "sidepannelLeft", "texture": "/cocacolaside1.jpg" },
-        { "part": "__material:FridgeColor", "tintColor": "#e41b17" },
-        { "part": "__material:handlecolor", "tintColor": "#e41b17" }
-      ]
-    },
-    {
-      "id": "pepsi",
-      "label": "Pepsi Look",
-      "buttonColor": "#0057b8",
-      "buttonTextColor": "#ffffff",
-      "actions": [
-        { "part": "Cylinder002", "texture": "/pepsilogo.jpg" },
-        { "part": "Insidestrip1", "texture": "/pepsistrip.jpg" },
-        { "part": "Insidestrip2", "texture": "/pepsistrip.jpg" },
-        { "part": "Insidestrip3", "texture": "/pepsistrip.jpg" },
-        { "part": "Insidestrip4", "texture": "/pepsistrip.jpg" },
-        { "part": "Insidestrip5", "texture": "/pepsistrip.jpg" },
-        { "part": "Insidestrip6", "texture": "/pepsistrip.jpg" },
-        { "part": "sidepannelRight", "texture": "/pepsisidepannel.jpg" },
-        { "part": "sidepannelLeft", "texture": "/pepsisidepannel.jpg" },
-        { "part": "__material:FridgeColor", "tintColor": "#0057b8" },
-        { "part": "__material:handlecolor", "tintColor": "#0057b8" }
-    ]
   }
-]
 }
+
+
+
+
+
+
+
+
