@@ -1785,36 +1785,17 @@ export function Experience({
             pixelRatio: originalPixelRatio
           });
 
-          // Calculate optimal camera position for the model
-          let optimalCameraPos = [3, 2, 5]; // Default fallback
-          let optimalTarget = [0, 1, 0];
+          // Use current camera position and target instead of calculating optimal
+          // This preserves the user's current view for the screenshot
+          let optimalCameraPos = camera.position.toArray();
+          let optimalTarget = orbitControlsRef.current?.target?.toArray() || [0, 1, 0];
 
-          if (modelGroupRef.current) {
-            try {
-              // Calculate the model's bounding box
-              const box = new THREE.Box3().setFromObject(modelGroupRef.current);
-              const center = box.getCenter(new THREE.Vector3());
-              const size = box.getSize(new THREE.Vector3());
-              const maxDim = Math.max(size.x, size.y, size.z);
-              const distance = maxDim * 2.2;
-              optimalCameraPos = [
-                center.x + distance * 0.6,
-                center.y + distance * 0.4,
-                center.z + distance * 0.6
-              ];
-              optimalTarget = [center.x, center.y, center.z];
-
-              console.log('📸 Calculated optimal camera position:', {
-                position: optimalCameraPos,
-                target: optimalTarget,
-                modelSize: size.toArray(),
-                maxDim,
-                distance
-              });
-            } catch (error) {
-              console.warn('⚠️ Failed to calculate optimal camera position, using defaults:', error);
-            }
-          }
+          console.log('📸 Using current camera position for screenshot:', {
+            position: optimalCameraPos,
+            target: optimalTarget,
+            currentFOV: camera.fov,
+            currentAspect: camera.aspect
+          });
 
           // Set optimal camera position
           camera.position.set(...optimalCameraPos);
