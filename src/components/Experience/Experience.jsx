@@ -2200,6 +2200,9 @@ export function Experience({
                   if (import.meta.env.VITE_API_BASE) {
                     return import.meta.env.VITE_API_BASE.replace('/api', '');
                   }
+                  if (import.meta.env.VITE_API_BASE_URL) {
+                    return import.meta.env.VITE_API_BASE_URL;
+                  }
                   if (import.meta.env.MODE === 'production') {
                     return 'https://threed-configurator-backend-7pwk.onrender.com';
                   }
