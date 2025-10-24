@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { widgetRegistry } from './widgets/index.jsx';
 import SaveConfigModal from './SaveConfigModal.jsx';
 import SavedConfigsList from './SavedConfigsList.jsx';
+import { getApiBaseUrl } from '../../config/api.js';
 import './Interface.css';
 
 export function Interface({
@@ -139,19 +140,8 @@ export function Interface({
       }
       
       const token = localStorage.getItem('token');
-      // Determine API URL
-      let apiUrl;
-      if (import.meta.env.VITE_API_BASE) {
-        apiUrl = import.meta.env.VITE_API_BASE;
-      } else if (import.meta.env.VITE_API_BASE_URL) {
-        apiUrl = `${import.meta.env.VITE_API_BASE_URL}/api`;
-      } else if (typeof window !== 'undefined' && (window.location.hostname.includes('vercel.app') || window.location.hostname.includes('netlify.app'))) {
-        apiUrl = 'https://threed-configurator-backend-7pwk.onrender.com/api';
-      } else if (import.meta.env.MODE === 'production') {
-        apiUrl = 'https://threed-configurator-backend-7pwk.onrender.com/api';
-      } else {
-        apiUrl = 'http://192.168.1.7:5000/api';
-      }
+      // Use centralized API URL determination
+      const apiUrl = getApiBaseUrl();
       
       const response = await fetch(`${apiUrl}/configs/save`, {
         method: 'POST',
