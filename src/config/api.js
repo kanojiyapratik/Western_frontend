@@ -22,6 +22,10 @@ export function getApiBaseUrl() {
   }
 
   console.log('🔗 API Base URL resolved to:', cachedApiUrl);
+  console.log('🔗 Current window.location.hostname:', typeof window !== 'undefined' ? window.location.hostname : 'N/A');
+  console.log('🔗 import.meta.env.MODE:', import.meta.env.MODE);
+  console.log('🔗 VITE_API_BASE:', import.meta.env.VITE_API_BASE);
+  console.log('🔗 VITE_API_URL:', import.meta.env.VITE_API_URL);
   return cachedApiUrl;
 }
 
