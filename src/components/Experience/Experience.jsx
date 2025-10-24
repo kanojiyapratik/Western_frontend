@@ -2517,7 +2517,7 @@ export function Experience({
   {/* Always include HDRI environment so materials can sample it; lower intensity in perf mode */}
   <Environment preset="warehouse" background={false} intensity={isPerformanceMode ? 0.25 : Math.max(0.9, envIntensity)} />
 
-  <color attach="background" args={['#e9e9e9']} />
+  <color attach="background" args={['#7d7d7d']} />
 
   {/* Stronger hemisphere for better fill */}
   <hemisphereLight skyColor={0xffffff} groundColor={0x888888} intensity={0.6} />
