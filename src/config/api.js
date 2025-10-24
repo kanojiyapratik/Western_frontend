@@ -7,6 +7,9 @@ export function getApiBaseUrl() {
   // Check for explicit environment variable first
   if (import.meta.env.VITE_API_BASE) {
     cachedApiUrl = import.meta.env.VITE_API_BASE;
+  } else if (import.meta.env.VITE_API_URL) {
+    // Alternative environment variable name
+    cachedApiUrl = import.meta.env.VITE_API_URL;
   } else if (typeof window !== 'undefined' && (window.location.hostname.includes('vercel.app') || window.location.hostname.includes('netlify.app'))) {
     // Production deployment detected by hostname
     cachedApiUrl = 'https://threed-configurator-backend-7pwk.onrender.com/api';
@@ -18,6 +21,7 @@ export function getApiBaseUrl() {
     cachedApiUrl = 'http://localhost:5000/api';
   }
 
+  console.log('🔗 API Base URL resolved to:', cachedApiUrl);
   return cachedApiUrl;
 }
 
