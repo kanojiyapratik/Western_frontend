@@ -2,14 +2,11 @@
 let cachedApiUrl = null;
 
 export function getApiBaseUrl() {
-  // Force re-evaluation for debugging
-  cachedApiUrl = null;
-
   if (cachedApiUrl) return cachedApiUrl;
 
   // Check for explicit environment variable first
   if (import.meta.env.VITE_API_BASE) {
-    cachedApiUrl = import.meta.env.VITE_API_BASE;
+    cachedApiUrl = import.meta.env.VITE_API_BASE + '/api';
   } else if (import.meta.env.VITE_API_URL) {
     // Alternative environment variable name
     cachedApiUrl = import.meta.env.VITE_API_URL;
@@ -25,10 +22,6 @@ export function getApiBaseUrl() {
   }
 
   console.log('🔗 API Base URL resolved to:', cachedApiUrl);
-  console.log('🔗 Current window.location.hostname:', typeof window !== 'undefined' ? window.location.hostname : 'N/A');
-  console.log('🔗 import.meta.env.MODE:', import.meta.env.MODE);
-  console.log('🔗 VITE_API_BASE:', import.meta.env.VITE_API_BASE);
-  console.log('🔗 VITE_API_URL:', import.meta.env.VITE_API_URL);
   return cachedApiUrl;
 }
 
