@@ -1764,11 +1764,26 @@ export function Experience({
       // Screenshot functionality for ScreenshotWidget
       takeScreenshot: async (targetWidth = 1920, targetHeight = 1080) => {
         try {
+          console.log('📸 takeScreenshot called with dimensions:', targetWidth, 'x', targetHeight);
+
+          // Validate required objects
+          if (!camera || !gl || !r3fScene) {
+            console.error('❌ Screenshot failed: Missing required objects', { camera: !!camera, gl: !!gl, r3fScene: !!r3fScene });
+            return false;
+          }
+
           // Store original settings
           const originalPosition = camera.position.clone();
           const originalTarget = orbitControlsRef.current?.target?.clone();
           const originalSize = { width: gl.domElement.width, height: gl.domElement.height };
           const originalPixelRatio = gl.getPixelRatio();
+
+          console.log('📸 Original settings stored:', {
+            position: originalPosition.toArray(),
+            target: originalTarget?.toArray(),
+            size: originalSize,
+            pixelRatio: originalPixelRatio
+          });
 
           // Calculate optimal camera position for the model
           let optimalCameraPos = [3, 2, 5]; // Default fallback
@@ -1788,8 +1803,16 @@ export function Experience({
                 center.z + distance * 0.6
               ];
               optimalTarget = [center.x, center.y, center.z];
+
+              console.log('📸 Calculated optimal camera position:', {
+                position: optimalCameraPos,
+                target: optimalTarget,
+                modelSize: size.toArray(),
+                maxDim,
+                distance
+              });
             } catch (error) {
-              // fallback to defaults
+              console.warn('⚠️ Failed to calculate optimal camera position, using defaults:', error);
             }
           }
 
@@ -1806,16 +1829,42 @@ export function Experience({
           camera.aspect = targetWidth / targetHeight;
           camera.updateProjectionMatrix();
 
-          // Render for stability
+          // Force a render to update the canvas size
+          gl.render(r3fScene, camera);
+
+          console.log('📸 Canvas resized to:', targetWidth, 'x', targetHeight, 'aspect:', camera.aspect);
+
+          // Render for stability - multiple renders to ensure everything is ready
+          console.log('📸 Rendering scene...');
+
+          // Force invalidate to ensure scene is up to date
+          try { invalidate(); } catch(e) { console.warn('⚠️ invalidate() failed:', e); }
+
           gl.render(r3fScene, camera);
           await new Promise(resolve => setTimeout(resolve, 150));
           gl.render(r3fScene, camera);
           await new Promise(resolve => setTimeout(resolve, 50));
           gl.render(r3fScene, camera);
 
+          console.log('📸 Scene rendered successfully');
+
           // Capture the screenshot
           const canvas = gl.domElement;
+          console.log('📸 Canvas dimensions:', canvas.width, 'x', canvas.height);
+
+          // Ensure canvas has content before capturing
+          if (canvas.width === 0 || canvas.height === 0) {
+            console.error('❌ Screenshot failed: Canvas has zero dimensions');
+            throw new Error('Canvas has zero dimensions');
+          }
+
           const dataURL = canvas.toDataURL('image/png', 1.0);
+          console.log('📸 Data URL generated, length:', dataURL.length);
+
+          if (!dataURL || dataURL === 'data:,') {
+            console.error('❌ Screenshot failed: Empty data URL generated');
+            throw new Error('Empty data URL generated');
+          }
 
           // Restore original settings
           gl.setSize(originalSize.width, originalSize.height, false);
@@ -1829,16 +1878,24 @@ export function Experience({
           }
           gl.render(r3fScene, camera);
 
+          console.log('📸 Original settings restored');
+
           // Download
           if (dataURL && dataURL.length > 1000) {
+            const filename = `${modelName}_3d_model_${new Date().toISOString().split('T')[0]}.png`;
+            console.log('📸 Creating download link for:', filename);
+
             const link = document.createElement('a');
             link.href = dataURL;
-            link.download = `${modelName}_3d_model_${new Date().toISOString().split('T')[0]}.png`;
+            link.download = filename;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
+
+            console.log('✅ Screenshot downloaded successfully');
             return true;
           } else {
+            console.error('❌ Screenshot data invalid - dataURL length:', dataURL?.length);
             throw new Error('Screenshot data invalid');
           }
         } catch (error) {

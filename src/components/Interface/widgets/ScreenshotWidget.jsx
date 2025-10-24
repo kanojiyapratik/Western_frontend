@@ -14,28 +14,34 @@ export function ScreenshotWidget({ title = "Download Image", api, userPermission
   };
 
   const handleDownload = async () => {
+    console.log('📸 ScreenshotWidget: handleDownload called');
+
     if (!api?.takeScreenshot) {
-      console.error('❌ takeScreenshot function not available');
+      console.error('❌ ScreenshotWidget: takeScreenshot function not available in API');
       setStatus('Screenshot not available');
       setTimeout(() => setStatus(''), 3000);
       return;
     }
 
+    console.log('📸 ScreenshotWidget: Starting screenshot capture...');
     setIsCapturing(true);
     setStatus('Capturing high-quality image...');
 
     try {
       const quality = qualityOptions[selectedQuality];
+      console.log('📸 ScreenshotWidget: Using quality:', selectedQuality, quality);
+
       const success = await api.takeScreenshot(quality.width, quality.height);
+
       if (success) {
         setStatus('✅ Screenshot downloaded!');
-        console.log('📸 Screenshot downloaded successfully');
+        console.log('📸 ScreenshotWidget: Screenshot downloaded successfully');
       } else {
         setStatus('❌ Screenshot failed');
-        console.error('❌ Screenshot failed');
+        console.error('❌ ScreenshotWidget: Screenshot failed - takeScreenshot returned false');
       }
     } catch (error) {
-      console.error('❌ Screenshot error:', error);
+      console.error('❌ ScreenshotWidget: Screenshot error:', error);
       setStatus('❌ Screenshot failed');
     } finally {
       setIsCapturing(false);
