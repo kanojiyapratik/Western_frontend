@@ -70,7 +70,29 @@ export default function ColorPickerWidget({ config, applyRequest }) {
 
       <div className="form-group">
         <label className="form-label">Color</label>
-        <input type="color" value={color} onChange={(e) => setColor(e.target.value)} style={{ width: '100%', height: '40px', border: 'none' }} />
+        <div className="color-picker-grid">
+          {[
+            '#ffffff', '#f8f9fa', '#e9ecef', '#dee2e6',
+            '#000000', '#343a40', '#495057', '#6c757d',
+            '#dc3545', '#fd7e14', '#ffc107', '#28a745',
+            '#007bff', '#6f42c1', '#e83e8c', '#20c997',
+            '#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4',
+            '#ffeaa7', '#dda0dd', '#98d8c8', '#f7dc6f'
+          ].map(colorOption => (
+            <div
+              key={colorOption}
+              className="color-picker"
+              style={{ backgroundColor: colorOption }}
+              onClick={() => setColor(colorOption)}
+              title={colorOption}
+            />
+          ))}
+        </div>
+      </div>
+
+      <div className="form-group">
+        <label className="form-label">Custom Color</label>
+        <input type="color" value={color} onChange={(e) => setColor(e.target.value)} style={{ width: '100%', height: '40px', border: 'none', borderRadius: '8px' }} />
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
