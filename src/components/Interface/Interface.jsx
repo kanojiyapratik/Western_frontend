@@ -505,16 +505,7 @@ export function Interface({
           </div>
         </div>
         <div className="toolbar-right">
-          <div className="user-info">
-            <span className="user-label">{userName || 'User'}</span>
-            <button
-              className="toolbar-logout"
-              onClick={onLogout}
-              title="Logout"
-            >
-              <span>🚪</span>
-            </button>
-          </div>
+          {/* User info and logout removed per request */}
         </div>
       </div>
       
