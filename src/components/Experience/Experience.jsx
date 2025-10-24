@@ -1804,11 +1804,34 @@ export function Experience({
             orbitControlsRef.current.update();
           }
 
+          // Store original camera settings
+          const originalFOV = camera.fov;
+          const originalNear = camera.near;
+          const originalFar = camera.far;
+          const originalAspect = camera.aspect;
+
+          // Calculate the scaling factor to maintain proportions
+          const currentAspect = originalSize.width / originalSize.height;
+          const targetAspect = targetWidth / targetHeight;
+          const scaleFactor = Math.min(targetWidth / originalSize.width, targetHeight / originalSize.height);
+
           // Set canvas to target resolution
           gl.setSize(targetWidth, targetHeight, false);
           gl.setPixelRatio(1); // Use 1:1 pixel ratio for exact resolution
-          camera.aspect = targetWidth / targetHeight;
+
+          // Adjust camera settings to maintain proportions
+          // Scale FOV to account for resolution change while preserving aspect
+          camera.fov = originalFOV / scaleFactor;
+          camera.aspect = targetAspect;
           camera.updateProjectionMatrix();
+
+          console.log('📸 Camera adjustment for screenshot:', {
+            originalFOV,
+            newFOV: camera.fov,
+            originalAspect: currentAspect,
+            targetAspect,
+            scaleFactor
+          });
 
           // Force a render to update the canvas size
           gl.render(r3fScene, camera);
@@ -1850,7 +1873,10 @@ export function Experience({
           // Restore original settings
           gl.setSize(originalSize.width, originalSize.height, false);
           gl.setPixelRatio(originalPixelRatio);
-          camera.aspect = originalSize.width / originalSize.height;
+          camera.aspect = originalAspect;
+          camera.fov = originalFOV;
+          camera.near = originalNear;
+          camera.far = originalFar;
           camera.updateProjectionMatrix();
           camera.position.copy(originalPosition);
           if (orbitControlsRef.current && originalTarget) {
