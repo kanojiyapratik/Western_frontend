@@ -1,21 +1,10 @@
 // src/api/user.js
 import axios from "axios";
+import { getApiBaseUrl } from "../config/api.js";
 
-// Lazy API URL resolution to prevent React error #310
+// Use centralized API URL resolution
 function getApiBase() {
-  // Check for explicit environment variable first
-  if (import.meta.env.VITE_API_BASE) {
-    return import.meta.env.VITE_API_BASE;
-  } else if (typeof window !== 'undefined' && (window.location.hostname.includes('vercel.app') || window.location.hostname.includes('netlify.app'))) {
-    // Production deployment detected by hostname
-    return 'https://threed-configurator-backend-7pwk.onrender.com/api';
-  } else if (import.meta.env.MODE === 'production') {
-    // Fallback production check
-    return 'https://threed-configurator-backend-7pwk.onrender.com/api';
-  } else {
-    // Development
-    return 'http://192.168.1.7:5000/api';
-  }
+  return getApiBaseUrl();
 }
 
 const api = axios.create({
