@@ -1810,27 +1810,21 @@ export function Experience({
           const originalFar = camera.far;
           const originalAspect = camera.aspect;
 
-          // Calculate the scaling factor to maintain proportions
-          const currentAspect = originalSize.width / originalSize.height;
-          const targetAspect = targetWidth / targetHeight;
-          const scaleFactor = Math.min(targetWidth / originalSize.width, targetHeight / originalSize.height);
-
           // Set canvas to target resolution
           gl.setSize(targetWidth, targetHeight, false);
           gl.setPixelRatio(1); // Use 1:1 pixel ratio for exact resolution
 
-          // Adjust camera settings to maintain proportions
-          // Scale FOV to account for resolution change while preserving aspect
-          camera.fov = originalFOV / scaleFactor;
-          camera.aspect = targetAspect;
+          // Keep the original camera settings - don't change FOV or aspect ratio
+          // This preserves the exact view the user is seeing
           camera.updateProjectionMatrix();
 
-          console.log('📸 Camera adjustment for screenshot:', {
+          console.log('📸 Screenshot settings (preserving original view):', {
             originalFOV,
-            newFOV: camera.fov,
-            originalAspect: currentAspect,
-            targetAspect,
-            scaleFactor
+            preservedFOV: camera.fov,
+            originalAspect,
+            preservedAspect: camera.aspect,
+            canvasSize: { width: targetWidth, height: targetHeight },
+            originalCanvasSize: originalSize
           });
 
           // Force a render to update the canvas size
@@ -1884,6 +1878,8 @@ export function Experience({
             orbitControlsRef.current.update();
           }
           gl.render(r3fScene, camera);
+
+          console.log('📸 Screenshot completed - view restored to original state');
 
           console.log('📸 Original settings restored');
 
