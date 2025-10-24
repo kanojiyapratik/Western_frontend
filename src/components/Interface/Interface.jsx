@@ -142,7 +142,9 @@ export function Interface({
       const token = localStorage.getItem('token');
       // Use centralized API URL determination
       const apiUrl = getApiBaseUrl();
-      
+
+      console.log('🔗 Save config API call:', `${apiUrl}/configs/save`);
+
       const response = await fetch(`${apiUrl}/configs/save`, {
         method: 'POST',
         headers: {
