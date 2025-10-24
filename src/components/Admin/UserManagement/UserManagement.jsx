@@ -141,14 +141,14 @@ const arePermissionsEqual = (a, b) => {
     'userManagement', 'userManageCreate', 'userManageEdit', 'userManageDelete',
     'doorPresets', 'doorToggles', 'drawerToggles', 'textureWidget', 'lightWidget',
     'globalTextureWidget', 'screenshotWidget', 'saveConfig', 'canRotate', 'canPan',
-    'canZoom', 'canMove', 'reflectionWidget', 'movementWidget', 'customWidget', 
+    'canZoom', 'canMove', 'reflectionWidget', 'movementWidget', 'customWidget',
     'imageDownloadQualities'
   ];
-  
+
   for (let key of corePermissionKeys) {
     const aVal = a[key];
     const bVal = b[key];
-    
+
     // Handle arrays (like imageDownloadQualities)
     if (Array.isArray(aVal) && Array.isArray(bVal)) {
       if (aVal.length !== bVal.length || !aVal.every(v => bVal.includes(v)) || !bVal.every(v => aVal.includes(v))) {
@@ -165,6 +165,39 @@ const arePermissionsEqual = (a, b) => {
     }
   }
   return true;
+};
+
+// Check if permissions match the base role defaults
+const hasCustomPermissions = (permissions, role) => {
+  if (!permissions || !role || role === 'custom') return false;
+
+  const basePermissions = ROLE_DEFAULT_PERMISSIONS[role];
+  if (!basePermissions) return false;
+
+  return !arePermissionsEqual(permissions, basePermissions);
+};
+
+// Get the appropriate role and custom role name based on permissions
+const getEffectiveRole = (currentRole, permissions, existingCustomRoleName = '') => {
+  // If already custom, keep the existing custom role name
+  if (currentRole === 'custom') {
+    return { role: 'custom', customRoleName: existingCustomRoleName };
+  }
+
+  // Check if permissions deviate from the base role defaults
+  if (hasCustomPermissions(permissions, currentRole)) {
+    // Convert to custom role with base role name
+    const baseRoleName = currentRole === 'assistantmanager' ? 'Ass. Manager' :
+                        currentRole === 'manager' ? 'Manager' :
+                        currentRole.charAt(0).toUpperCase() + currentRole.slice(1);
+    return {
+      role: 'custom',
+      customRoleName: `Cus. ${baseRoleName}`
+    };
+  }
+
+  // Permissions match base role, keep original role
+  return { role: currentRole, customRoleName: '' };
 };
 
 // Display role name with proper formatting
@@ -310,7 +343,7 @@ const UserManagement = () => {
     
     // Use the permissions from database exactly as they are - don't modify them
     const dbPermissions = user.permissions || {};
-    
+
     console.log('=== PERMISSIONS DEBUG ===');
     console.log('User:', user.name, 'Role:', user.role);
     console.log('Raw permissions from DB:', user.permissions);
@@ -320,13 +353,13 @@ const UserManagement = () => {
       userManageEdit: dbPermissions.userManageEdit,
       userManageDelete: dbPermissions.userManageDelete
     });
-    
+
     // Only add presetAccess if it doesn't exist
     let completePermissions = {
       ...dbPermissions,
       presetAccess: dbPermissions.presetAccess || {}
     };
-    
+
     console.log('Complete permissions being set in edit form:', completePermissions);
     console.log('User management in complete permissions:', {
       userManagement: completePermissions.userManagement,
@@ -334,12 +367,15 @@ const UserManagement = () => {
       userManageEdit: completePermissions.userManageEdit,
       userManageDelete: completePermissions.userManageDelete
     });
-    
+
+    // Check if current permissions deviate from the stored role - convert to custom if needed
+    const effectiveRole = getEffectiveRole(user.role || 'employee', completePermissions, user.customRoleName);
+
     setEditingUser({
       ...user,
-      role: user.role || 'employee',
+      role: effectiveRole.role,
       permissions: completePermissions,
-      customRoleName: user.customRoleName || '',
+      customRoleName: effectiveRole.customRoleName,
     });
     setShowEditModal(true);
     setTimeout(() => loadModelPresets(), 10);
@@ -397,14 +433,22 @@ const UserManagement = () => {
     e.preventDefault();
     try {
       const token = localStorage.getItem('token');
+
+      // Ensure the role is correctly set based on current permissions before saving
+      const finalPermissions = editingUser.permissions || {};
+      const effectiveRole = getEffectiveRole(editingUser.role, finalPermissions, editingUser.customRoleName);
+
       const payload = {
-        permissions: editingUser.permissions || {},
-        role: editingUser.role || 'employee',
-        customRoleName: editingUser.customRoleName || '',
+        permissions: finalPermissions,
+        role: effectiveRole.role,
+        customRoleName: effectiveRole.customRoleName,
       };
+
       console.log('=== UPDATE USER DEBUG ===');
       console.log('User:', editingUser.name);
-      console.log('Role being saved:', payload.role);
+      console.log('Original role:', editingUser.role);
+      console.log('Effective role being saved:', payload.role);
+      console.log('Custom role name being saved:', payload.customRoleName);
       console.log('All permissions being saved:', payload.permissions);
       console.log('User management permissions being saved:', {
         userManagement: payload.permissions.userManagement,
@@ -465,16 +509,25 @@ const UserManagement = () => {
 
   // Toggle a preset for editingUser.permissions.presetAccess
   const handlePresetToggle = (presetId, checked) => {
-    setEditingUser(prev => ({
-      ...prev,
-      permissions: {
+    setEditingUser(prev => {
+      const newPermissions = {
         ...prev.permissions,
         presetAccess: {
           ...(prev.permissions?.presetAccess || {}),
           [presetId]: checked
         }
-      }
-    }));
+      };
+
+      // Check if permissions now deviate from base role - convert to custom if needed
+      const effectiveRole = getEffectiveRole(prev.role, newPermissions, prev.customRoleName);
+
+      return {
+        ...prev,
+        permissions: newPermissions,
+        role: effectiveRole.role,
+        customRoleName: effectiveRole.customRoleName
+      };
+    });
   };
 
   // Active/deactivated status removed; no toggle function
@@ -571,7 +624,7 @@ const UserManagement = () => {
         ...prev.permissions,
         [permission]: value
       };
-      
+
       // Auto-check main checkboxes when sub-permissions are enabled
       if (permission.startsWith('userManage') && value) {
         newPermissions.userManagement = true;
@@ -579,7 +632,7 @@ const UserManagement = () => {
       if (permission.startsWith('modelManage') && value) {
         newPermissions.modelUpload = true;
       }
-      
+
       // Auto-uncheck main checkbox when all sub-permissions are disabled
       if (permission === 'userManagement' && !value) {
         newPermissions.userManageCreate = false;
@@ -591,17 +644,22 @@ const UserManagement = () => {
         newPermissions.modelManageEdit = false;
         newPermissions.modelManageDelete = false;
       }
-      
+
       // Ensure all permissions have boolean values (not undefined)
       Object.keys(newPermissions).forEach(key => {
         if (newPermissions[key] === undefined) {
           newPermissions[key] = false;
         }
       });
-      
+
+      // Check if permissions now deviate from base role - convert to custom if needed
+      const effectiveRole = getEffectiveRole(prev.role, newPermissions);
+
       return {
         ...prev,
-        permissions: newPermissions
+        permissions: newPermissions,
+        role: effectiveRole.role,
+        customRoleName: effectiveRole.customRoleName
       };
     });
   };
@@ -612,12 +670,20 @@ const UserManagement = () => {
       const newQualities = checked
         ? [...currentQualities, quality]
         : currentQualities.filter(q => q !== quality);
+
+      const newPermissions = {
+        ...prev.permissions,
+        imageDownloadQualities: newQualities
+      };
+
+      // Check if permissions now deviate from base role - convert to custom if needed
+      const effectiveRole = getEffectiveRole(prev.role, newPermissions, prev.customRoleName);
+
       return {
         ...prev,
-        permissions: {
-          ...prev.permissions,
-          imageDownloadQualities: newQualities
-        }
+        permissions: newPermissions,
+        role: effectiveRole.role,
+        customRoleName: effectiveRole.customRoleName
       };
     });
   };
@@ -710,7 +776,16 @@ const UserManagement = () => {
       }
       return acc;
     }, {});
-    setEditingUser(prev => ({ ...prev, permissions: allTrue }));
+
+    // Check if permissions now deviate from base role - convert to custom if needed
+    const effectiveRole = getEffectiveRole(editingUser.role, allTrue, editingUser.customRoleName);
+
+    setEditingUser(prev => ({
+      ...prev,
+      permissions: allTrue,
+      role: effectiveRole.role,
+      customRoleName: effectiveRole.customRoleName
+    }));
   };
 
   const revokeAll = () => {
@@ -723,7 +798,16 @@ const UserManagement = () => {
       }
       return acc;
     }, {});
-    setEditingUser(prev => ({ ...prev, permissions: allFalse }));
+
+    // Check if permissions now deviate from base role - convert to custom if needed
+    const effectiveRole = getEffectiveRole(editingUser.role, allFalse, editingUser.customRoleName);
+
+    setEditingUser(prev => ({
+      ...prev,
+      permissions: allFalse,
+      role: effectiveRole.role,
+      customRoleName: effectiveRole.customRoleName
+    }));
   };
 
   if (loading) {
@@ -1172,28 +1256,32 @@ const UserManagement = () => {
                         onChange={e => {
                           const newRole = e.target.value;
                           console.log('Role changed from', editingUser.role, 'to:', newRole);
-                          
+
                           // Only apply default permissions if the role actually changed
                           if (newRole === editingUser.role) {
                             console.log('Role unchanged, keeping existing permissions');
                             return;
                           }
-                          
+
                           setEditingUser(prev => {
                             const defaultPerms = { ...ROLE_DEFAULT_PERMISSIONS[newRole] } || {};
                             console.log('Default permissions for', newRole, ':', defaultPerms);
-                            
+
                             const completePerms = {
                               ...defaultPerms,
                               presetAccess: prev.permissions?.presetAccess || {}
                             };
-                            
+
                             console.log('Complete permissions being set:', completePerms);
-                            
-                            return { 
-                              ...prev, 
-                              role: newRole, 
-                              customRoleName: newRole === 'custom' ? (prev.customRoleName || '') : '',
+
+                            // Check if the new permissions would deviate from the new role's defaults
+                            // (This shouldn't happen for standard roles, but just in case)
+                            const effectiveRole = getEffectiveRole(newRole, completePerms, prev.customRoleName);
+
+                            return {
+                              ...prev,
+                              role: effectiveRole.role,
+                              customRoleName: effectiveRole.customRoleName,
                               permissions: completePerms
                             };
                           });
