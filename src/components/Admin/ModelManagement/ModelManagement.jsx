@@ -187,7 +187,14 @@ const ModelManagement = () => {
         hiddenInitially: model.hiddenInitially,
         uiWidgets: model.uiWidgets,
         assets: model.assets,
-        presets: model.presets
+        presets: model.presets,
+        presetImages: model.presetImages,
+        placementMode: model.placementMode,
+        modelPosition: model.modelPosition,
+        modelRotation: model.modelRotation,
+        modelScale: model.modelScale,
+        interactionGroups: model.interactionGroups,
+        shadows: model.shadows
       };
     });
     return formatted;
