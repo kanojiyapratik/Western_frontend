@@ -104,11 +104,24 @@ export default function AddModelModalSimple({ onClose, onAdd, editModel = null, 
     console.log('No assets found in editModel:', editModel);
     return [];
   });
+
+  // Load additional model configuration fields on edit
+  const [placementMode, setPlacementMode] = useState(editModel?.placementMode || 'autofit');
+  const [modelPosition, setModelPosition] = useState(editModel?.modelPosition || [0, 0.5, 0]);
+  const [modelRotation, setModelRotation] = useState(editModel?.modelRotation || [0, 0, 0]);
+  const [modelScale, setModelScale] = useState(editModel?.modelScale || 1);
+  const [interactionGroups, setInteractionGroups] = useState(editModel?.interactionGroups || []);
+  const [shadows, setShadows] = useState(editModel?.shadows || { enabled: true, position: [0, -0.5, 0], opacity: 0.4, scale: 10, blur: 2.5, far: 4.5, resolution: 256, color: "#000000" });
   const [presetImages, setPresetImages] = useState(() => {
     // On edit, load preset images from model.presetImages field if it exists
     if (isEditMode && editModel && editModel.presetImages && Array.isArray(editModel.presetImages)) {
       console.log('Loading preset images from editModel:', editModel.presetImages);
-      return editModel.presetImages;
+      return editModel.presetImages.map(img => ({
+        originalName: img.originalName || img.filename || 'Unknown',
+        filename: img.filename || img.originalName || 'Unknown',
+        url: img.url,
+        uploadedAt: img.uploadedAt || new Date().toISOString()
+      }));
     }
     return [];
   });
@@ -371,6 +384,7 @@ export default function AddModelModalSimple({ onClose, onAdd, editModel = null, 
               originalName: file.name,
               filename: file.name,
               url: cloudinaryUrl,
+              publicId: data.public_id || null, // Store Cloudinary public_id for potential cleanup
               uploadedAt: new Date().toISOString()
             });
           } catch (err) {
@@ -441,7 +455,31 @@ export default function AddModelModalSimple({ onClose, onAdd, editModel = null, 
       }
       // Include preset images if any were uploaded
       if (presetImages.length > 0) {
-        modelData.presetImages = presetImages;
+        modelData.presetImages = presetImages.map(img => ({
+          originalName: img.originalName,
+          filename: img.filename,
+          url: img.url,
+          publicId: img.publicId || null,
+          uploadedAt: img.uploadedAt
+        }));
+      }
+
+      // Include additional model configuration fields
+      modelData.placementMode = placementMode;
+      if (modelPosition && Array.isArray(modelPosition) && modelPosition.length === 3) {
+        modelData.modelPosition = modelPosition;
+      }
+      if (modelRotation && Array.isArray(modelRotation) && modelRotation.length === 3) {
+        modelData.modelRotation = modelRotation;
+      }
+      if (typeof modelScale === 'number' && modelScale > 0) {
+        modelData.modelScale = modelScale;
+      }
+      if (interactionGroups && Array.isArray(interactionGroups) && interactionGroups.length > 0) {
+        modelData.interactionGroups = interactionGroups;
+      }
+      if (shadows && typeof shadows === 'object') {
+        modelData.shadows = shadows;
       }
 
       setSaving(true);
@@ -636,9 +674,16 @@ export default function AddModelModalSimple({ onClose, onAdd, editModel = null, 
         <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid #e5e7eb' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
             <span style={{ fontWeight: 600 }}>Preset Images ({presetImages.length} uploaded)</span>
-            <button type="button" onClick={handlePresetImagesPick} disabled={uploadingPresetImages || !isLoggedIn || checkingAuth} className="btn-secondary">
-              {uploadingPresetImages ? 'Uploading…' : !isLoggedIn && !checkingAuth ? 'Login Required' : 'Upload images'}
-            </button>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button type="button" onClick={handlePresetImagesPick} disabled={uploadingPresetImages || !isLoggedIn || checkingAuth} className="btn-secondary">
+                {uploadingPresetImages ? 'Uploading…' : !isLoggedIn && !checkingAuth ? 'Login Required' : 'Upload images'}
+              </button>
+              {presetImages.length > 0 && (
+                <button type="button" onClick={() => setPresetImages([])} className="btn-danger" style={{ fontSize: 12, padding: '4px 8px' }}>
+                  Clear All
+                </button>
+              )}
+            </div>
           </div>
           <div style={{ fontSize: 12, color: '#64748b' }}>Upload images that can be used in preset configurations (e.g., logos, textures). Images are uploaded to Cloudinary and URLs are stored for use in config files.</div>
           {presetImages.length > 0 && (
@@ -655,13 +700,22 @@ export default function AddModelModalSimple({ onClose, onAdd, editModel = null, 
                     <div style={{ fontSize: 10, color: '#64748b', marginBottom: 4, wordBreak: 'break-all', maxHeight: '40px', overflow: 'hidden' }}>
                       {img.url}
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => copyToClipboard(img.url)}
-                      style={{ fontSize: 10, padding: '4px 8px', background: '#2563eb', color: 'white', border: 'none', borderRadius: 4, cursor: 'pointer', width: '100%' }}
-                    >
-                      Copy URL
-                    </button>
+                    <div style={{ display: 'flex', gap: 4 }}>
+                      <button
+                        type="button"
+                        onClick={() => copyToClipboard(img.url)}
+                        style={{ fontSize: 10, padding: '4px 6px', background: '#2563eb', color: 'white', border: 'none', borderRadius: 4, cursor: 'pointer', flex: 1 }}
+                      >
+                        Copy URL
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPresetImages(prev => prev.filter((_, i) => i !== idx))}
+                        style={{ fontSize: 10, padding: '4px 6px', background: '#dc2626', color: 'white', border: 'none', borderRadius: 4, cursor: 'pointer', flex: 1 }}
+                      >
+                        Remove
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
