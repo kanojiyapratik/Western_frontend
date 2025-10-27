@@ -2410,7 +2410,7 @@ export function Experience({
   // -----------------------
   // Preset UI (e.g., Coke / Pepsi)
   // Expect `config.presets` to be an array like:
-  // [{ id: 'coke', label: 'Coke Look', actions: [{ part: 'CanBody', texture: '/texture/pepsi.jpg', mapping: {} }, { part: 'Logo', tintColor: '#fff' }] }, ...]
+  // [{ id: 'coke', label: 'Coke Look', actions: [{ part: 'CanBody', texture: 'https://res.cloudinary.com/dltnu6gm2/image/upload/v1761303469/models/cokelogo.jpg', mapping: {} }, { part: 'Logo', tintColor: '#fff' }] }, ...]
   // Each action can either specify `texture` (string path or dataURL) or `tintColor`.
   const applyPreset = async (preset) => {
     if (!preset || !Array.isArray(preset.actions)) return;

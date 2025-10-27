@@ -47,6 +47,7 @@ export default function AddModelModalSimple({ onClose, onAdd, editModel = null, 
   const [uploadingModel, setUploadingModel] = useState(false);
   const [uploadingConfig, setUploadingConfig] = useState(false);
   const [uploadingAssets, setUploadingAssets] = useState(false);
+  const [uploadingPresetImages, setUploadingPresetImages] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [error, setError] = useState('');
@@ -101,6 +102,14 @@ export default function AddModelModalSimple({ onClose, onAdd, editModel = null, 
       }));
     }
     console.log('No assets found in editModel:', editModel);
+    return [];
+  });
+  const [presetImages, setPresetImages] = useState(() => {
+    // On edit, load preset images from model.presetImages field if it exists
+    if (isEditMode && editModel && editModel.presetImages && Array.isArray(editModel.presetImages)) {
+      console.log('Loading preset images from editModel:', editModel.presetImages);
+      return editModel.presetImages;
+    }
     return [];
   });
   const [showPasteJSON, setShowPasteJSON] = useState(false);
@@ -325,6 +334,58 @@ export default function AddModelModalSimple({ onClose, onAdd, editModel = null, 
     input.click();
   };
 
+  const handlePresetImagesPick = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.multiple = true;
+    input.onchange = async (e) => {
+      const files = Array.from(e.target?.files || []);
+      if (!files.length) return;
+      setUploadingPresetImages(true);
+      try {
+        const uploaded = [];
+        for (let i = 0; i < files.length; i++) {
+          const file = files[i];
+          try {
+            // Upload to Cloudinary via the existing upload endpoint
+            const formData = new FormData();
+            formData.append('file', file);
+            const token = localStorage.getItem('token');
+
+            const response = await fetch(`${getApiBaseUrl()}/api/upload`, {
+              method: 'POST',
+              headers: token ? { 'Authorization': `Bearer ${token}` } : undefined,
+              body: formData
+            });
+
+            if (!response.ok) {
+              const err = await response.json().catch(() => ({}));
+              throw new Error(err.message || `Upload failed (${response.status})`);
+            }
+
+            const data = await response.json();
+            const cloudinaryUrl = data.path || data.filename; // This will be the Cloudinary URL like https://res.cloudinary.com/.../models/filename.jpg
+
+            uploaded.push({
+              originalName: file.name,
+              filename: file.name,
+              url: cloudinaryUrl,
+              uploadedAt: new Date().toISOString()
+            });
+          } catch (err) {
+            console.error('Preset image upload failed:', err);
+            // continue other uploads
+          }
+        }
+        setPresetImages(prev => [...prev, ...uploaded]);
+      } finally {
+        setUploadingPresetImages(false);
+      }
+    };
+    input.click();
+  };
+
   const updateAssetLabel = (index, label) => {
     setAssets(prev => prev.map((a, i) => i === index ? { ...a, label } : a));
   };
@@ -377,6 +438,10 @@ export default function AddModelModalSimple({ onClose, onAdd, editModel = null, 
       if (section) modelData.section = section;
       if (Object.keys(assetsObj).length > 0) {
         modelData.assets = assetsObj;
+      }
+      // Include preset images if any were uploaded
+      if (presetImages.length > 0) {
+        modelData.presetImages = presetImages;
       }
 
       setSaving(true);
@@ -565,6 +630,43 @@ export default function AddModelModalSimple({ onClose, onAdd, editModel = null, 
               </React.Fragment>
             ))}
           </div>
+        </div>
+
+        {/* Preset Images Upload Section */}
+        <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid #e5e7eb' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+            <span style={{ fontWeight: 600 }}>Preset Images ({presetImages.length} uploaded)</span>
+            <button type="button" onClick={handlePresetImagesPick} disabled={uploadingPresetImages || !isLoggedIn || checkingAuth} className="btn-secondary">
+              {uploadingPresetImages ? 'Uploading…' : !isLoggedIn && !checkingAuth ? 'Login Required' : 'Upload images'}
+            </button>
+          </div>
+          <div style={{ fontSize: 12, color: '#64748b' }}>Upload images that can be used in preset configurations (e.g., logos, textures). Images are uploaded to Cloudinary and URLs are stored for use in config files.</div>
+          {presetImages.length > 0 && (
+            <div style={{ marginTop: 8 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 8 }}>
+                {presetImages.map((img, idx) => (
+                  <div key={idx} style={{ border: '1px solid #e5e7eb', borderRadius: 8, padding: 8, textAlign: 'center' }}>
+                    <img
+                      src={img.url}
+                      alt={img.originalName}
+                      style={{ width: '100px', height: '100px', objectFit: 'cover', borderRadius: 4, marginBottom: 4 }}
+                    />
+                    <div style={{ fontSize: 11, fontWeight: 500, marginBottom: 4, wordBreak: 'break-all' }}>{img.originalName}</div>
+                    <div style={{ fontSize: 10, color: '#64748b', marginBottom: 4, wordBreak: 'break-all', maxHeight: '40px', overflow: 'hidden' }}>
+                      {img.url}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => copyToClipboard(img.url)}
+                      style={{ fontSize: 10, padding: '4px 8px', background: '#2563eb', color: 'white', border: 'none', borderRadius: 4, cursor: 'pointer', width: '100%' }}
+                    >
+                      Copy URL
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {error && <div className="error" style={{ color: '#b91c1c', marginTop: 8 }}>{error}</div>}

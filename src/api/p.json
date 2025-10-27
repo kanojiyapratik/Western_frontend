@@ -1,10 +1,11 @@
 {
-  "name": "QW",
-  "path": "https://res.cloudinary.com/dltnu6gm2/image/upload/v1761303469/models/QW_base.glb",
+   "name": "2",
+  "path": "https://res.cloudinary.com/dltnu6gm2/image/upload/v1761305540/models/2_base.glb",
   "assets": {
-    "base": "https://res.cloudinary.com/dltnu6gm2/image/upload/v1761303469/models/QW_base.glb",
-    "doors": "https://res.cloudinary.com/dltnu6gm2/image/upload/v1761303471/models/QW_doors.glb",
-    "glassDoors": "https://res.cloudinary.com/dltnu6gm2/image/upload/v1761303479/models/QW_glassDoors.glb"
+    "base": "https://res.cloudinary.com/dltnu6gm2/image/upload/v1761305540/models/2_base.glb",
+    "doors": "https://res.cloudinary.com/dltnu6gm2/image/upload/v1761305542/models/2_doors.glb",
+    "drawers": "https://res.cloudinary.com/dltnu6gm2/image/upload/v1761306250/models/2_drawers.glb",
+    "glassDoors": "https://res.cloudinary.com/dltnu6gm2/image/upload/v1761305561/models/2_glassDoors.glb"
   },
   "modelPosition": [
     0,
