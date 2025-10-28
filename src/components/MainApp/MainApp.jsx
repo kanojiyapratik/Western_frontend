@@ -280,6 +280,9 @@ function MainApp() {
   // Effects/Materials states
   const [reflectionActive, setReflectionActive] = useState(false);
 
+  // Viewer controls state
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
   // Get current model configuration from merged set
   const currentModel = mergedModels[selectedModel] || mergedModels["Undercounter"];
 
@@ -359,6 +362,61 @@ function MainApp() {
     }
   }, [logActivity]);
 
+  // Viewer control functions
+  const handleZoomIn = useCallback(() => {
+    if (api?.updateCameraForModel) {
+      const cameraConfig = api.updateCameraForModel();
+      if (cameraConfig) {
+        logActivity("viewer_zoom_in");
+      }
+    }
+  }, [api, logActivity]);
+
+  const handleZoomOut = useCallback(() => {
+    // Zoom out by moving camera farther away
+    if (api?.getModelInfo && api?.updateModelTransform) {
+      const modelInfo = api.getModelInfo();
+      if (modelInfo) {
+        // Increase camera distance for zoom out effect
+        const currentTransform = modelInfo.transform;
+        const zoomOutTransform = {
+          ...currentTransform,
+          scale: Math.max(0.1, (currentTransform.scale || 1) * 0.8) // Zoom out by reducing scale
+        };
+        api.updateModelTransform(zoomOutTransform);
+        logActivity("viewer_zoom_out");
+      }
+    }
+  }, [api, logActivity]);
+
+  const handleFullscreen = useCallback(() => {
+    setIsFullscreen(!isFullscreen);
+    logActivity(isFullscreen ? "viewer_exit_fullscreen" : "viewer_enter_fullscreen");
+  }, [isFullscreen, logActivity]);
+
+  // Handle escape key to exit fullscreen
+  useEffect(() => {
+    const handleKeyPress = (e) => {
+      if (e.key === 'Escape' && isFullscreen) {
+        setIsFullscreen(false);
+        logActivity("viewer_exit_fullscreen_esc");
+      }
+    };
+
+    if (isFullscreen) {
+      document.addEventListener('keydown', handleKeyPress);
+      // Prevent body scroll when in fullscreen
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyPress);
+      document.body.style.overflow = '';
+    };
+  }, [isFullscreen, logActivity]);
+
   if (loading) {
     return (
       <div className="main-app">
@@ -375,7 +433,7 @@ function MainApp() {
   return (
     <div className="main-app">
       <div className="app-content">
-        <div className="canvas-container">
+        <div className={`canvas-container ${isFullscreen ? 'fullscreen' : ''}`}>
           <Canvas
             shadows
             frameloop="demand"
@@ -398,6 +456,34 @@ function MainApp() {
               onModelTransformChange={handleModelTransformChange}
             />
           </Canvas>
+
+          {/* Professional Viewer Controls */}
+          <div className={`viewer-controls ${isFullscreen ? 'fullscreen-mode' : ''}`}>
+            <button
+              className="zoom-in"
+              onClick={handleZoomIn}
+              title="Zoom In"
+              aria-label="Zoom in on model"
+            >
+              +
+            </button>
+            <button
+              className="zoom-out"
+              onClick={handleZoomOut}
+              title="Zoom Out"
+              aria-label="Zoom out from model"
+            >
+              −
+            </button>
+            <button
+              className="fullscreen"
+              onClick={handleFullscreen}
+              title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
+              aria-label={isFullscreen ? "Exit fullscreen mode" : "Enter fullscreen mode"}
+            >
+              ⛶
+            </button>
+          </div>
         </div>
 
         <Interface
