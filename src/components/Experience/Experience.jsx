@@ -165,7 +165,24 @@ export function Experience({
   // Load the main model (base model)
   logOnce('load_model', 'Loading main model from:', config.path);
   logOnce('config_snapshot', 'Full config object:', JSON.stringify(config, null, 2));
-  const { scene: mainScene } = useGLTF(config.path);
+
+  // Convert S3 URLs to proxy URLs to bypass CORS
+  const getProxyUrl = (url) => {
+    if (url && url.includes('amazonaws.com') && url.includes('.glb')) {
+      // Extract the path after the bucket
+      const s3Match = url.match(/amazonaws\.com\/(.+\.glb)/);
+      if (s3Match) {
+        const baseUrl = import.meta.env.VITE_API_BASE?.replace('/api', '') ||
+                        (import.meta.env.MODE === 'production' ? 'https://threed-configurator-backend-7pwk.onrender.com' : 'http://localhost:5000');
+        return `${baseUrl}/api/models/proxy/glb/${s3Match[1]}`;
+      }
+    }
+    return url;
+  };
+
+  const proxyPath = getProxyUrl(config.path);
+  logOnce('proxy_url', 'Using proxy URL:', proxyPath);
+  const { scene: mainScene } = useGLTF(proxyPath);
   logOnce('main_scene_loaded', 'Main scene loaded:', mainScene ? 'success' : 'failed');
 
   // Load ALL additional assets dynamically from config.assets (no manual config needed)
@@ -175,9 +192,11 @@ export function Experience({
     Object.entries(config.assets).forEach(([assetKey, assetPath]) => {
       if (assetPath && typeof assetPath === 'string') {
         try {
-          const { scene } = useGLTF(assetPath);
+          const proxyAssetPath = getProxyUrl(assetPath);
+          logOnce(`asset_proxy_${assetKey}`, `[ASSET] Using proxy URL for ${assetKey}: ${proxyAssetPath}`);
+          const { scene } = useGLTF(proxyAssetPath);
           assetScenes[assetKey] = scene;
-          logOnce(`asset_loaded_${assetKey}`, `[ASSET] ${assetKey} loaded from: ${assetPath}`);
+          logOnce(`asset_loaded_${assetKey}`, `[ASSET] ${assetKey} loaded from: ${proxyAssetPath}`);
           let meshCount = 0;
           scene.traverse(obj => { if (obj.isMesh) meshCount++; });
           logOnce(`asset_meshcount_${assetKey}`, `[ASSET] ${assetKey} mesh count: ${meshCount}`);
