@@ -30,11 +30,13 @@ export default function AddModelModalSimple({ onClose, onAdd, editModel = null, 
         try {
           setConfigLoadError('');
           const url = configUrl.startsWith('http') ? configUrl : `${getApiBaseUrl()}${configUrl}`;
+          console.log('Fetching config from:', url);
           const res = await fetch(url);
           if (!res.ok) throw new Error(`Failed to fetch config: ${res.status}`);
           const json = await res.json();
           setConfigContent(JSON.stringify(json, null, 2));
         } catch (err) {
+          console.error('Config fetch error:', err);
           setConfigLoadError(err.message || 'Failed to load config');
         }
       };
@@ -173,30 +175,55 @@ export default function AddModelModalSimple({ onClose, onAdd, editModel = null, 
       throw new Error('You must be logged in to upload files. Please log in and try again.');
     }
 
-    const formData = new FormData();
-    formData.append('file', file);
     const token = localStorage.getItem('token');
     console.log('Upload token:', token ? 'present' : 'missing');
-    
+
     if (!token) {
       throw new Error('No authentication token found. Please log in again.');
     }
-    
-    const endpoint = subPath === 'configs' ? '/api/upload-config' : '/api/upload';
-    const res = await fetch(`${getApiBaseUrl()}${endpoint}`, {
-      method: 'POST',
-      headers: token ? { 'Authorization': `Bearer ${token}` } : undefined,
-      body: formData
-    });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      console.error('[UploadError]', res.status, err);
-      throw new Error(err.message || `Upload failed (${res.status})`);
+
+    if (subPath === 'configs') {
+      // For config files, save directly to backend instead of S3
+      const configData = await file.text();
+      const jsonData = JSON.parse(configData);
+
+      const res = await fetch(`${getApiBaseUrl()}/api/upload-config`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ config: jsonData })
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        console.error('[ConfigUploadError]', res.status, err);
+        throw new Error(err.message || `Config upload failed (${res.status})`);
+      }
+
+      const data = await res.json();
+      console.log('[ConfigUploadSuccess]', data);
+      return data.path;
+    } else {
+      // For model files, use S3 upload
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const res = await fetch(`${getApiBaseUrl()}/api/upload`, {
+        method: 'POST',
+        headers: token ? { 'Authorization': `Bearer ${token}` } : undefined,
+        body: formData
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        console.error('[UploadError]', res.status, err);
+        throw new Error(err.message || `Upload failed (${res.status})`);
+      }
+      const data = await res.json();
+      console.log('[UploadSuccess]', subPath, data);
+      return data?.path || (data?.filename ? `/models/${data.filename}` : '');
     }
-    const data = await res.json();
-    console.log('[UploadSuccess]', subPath, data);
-    // Prefer /models or /configs prefix from server response
-    return data?.path || (data?.filename ? (subPath === 'configs' ? `/configs/${data.filename}` : `/models/${data.filename}`) : '');
   };
 
   const handleModelPick = () => {

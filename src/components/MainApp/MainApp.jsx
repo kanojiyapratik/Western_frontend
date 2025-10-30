@@ -311,6 +311,7 @@ function MainApp() {
         globalTextureWidget: true,
         lightWidget: true,
         saveConfig: true,
+        screenshotWidget: true,
         role: user?.role
       }
     : user?.permissions || {};

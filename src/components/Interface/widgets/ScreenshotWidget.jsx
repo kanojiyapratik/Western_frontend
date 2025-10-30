@@ -5,7 +5,9 @@ export function ScreenshotWidget({ title = "Download Image", api, userPermission
   const [status, setStatus] = useState('');
   const [selectedQuality, setSelectedQuality] = useState('average');
 
-  const allowedQualities = userPermissions?.imageDownloadQualities || ['average'];
+  const allowedQualities = userPermissions?.role === 'admin' || userPermissions?.role === 'superadmin'
+    ? ['average', 'good', 'high', 'best', 'maximum']
+    : userPermissions?.imageDownloadQualities || ['average', 'good', 'high'];
 
   const qualityOptions = {
     average: { label: 'Average (720p)', width: 1280, height: 720 },

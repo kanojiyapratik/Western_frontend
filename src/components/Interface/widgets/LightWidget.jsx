@@ -38,17 +38,7 @@ export const LightWidget = ({ config, api }) => {
   }, [JSON.stringify(lights)]); // Use JSON.stringify to avoid infinite loops on array changes
 
   if (!lights || lights.length === 0) {
-    return (
-      <div className="widget-container">
-        <div className="widget-title">💡 Lights Control</div>
-        <div style={{ padding: '20px', textAlign: 'center', color: '#666' }}>
-          <p>⚠️ No lights configured for this model</p>
-          <p style={{ fontSize: '12px' }}>
-            Lights need to be configured in the model's database entry
-          </p>
-        </div>
-      </div>
-    );
+    return null; // Don't show widget if no lights configured
   }
 
   const toggleLight = (lightName, newState) => {
@@ -84,56 +74,17 @@ export const LightWidget = ({ config, api }) => {
   const anyOn = Object.values(lightsState).some(state => state);
 
   return (
-    <div className="widget-container">
-      <div className="widget-title">
-        💡 Lights Control
-      </div>
-      
-      {/* Master toggle */}
-      <div style={{ marginBottom: '20px' }}>
+    <div className="widget light-widget">
+      <h3>Lights</h3>
+      <div className="widget-content">
         <button
-          className={`interface-button ${anyOn ? 'btn-warning' : 'secondary'} btn-full-width`}
+          className={`light-toggle-btn ${anyOn ? 'active' : ''}`}
           onClick={toggleAllLights}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '10px'
-          }}
+          title={anyOn ? 'Turn off all lights' : 'Turn on all lights'}
         >
-          <span>{anyOn ? '💡' : '🔆'}</span>
-          {allOn ? 'All Lights ON' : anyOn ? 'Some Lights ON' : 'All Lights OFF'}
+          {anyOn ? '💡' : '🔆'}
         </button>
       </div>
-
-      {/* Individual light controls */}
-      {lights.map(light => (
-        <div key={light.name} className="form-group">
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'space-between',
-            padding: '16px 20px',
-            background: lightsState[light.name] ? 'linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%)' : 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)',
-            border: `2px solid ${lightsState[light.name] ? '#ffeaa7' : '#e2e8f0'}`,
-            borderRadius: '16px',
-            transition: 'all 0.3s ease'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <span style={{ fontSize: '24px' }}>{lightsState[light.name] ? '💡' : '🔘'}</span>
-              <span className="form-label" style={{ margin: 0, fontSize: '16px', fontWeight: '600' }}>{light.name}</span>
-            </div>
-            <label className="switch">
-              <input
-                type="checkbox"
-                checked={lightsState[light.name] || false}
-                onChange={(e) => toggleLight(light.name, e.target.checked)}
-              />
-              <span className="slider"></span>
-            </label>
-          </div>
-        </div>
-      ))}
     </div>
   );
 };

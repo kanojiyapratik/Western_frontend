@@ -2718,8 +2718,8 @@ export function Experience({
 
       {/* Minimal post-processing for smooth rendering only */}
       <EffectComposer>
-        <Bloom intensity={0.1} luminanceThreshold={0.9} luminanceSmoothing={0.9} mipmapBlur />
-        <SSAO samples={8} radius={0.1} intensity={0.5} luminanceInfluence={0.5} color="black" />
+        <Bloom intensity={0.05} luminanceThreshold={0.95} luminanceSmoothing={0.95} mipmapBlur />
+        <SSAO samples={4} radius={0.05} intensity={0.3} luminanceInfluence={0.7} color="black" />
   <ToneMapping adaptive={false} mode={3} resolution={256} />
         <SMAA />
       </EffectComposer>
