@@ -15,6 +15,7 @@ const getApiBaseUrl = () => {
 };
 
 export default function AddModelModalSimple({ onClose, onAdd, editModel = null, isEditMode = false, onOpenMultiAsset = null }) {
+  const [showAssetTypeSelection, setShowAssetTypeSelection] = useState(!isEditMode);
   // For config file editing
   const [configContent, setConfigContent] = useState('');
   const [configLoadError, setConfigLoadError] = useState('');
@@ -543,21 +544,12 @@ export default function AddModelModalSimple({ onClose, onAdd, editModel = null, 
     <div className="modal-overlay">
       <div className="modal">
         <h3>{isEditMode ? 'Edit Model' : 'Add Model'}</h3>
+
+
+        {/* Show form always */}
+        {true && (
+          <>
         
-        {/* Authentication Status */}
-        {checkingAuth ? (
-          <div style={{ padding: '8px', background: '#fef3c7', border: '1px solid #f59e0b', borderRadius: '8px', marginBottom: '16px' }}>
-            Checking authentication...
-          </div>
-        ) : !isLoggedIn ? (
-          <div style={{ padding: '8px', background: '#fee2e2', border: '1px solid #dc2626', borderRadius: '8px', marginBottom: '16px' }}>
-            <strong>Authentication Required:</strong> You must be logged in to upload files. Please log in through the admin panel and try again.
-          </div>
-        ) : (
-          <div style={{ padding: '8px', background: '#d1fae5', border: '1px solid #10b981', borderRadius: '8px', marginBottom: '16px' }}>
-            ✓ Authenticated - You can upload files
-          </div>
-        )}
         
         <div className="form-grid">
           <label>
@@ -672,9 +664,6 @@ export default function AddModelModalSimple({ onClose, onAdd, editModel = null, 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
             <span style={{ fontWeight: 600 }}>Additional assets (optional)</span>
             <div style={{ display: 'flex', gap: 8 }}>
-              <button type="button" onClick={() => { if (onOpenMultiAsset) onOpenMultiAsset(); else handleAssetsPick(); }} disabled={uploadingAssets || !isLoggedIn || checkingAuth} className="btn-secondary">
-                {uploadingAssets ? 'Uploading…' : !isLoggedIn && !checkingAuth ? 'Login Required' : 'Upload multiple'}
-              </button>
               {assets.length > 0 && (
                 <button type="button" className="btn-secondary" onClick={() => copyToClipboard(buildAssetsSnippet())}>
                   Copy JSON snippet
@@ -750,14 +739,16 @@ export default function AddModelModalSimple({ onClose, onAdd, editModel = null, 
           )}
         </div>
 
-        {error && <div className="error" style={{ color: '#b91c1c', marginTop: 8 }}>{error}</div>}
+          {error && <div className="error" style={{ color: '#b91c1c', marginTop: 8 }}>{error}</div>}
 
-        <div className="modal-actions">
-          <button className="btn-secondary" onClick={onClose} disabled={saving}>Cancel</button>
-          <button className="btn-primary" onClick={handleSubmit} disabled={saving || !isLoggedIn || checkingAuth}>
-            {saving ? 'Saving…' : !isLoggedIn && !checkingAuth ? 'Login Required' : 'Save'}
-          </button>
-        </div>
+          <div className="modal-actions">
+            <button className="btn-secondary" onClick={onClose} disabled={saving}>Cancel</button>
+            <button className="btn-primary" onClick={handleSubmit} disabled={saving || !isLoggedIn || checkingAuth}>
+              {saving ? 'Saving…' : !isLoggedIn && !checkingAuth ? 'Login Required' : 'Save'}
+            </button>
+          </div>
+        </>
+        )}
       </div>
       <style>{`
         .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; z-index: 50; }

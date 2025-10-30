@@ -120,6 +120,8 @@ const ModelManagement = () => {
   const [error, setError] = useState(null);
   // Default to showing all sections
   const [selectedSection, setSelectedSection] = useState('(All)');
+  // Track which modal type to show
+  const [modalType, setModalType] = useState('single'); // 'single' or 'multi'
   
   // Delete confirmation modal state
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -444,11 +446,155 @@ const ModelManagement = () => {
             </select>
           </div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginLeft: 16 }}>
           {canUpload && (
-            <button className="btn-primary" onClick={()=>setShowAdd(true)}>Add Model</button>
+            <div style={{ position: 'relative' }}>
+              <button
+                className="btn-primary"
+                onMouseEnter={(e) => {
+                  const dropdown = e.currentTarget.nextElementSibling;
+                  if (dropdown) {
+                    dropdown.style.display = 'block';
+                    dropdown.style.opacity = '0';
+                    dropdown.style.transform = 'translateY(-8px)';
+                    // Animate in
+                    setTimeout(() => {
+                      dropdown.style.transition = 'all 0.15s ease-out';
+                      dropdown.style.opacity = '1';
+                      dropdown.style.transform = 'translateY(0)';
+                    }, 10);
+                  }
+                }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const dropdown = e.currentTarget.nextElementSibling;
+                  if (dropdown) {
+                    const isVisible = dropdown.style.display === 'block';
+                    if (isVisible) {
+                      // Animate out
+                      dropdown.style.opacity = '0';
+                      dropdown.style.transform = 'translateY(-8px)';
+                      setTimeout(() => {
+                        dropdown.style.display = 'none';
+                      }, 150);
+                    } else {
+                      dropdown.style.display = 'block';
+                      dropdown.style.opacity = '0';
+                      dropdown.style.transform = 'translateY(-10px)';
+                      // Animate in
+                      setTimeout(() => {
+                        dropdown.style.transition = 'all 0.2s ease-out';
+                        dropdown.style.opacity = '1';
+                        dropdown.style.transform = 'translateY(0)';
+                      }, 10);
+                    }
+                  }
+                }}
+                style={{ position: 'relative', zIndex: 1001 }}
+              >
+                Add Model
+              </button>
+              <div
+                style={{
+                  position: 'absolute',
+                  top: 'calc(100% + 2px)',
+                  left: 0,
+                  background: 'white',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '6px',
+                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                  zIndex: 1000,
+                  minWidth: '130px',
+                  display: 'none',
+                  opacity: 0,
+                  transform: 'translateY(-8px)',
+                  overflow: 'hidden'
+                }}
+                onMouseLeave={(e) => {
+                  // Animate out when mouse leaves dropdown
+                  e.currentTarget.style.opacity = '0';
+                  e.currentTarget.style.transform = 'translateY(-8px)';
+                  setTimeout(() => {
+                    e.currentTarget.style.display = 'none';
+                  }, 150);
+                }}
+              >
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setModalType('single');
+                    setShowAdd(true);
+                    // Hide dropdown with animation
+                    const dropdown = e.currentTarget.parentElement;
+                    dropdown.style.opacity = '0';
+                    dropdown.style.transform = 'translateY(-8px)';
+                    setTimeout(() => {
+                      dropdown.style.display = 'none';
+                    }, 150);
+                  }}
+                  style={{
+                    width: '100%',
+                    textAlign: 'left',
+                    padding: '8px 12px',
+                    border: 'none',
+                    background: 'transparent',
+                    cursor: 'pointer',
+                    color: '#374151',
+                    fontSize: '13px',
+                    fontWeight: '500',
+                    transition: 'all 0.15s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.background = '#f3f4f6';
+                    e.target.style.color = '#1f2937';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.background = 'transparent';
+                    e.target.style.color = '#374151';
+                  }}
+                >
+                  📄 Single Asset
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setModalType('multi');
+                    setShowAddMultiAsset(true);
+                    // Hide dropdown with animation
+                    const dropdown = e.currentTarget.parentElement;
+                    dropdown.style.opacity = '0';
+                    dropdown.style.transform = 'translateY(-8px)';
+                    setTimeout(() => {
+                      dropdown.style.display = 'none';
+                    }, 150);
+                  }}
+                  style={{
+                    width: '100%',
+                    textAlign: 'left',
+                    padding: '10px 14px',
+                    border: 'none',
+                    background: 'transparent',
+                    cursor: 'pointer',
+                    color: '#374151',
+                    fontSize: '13px',
+                    fontWeight: '500',
+                    borderTop: '1px solid #e5e7eb',
+                    transition: 'all 0.15s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.background = '#f3f4f6';
+                    e.target.style.color = '#1f2937';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.background = 'transparent';
+                    e.target.style.color = '#374151';
+                  }}
+                >
+                  📦 Multi Asset
+                </button>
+              </div>
+            </div>
           )}
-         
         </div>
       </div>
       
@@ -515,7 +661,7 @@ const ModelManagement = () => {
           </tbody>
         </table>
       </div>
-  {showAdd && <AddModelModalSimple onClose={()=>setShowAdd(false)} onAdd={handleAddModel} onOpenMultiAsset={() => setShowAddMultiAsset(true)} />}
+  {showAdd && <AddModelModalSimple onClose={()=>setShowAdd(false)} onAdd={handleAddModel} onOpenMultiAsset={() => { setShowAddMultiAsset(true); setShowAdd(false); }} />}
       {showAddMultiAsset && <AddModelModalMultiAsset onClose={()=>setShowAddMultiAsset(false)} onAdd={handleAddModel} />}
       {showEdit && editModel && (
         <AddModelModalSimple

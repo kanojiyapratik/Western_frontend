@@ -169,23 +169,9 @@ export default function AddModelModalMultiAsset({ onClose, onAdd }) {
 
   return (
     <div className="modal-overlay">
-      <div className="modal" style={{ maxWidth: '800px', maxHeight: '90vh', overflow: 'auto' }}>
+      <div className="modal" style={{ maxWidth: '700px', maxHeight: '85vh', overflow: 'auto' }}>
         <h3>Upload Multi-Asset Model</h3>
 
-        {/* Authentication Status */}
-        {checkingAuth ? (
-          <div style={{ padding: '8px', background: '#fef3c7', border: '1px solid #f59e0b', borderRadius: '8px', marginBottom: '16px' }}>
-            Checking authentication...
-          </div>
-        ) : !isLoggedIn ? (
-          <div style={{ padding: '8px', background: '#fee2e2', border: '1px solid #dc2626', borderRadius: '8px', marginBottom: '16px' }}>
-            <strong>Authentication Required:</strong> You must be logged in to upload files. Please log in through the admin panel and try again.
-          </div>
-        ) : (
-          <div style={{ padding: '8px', background: '#d1fae5', border: '1px solid #10b981', borderRadius: '8px', marginBottom: '16px' }}>
-            ✓ Authenticated - You can upload files
-          </div>
-        )}
 
         {error && (
           <div style={{ padding: '8px', background: '#fee2e2', border: '1px solid #dc2626', borderRadius: '8px', marginBottom: '16px' }}>
@@ -194,122 +180,128 @@ export default function AddModelModalMultiAsset({ onClose, onAdd }) {
         )}
 
         <form onSubmit={handleSubmit}>
-          {/* Basic Info */}
-          <div style={{ marginBottom: '16px' }}>
-            <label style={{ display: 'block', marginBottom: '4px', fontWeight: 'bold' }}>
-              Model Name *
-            </label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="e.g., ModernCabinet"
-              required
-              style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
-            />
-          </div>
-
-          <div style={{ marginBottom: '16px' }}>
-            <label style={{ display: 'block', marginBottom: '4px', fontWeight: 'bold' }}>
-              Display Name
-            </label>
-            <input
-              type="text"
-              value={displayName}
-              onChange={(e) => setDisplayName(e.target.value)}
-              placeholder="e.g., Modern Kitchen Cabinet"
-              style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
-            />
-          </div>
-
-          <div style={{ marginBottom: '16px' }}>
-            <label style={{ display: 'block', marginBottom: '4px', fontWeight: 'bold' }}>
-              Type
-            </label>
-            <select
-              value={type}
-              onChange={(e) => setType(e.target.value)}
-              style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
-            >
-              <option value="cabinet">Cabinet</option>
-              <option value="refrigerator">Refrigerator</option>
-              <option value="freezer">Freezer</option>
-              <option value="other">Other</option>
-            </select>
-          </div>
-
-          <div style={{ marginBottom: '16px' }}>
-            <label style={{ display: 'block', marginBottom: '4px', fontWeight: 'bold' }}>
-              Section
-            </label>
-            <select value={section} onChange={(e) => setSection(e.target.value)} style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}>
-              <option value="Upright Counter">Upright Counter</option>
-              <option value="Visicooler">Visicooler</option>
-              <option value="XYZ">XYZ</option>
-            </select>
-          </div>
-
-          {/* Asset Files */}
-          <div style={{ marginBottom: '16px' }}>
-            <h4 style={{ marginBottom: '8px' }}>Asset Files</h4>
-
-            {Object.entries({
-              base: 'Base Model (Required)',
-              doors: 'Doors',
-              drawers: 'Drawers',
-              glassDoors: 'Glass Doors',
-              other: 'Other Assets'
-            }).map(([key, label]) => (
-              <div key={key} style={{ marginBottom: '8px' }}>
-                <label style={{ display: 'block', marginBottom: '4px', fontWeight: 'bold' }}>
-                  {label} {key === 'base' ? '*' : ''}
-                </label>
-                <input
-                  type="file"
-                  accept=".glb,.gltf"
-                  onChange={(e) => handleFileChange(key, e.target.files[0])}
-                  style={{ width: '100%', padding: '4px' }}
-                  required={key === 'base'}
-                />
-                {files[key] && (
-                  <div style={{ marginTop: '4px', fontSize: '12px', color: '#666' }}>
-                    Selected: {files[key].name}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-
-          {/* Advanced Options */}
-          <details style={{ marginBottom: '16px' }}>
-            <summary style={{ cursor: 'pointer', fontWeight: 'bold', marginBottom: '8px' }}>
-              Advanced Options (Optional)
-            </summary>
-
-            <div style={{ marginBottom: '8px' }}>
-              <label style={{ display: 'block', marginBottom: '4px', fontWeight: 'bold' }}>
-                Interaction Groups (JSON)
+          {/* Basic Info - Compact Grid */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
+            <div>
+              <label style={{ display: 'block', marginBottom: '4px', fontWeight: 'bold', fontSize: '13px' }}>
+                Model Name *
               </label>
-              <textarea
-                value={interactionGroups}
-                onChange={(e) => setInteractionGroups(e.target.value)}
-                placeholder='[{"type": "doors", "label": "Doors", "parts": []}]'
-                rows={3}
-                style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', fontFamily: 'monospace' }}
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="e.g., ModernCabinet"
+                required
+                style={{ width: '100%', padding: '6px', border: '1px solid #ccc', borderRadius: '4px', fontSize: '13px' }}
               />
             </div>
 
-            <div style={{ marginBottom: '8px' }}>
-              <label style={{ display: 'block', marginBottom: '4px', fontWeight: 'bold' }}>
-                Metadata (JSON)
+            <div>
+              <label style={{ display: 'block', marginBottom: '4px', fontWeight: 'bold', fontSize: '13px' }}>
+                Display Name
               </label>
-              <textarea
-                value={metadata}
-                onChange={(e) => setMetadata(e.target.value)}
-                placeholder='{"panels": [], "solidDoorMeshPrefixes": []}'
-                rows={3}
-                style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', fontFamily: 'monospace' }}
+              <input
+                type="text"
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+                placeholder="e.g., Modern Kitchen Cabinet"
+                style={{ width: '100%', padding: '6px', border: '1px solid #ccc', borderRadius: '4px', fontSize: '13px' }}
               />
+            </div>
+
+            <div>
+              <label style={{ display: 'block', marginBottom: '4px', fontWeight: 'bold', fontSize: '13px' }}>
+                Type
+              </label>
+              <select
+                value={type}
+                onChange={(e) => setType(e.target.value)}
+                style={{ width: '100%', padding: '6px', border: '1px solid #ccc', borderRadius: '4px', fontSize: '13px' }}
+              >
+                <option value="cabinet">Cabinet</option>
+                <option value="refrigerator">Refrigerator</option>
+                <option value="freezer">Freezer</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+
+            <div>
+              <label style={{ display: 'block', marginBottom: '4px', fontWeight: 'bold', fontSize: '13px' }}>
+                Section
+              </label>
+              <select value={section} onChange={(e) => setSection(e.target.value)} style={{ width: '100%', padding: '6px', border: '1px solid #ccc', borderRadius: '4px', fontSize: '13px' }}>
+                <option value="Upright Counter">Upright Counter</option>
+                <option value="Visicooler">Visicooler</option>
+                <option value="XYZ">XYZ</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Asset Files - Compact Layout */}
+          <div style={{ marginBottom: '16px' }}>
+            <h4 style={{ marginBottom: '8px', fontSize: '14px' }}>Asset Files</h4>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+              {Object.entries({
+                base: 'Base Model (Required)',
+                doors: 'Doors',
+                drawers: 'Drawers',
+                glassDoors: 'Glass Doors',
+                other: 'Other Assets'
+              }).map(([key, label]) => (
+                <div key={key} style={{ marginBottom: '8px' }}>
+                  <label style={{ display: 'block', marginBottom: '2px', fontWeight: 'bold', fontSize: '12px' }}>
+                    {label} {key === 'base' ? '*' : ''}
+                  </label>
+                  <input
+                    type="file"
+                    accept=".glb,.gltf"
+                    onChange={(e) => handleFileChange(key, e.target.files[0])}
+                    style={{ width: '100%', padding: '4px', fontSize: '12px' }}
+                    required={key === 'base'}
+                  />
+                  {files[key] && (
+                    <div style={{ marginTop: '2px', fontSize: '11px', color: '#666' }}>
+                      ✓ {files[key].name}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Advanced Options - Collapsed by default */}
+          <details style={{ marginBottom: '16px' }}>
+            <summary style={{ cursor: 'pointer', fontWeight: 'bold', marginBottom: '8px', fontSize: '13px' }}>
+              ⚙️ Advanced Options (Optional)
+            </summary>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+              <div>
+                <label style={{ display: 'block', marginBottom: '4px', fontWeight: 'bold', fontSize: '12px' }}>
+                  Interaction Groups (JSON)
+                </label>
+                <textarea
+                  value={interactionGroups}
+                  onChange={(e) => setInteractionGroups(e.target.value)}
+                  placeholder='[{"type": "doors", "label": "Doors", "parts": []}]'
+                  rows={2}
+                  style={{ width: '100%', padding: '6px', border: '1px solid #ccc', borderRadius: '4px', fontFamily: 'monospace', fontSize: '12px' }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', marginBottom: '4px', fontWeight: 'bold', fontSize: '12px' }}>
+                  Metadata (JSON)
+                </label>
+                <textarea
+                  value={metadata}
+                  onChange={(e) => setMetadata(e.target.value)}
+                  placeholder='{"panels": [], "solidDoorMeshPrefixes": []}'
+                  rows={2}
+                  style={{ width: '100%', padding: '6px', border: '1px solid #ccc', borderRadius: '4px', fontFamily: 'monospace', fontSize: '12px' }}
+                />
+              </div>
             </div>
           </details>
 
@@ -332,53 +324,34 @@ export default function AddModelModalMultiAsset({ onClose, onAdd }) {
           </div>
         </form>
 
-        {/* Upload Result */}
+        {/* Upload Result - Compact */}
         {uploadResult && (
-          <div style={{ marginTop: '20px', padding: '16px', background: '#f0f9ff', border: '1px solid #0ea5e9', borderRadius: '8px' }}>
-            <h4 style={{ marginTop: 0, color: '#0ea5e9' }}>✅ Upload Successful!</h4>
+          <div style={{ marginTop: '16px', padding: '12px', background: '#f0f9ff', border: '1px solid #0ea5e9', borderRadius: '6px' }}>
+            <h4 style={{ margin: '0 0 8px 0', color: '#0ea5e9', fontSize: '14px' }}>✅ Upload Successful!</h4>
 
-            <div style={{ marginBottom: '12px' }}>
+            <div style={{ marginBottom: '8px', fontSize: '13px' }}>
               <strong>Model:</strong> {uploadResult.model?.name} ({uploadResult.model?.displayName})
             </div>
 
-            {/* Remove asset URLs display since we're not using hardcoded paths */}
-            {/* <div style={{ marginBottom: '12px' }}>
-              <strong>Asset URLs:</strong>
-              <ul style={{ margin: '4px 0', paddingLeft: '20px' }}>
-                {Object.entries(uploadResult.assetUrls || {}).map(([key, url]) => (
-                  <li key={key}>
-                    <strong>{key}:</strong> <code style={{ fontSize: '12px' }}>{url}</code>
-                  </li>
-                ))}
-              </ul>
-            </div> */}
-
-            <div style={{ marginBottom: '12px' }}>
-              <strong>Generated JSON Configuration:</strong>
-              <p style={{ fontSize: '12px', color: '#666', marginBottom: '8px' }}>
-                Copy this JSON and use it as a starting point for your model configuration. The paths will be automatically filled from your uploaded model data.
-              </p>
-            </div>
-
-            <div style={{ marginBottom: '12px' }}>
+            <div style={{ marginBottom: '8px' }}>
               <button
                 onClick={() => copyToClipboard(JSON.stringify(uploadResult.jsonConfig, null, 2))}
-                style={{ padding: '6px 12px', border: '1px solid #0ea5e9', borderRadius: '4px', background: '#e0f2fe', color: '#0ea5e9', cursor: 'pointer' }}
+                style={{ padding: '4px 8px', border: '1px solid #0ea5e9', borderRadius: '4px', background: '#e0f2fe', color: '#0ea5e9', cursor: 'pointer', fontSize: '12px' }}
               >
-                📋 Copy JSON Configuration
+                📋 Copy JSON Config
               </button>
             </div>
 
             <details>
-              <summary style={{ cursor: 'pointer', fontWeight: 'bold' }}>View Full JSON</summary>
+              <summary style={{ cursor: 'pointer', fontWeight: 'bold', fontSize: '12px' }}>View JSON</summary>
               <pre style={{
                 background: '#f8fafc',
-                padding: '12px',
+                padding: '8px',
                 borderRadius: '4px',
-                fontSize: '11px',
+                fontSize: '10px',
                 overflow: 'auto',
-                maxHeight: '300px',
-                marginTop: '8px'
+                maxHeight: '200px',
+                marginTop: '4px'
               }}>
                 {JSON.stringify(uploadResult.jsonConfig, null, 2)}
               </pre>
