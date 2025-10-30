@@ -31,7 +31,7 @@ export default function AddModelModalSimple({ onClose, onAdd, editModel = null, 
           setConfigLoadError('');
           const url = configUrl.startsWith('http') ? configUrl : `${getApiBaseUrl()}${configUrl}`;
           console.log('Fetching config from:', url);
-          const res = await fetch(url);
+          const res = await fetch(encodeURI(url));
           if (!res.ok) throw new Error(`Failed to fetch config: ${res.status}`);
           const json = await res.json();
           setConfigContent(JSON.stringify(json, null, 2));
