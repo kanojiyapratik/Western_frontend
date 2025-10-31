@@ -82,7 +82,7 @@ export const getActivityLogs = async (filters = {}) => {
 
 export const logActivity = async (activityData) => {
   try {
-    const res = await api.post("/activity/log", activityData);
+    const res = await api.post("/api/activity/log", activityData);
     return res.data;
   } catch (error) {
     console.error("Activity logging error:", error);
