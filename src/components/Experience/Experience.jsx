@@ -5,7 +5,8 @@ import { extend } from '@react-three/fiber';
 import { useFrame } from '@react-three/fiber';
 import { useThree } from "@react-three/fiber";
 import { Environment, OrbitControls, useGLTF, Html, ContactShadows } from "@react-three/drei";
-import { EffectComposer, SSAO, Bloom, ToneMapping, SMAA } from "@react-three/postprocessing";
+import { EffectComposer, SSAO, Bloom, ToneMapping, SMAA, DepthOfField, Vignette, ChromaticAberration, Noise } from "@react-three/postprocessing";
+import { BlendFunction, KernelSize } from "postprocessing";
 // import { modelsConfig } from "../../modelsConfig"; // Removed - using dynamic configs only
 import { useInteractions } from "./hooks/useInteractions";
 import { logActivity } from "../../api/user";
@@ -40,6 +41,14 @@ export function Experience({
   const [envIntensity, setEnvIntensity] = useState(1);
   const [bloomStrength] = useState(0.3);
   const [forceGlossy, setForceGlossy] = useState(false);
+
+  // Advanced post-processing controls
+  const [enableAdvancedPP, setEnableAdvancedPP] = useState(false);
+  const [depthOfFieldEnabled, setDepthOfFieldEnabled] = useState(false);
+  const [vignetteEnabled, setVignetteEnabled] = useState(false);
+  const [chromaticAberrationEnabled, setChromaticAberrationEnabled] = useState(false);
+  const [filmGrainEnabled, setFilmGrainEnabled] = useState(false);
+  const [colorGradingEnabled, setColorGradingEnabled] = useState(false);
 
   // Material inspector overlay: show first N materials and their properties
   // Inspector UI removed per user request
@@ -2464,7 +2473,103 @@ export function Experience({
     }
   };
 
-  // Debug overlay removed in production - no UI debug overlay displayed
+  // Advanced Post-Processing Debug UI
+  {enableAdvancedPP && (
+    <Html position={[-2, 1.5, 0]} style={{ pointerEvents: 'auto' }}>
+      <div style={{
+        background: 'rgba(0,0,0,0.8)',
+        color: 'white',
+        padding: '10px',
+        borderRadius: '8px',
+        fontSize: '12px',
+        fontFamily: 'monospace',
+        maxWidth: '250px'
+      }}>
+        <div style={{ marginBottom: '8px', fontWeight: 'bold' }}>🎨 Advanced Post-Processing</div>
+
+        <label style={{ display: 'block', marginBottom: '4px' }}>
+          <input
+            type="checkbox"
+            checked={depthOfFieldEnabled}
+            onChange={(e) => setDepthOfFieldEnabled(e.target.checked)}
+            style={{ marginRight: '4px' }}
+          />
+          Depth of Field
+        </label>
+
+        <label style={{ display: 'block', marginBottom: '4px' }}>
+          <input
+            type="checkbox"
+            checked={vignetteEnabled}
+            onChange={(e) => setVignetteEnabled(e.target.checked)}
+            style={{ marginRight: '4px' }}
+          />
+          Vignette
+        </label>
+
+        <label style={{ display: 'block', marginBottom: '4px' }}>
+          <input
+            type="checkbox"
+            checked={chromaticAberrationEnabled}
+            onChange={(e) => setChromaticAberrationEnabled(e.target.checked)}
+            style={{ marginRight: '4px' }}
+          />
+          Chromatic Aberration
+        </label>
+
+        <label style={{ display: 'block', marginBottom: '4px' }}>
+          <input
+            type="checkbox"
+            checked={filmGrainEnabled}
+            onChange={(e) => setFilmGrainEnabled(e.target.checked)}
+            style={{ marginRight: '4px' }}
+          />
+          Film Grain
+        </label>
+
+        <button
+          onClick={() => {
+            setDepthOfFieldEnabled(false);
+            setVignetteEnabled(false);
+            setChromaticAberrationEnabled(false);
+            setFilmGrainEnabled(false);
+          }}
+          style={{
+            marginTop: '8px',
+            padding: '4px 8px',
+            background: '#dc3545',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            fontSize: '11px'
+          }}
+        >
+          Reset Effects
+        </button>
+      </div>
+    </Html>
+  )}
+
+  {/* Toggle button for advanced post-processing */}
+  <Html position={[2, -1.5, 0]} style={{ pointerEvents: 'auto' }}>
+    <button
+      onClick={() => setEnableAdvancedPP(!enableAdvancedPP)}
+      style={{
+        background: enableAdvancedPP ? '#28a745' : '#6c757d',
+        color: 'white',
+        border: 'none',
+        padding: '8px 12px',
+        borderRadius: '6px',
+        cursor: 'pointer',
+        fontSize: '12px',
+        fontWeight: 'bold',
+        boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+      }}
+    >
+      {enableAdvancedPP ? '🎨 Advanced PP ON' : '🎨 Advanced PP OFF'}
+    </button>
+  </Html>
 
   // Instrument history methods and log mount/unmount to diagnose navigation issues
   useEffect(() => {
@@ -2716,12 +2821,47 @@ export function Experience({
         }}
       />
 
-      {/* Minimal post-processing for smooth rendering only */}
+      {/* Advanced post-processing effects */}
       <EffectComposer>
+        {/* Basic effects - always enabled */}
         <Bloom intensity={0.05} luminanceThreshold={0.95} luminanceSmoothing={0.95} mipmapBlur />
         <SSAO samples={4} radius={0.05} intensity={0.3} luminanceInfluence={0.7} color="black" />
-  <ToneMapping adaptive={false} mode={3} resolution={256} />
+        <ToneMapping adaptive={false} mode={3} resolution={256} />
         <SMAA />
+
+        {/* Advanced effects - conditionally enabled */}
+        {depthOfFieldEnabled && (
+          <DepthOfField
+            focusDistance={0.1}
+            focalLength={0.5}
+            bokehScale={3}
+            height={480}
+          />
+        )}
+
+        {vignetteEnabled && (
+          <Vignette
+            offset={0.5}
+            darkness={0.5}
+            eskil={false}
+            blendFunction={BlendFunction.MULTIPLY}
+          />
+        )}
+
+        {chromaticAberrationEnabled && (
+          <ChromaticAberration
+            blendFunction={BlendFunction.NORMAL}
+            offset={[0.0005, 0.0012]}
+          />
+        )}
+
+        {filmGrainEnabled && (
+          <Noise
+            premultiply
+            blendFunction={BlendFunction.ADD}
+            opacity={0.3}
+          />
+        )}
       </EffectComposer>
 
       {/* Debug UI overlay and toggle button removed as requested */}
