@@ -12,7 +12,9 @@ export function ScreenshotWidget({ title = "Download Image", api, userPermission
   const qualityOptions = {
     average: { label: 'Average (720p)', width: 1280, height: 720 },
     good: { label: 'Good (2K)', width: 2560, height: 1440 },
-    best: { label: 'Best (4K)', width: 3840, height: 2160 }
+    high: { label: 'High (4K)', width: 3840, height: 2160 },
+    best: { label: 'Best (8K)', width: 7680, height: 4320 },
+    maximum: { label: 'Maximum (16K)', width: 15360, height: 8640 }
   };
 
   const handleDownload = async () => {
@@ -32,6 +34,13 @@ export function ScreenshotWidget({ title = "Download Image", api, userPermission
     try {
       const quality = qualityOptions[selectedQuality];
       console.log('📸 ScreenshotWidget: Using quality:', selectedQuality, quality);
+
+      if (!quality || !quality.width || !quality.height) {
+        console.error('❌ ScreenshotWidget: Invalid quality configuration:', quality);
+        setStatus('❌ Invalid quality setting');
+        setTimeout(() => setStatus(''), 3000);
+        return;
+      }
 
       const success = await api.takeScreenshot(quality.width, quality.height);
 

@@ -27,9 +27,12 @@ export const PresetWidget = ({ config, applyRequest, api, userPermissions }) => 
   }
 
   const handleApplyPreset = async (preset) => {
-    if (!preset || !Array.isArray(preset.actions)) return;
+    if (!preset || !Array.isArray(preset.actions)) {
+      dlog(`❌ Invalid preset or no actions:`, preset);
+      return;
+    }
     try {
-      dlog(`🔄 Applying preset: ${preset.id || preset.label}`);
+      dlog(`🔄 Applying preset: ${preset.id || preset.label} with ${preset.actions.length} actions`);
       for (const action of preset.actions) {
         const part = action.part;
         if (!part) continue;
@@ -39,17 +42,45 @@ export const PresetWidget = ({ config, applyRequest, api, userPermissions }) => 
         if (action.texture) {
           dlog(`🖼️ Applying texture ${action.texture} to ${part}`);
           try {
+            // Normalize part name to match the texture widget configuration
+            let normalizedPart = part;
+            if (part.toLowerCase().includes('sidepannel')) {
+              // Convert sidepannelRight/sidepannelLeft to SidepannelRight/SidepannelLeft
+              normalizedPart = part.charAt(0).toUpperCase() + part.slice(1);
+              if (normalizedPart.toLowerCase().includes('right')) {
+                normalizedPart = 'SidepannelRight';
+              } else if (normalizedPart.toLowerCase().includes('left')) {
+                normalizedPart = 'SidepannelLeft';
+              }
+              dlog(`🔄 Normalized part name: ${part} -> ${normalizedPart}`);
+            }
+
+            // Handle S3 URLs - proxy through backend to avoid CORS
+            let textureUrl = action.texture;
+            if (textureUrl && (textureUrl.includes('amazonaws.com') || textureUrl.includes('s3.'))) {
+              // Proxy S3 images through backend to avoid CORS
+              const apiBase = import.meta.env.VITE_API_BASE || 'http://localhost:5000/api';
+              // Remove the /api suffix if present since we add it back
+              const cleanApiBase = apiBase.replace('/api', '');
+              textureUrl = `${cleanApiBase}/api/proxy-image?url=${encodeURIComponent(textureUrl)}`;
+              dlog(`🔗 Proxied S3 URL: ${action.texture} -> ${textureUrl}`);
+            } else if (textureUrl && textureUrl.includes('amazonaws.com') && !textureUrl.startsWith('http')) {
+              textureUrl = 'https://' + textureUrl;
+              dlog(`🔗 Fixed S3 URL: ${action.texture} -> ${textureUrl}`);
+            }
+
             if (applyRequest?.current) {
-              await applyRequest.current(part, action.texture, action.mapping || {}, action.persist || false);
-              dlog(`✅ Texture applied via applyRequest to ${part}`);
+              await applyRequest.current(normalizedPart, textureUrl, action.mapping || {}, action.persist || false);
+              dlog(`✅ Texture applied via applyRequest to ${normalizedPart}: ${textureUrl}`);
             } else if (api?.applyTexture) {
-              await api.applyTexture(part, action.texture, action.mapping || {}, action.persist || false);
-              dlog(`✅ Texture applied via api to ${part}`);
+              await api.applyTexture(normalizedPart, textureUrl, action.mapping || {}, action.persist || false);
+              dlog(`✅ Texture applied via api to ${normalizedPart}: ${textureUrl}`);
             } else {
-              console.warn(`❌ No texture application method available for ${part}`);
+              console.warn(`❌ No texture application method available for ${normalizedPart}`);
             }
           } catch (textureErr) {
             console.error(`❌ Failed to apply texture to ${part}:`, textureErr);
+            // Continue with other actions even if one fails
           }
         } else if (action.tintColor || action.color) {
           const color = action.tintColor || action.color;
@@ -57,15 +88,16 @@ export const PresetWidget = ({ config, applyRequest, api, userPermissions }) => 
           try {
             if (applyRequest?.current) {
               await applyRequest.current(part, null, { tintColor: color });
-              dlog(`✅ Color applied via applyRequest to ${part}`);
+              dlog(`✅ Color applied via applyRequest to ${part}: ${color}`);
             } else if (api?.applyTexture) {
               await api.applyTexture(part, null, { tintColor: color });
-              dlog(`✅ Color applied via api to ${part}`);
+              dlog(`✅ Color applied via api to ${part}: ${color}`);
             } else {
               console.warn(`❌ No color application method available for ${part}`);
             }
           } catch (colorErr) {
             console.error(`❌ Failed to apply color to ${part}:`, colorErr);
+            // Continue with other actions even if one fails
           }
         }
       }
