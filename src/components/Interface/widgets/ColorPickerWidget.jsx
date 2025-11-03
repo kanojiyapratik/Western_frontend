@@ -11,49 +11,58 @@ export default function ColorPickerWidget({ config, applyRequest }) {
   const [color, setColor] = useState('#ffffff');
   const [persist, setPersist] = useState(false);
 
-  const handleApply = async () => {
-    if (!selectedPart) {
-      alert('Please select a target part or material first');
+  // Function to apply color immediately when color changes
+  const applyColor = async (newColor, targetPart = selectedPart) => {
+    if (!targetPart) {
+      console.log('⚠️ No target part selected for color application');
       return;
     }
 
     // Determine whether the target is a material or object
-    // If the part entry has `type: 'material'` then we use the special syntax '__material:Name'
-    const partCfg = parts.find(p => p.name === selectedPart) || {};
-    let target = selectedPart;
+    const partCfg = parts.find(p => p.name === targetPart) || {};
+    let target = targetPart;
     if (partCfg.type === 'material' && partCfg.materialName) {
       target = `__material:${partCfg.materialName}`;
     }
 
     if (!target || typeof target !== 'string') {
-      console.error('ColorPickerWidget: resolved invalid target', { selectedPart, partCfg, target });
-      alert('Invalid color target selected');
+      console.error('ColorPickerWidget: resolved invalid target', { targetPart, partCfg, target });
       return;
     }
 
-    console.log('🎨 ColorPickerWidget: applying color', { target, color, persist });
+    console.log('🎨 ColorPickerWidget: applying color dynamically', { target, color: newColor, persist });
 
     if (!applyRequest?.current) {
       console.warn('⚠️ applyRequest not available on props');
-      alert('Color application not available - please refresh the page');
       return;
     }
 
     try {
       // Call the applyRequest function with proper parameters
-      const result = applyRequest.current(target, null, { tintColor: color, persist });
+      const result = applyRequest.current(target, null, { tintColor: newColor, persist });
 
       // Handle both promise and non-promise returns
       if (result && typeof result.then === 'function') {
         await result;
       }
 
-      console.log('✅ Color apply invoked successfully');
-      alert(`Color ${color} applied to ${target}`);
+      console.log('✅ Color applied dynamically:', { target, color: newColor });
     } catch (err) {
-      console.error('❌ Color apply failed:', err);
-      alert('Failed to apply color. Please check the console for details.');
+      console.error('❌ Dynamic color apply failed:', err);
     }
+  };
+
+  // Handler for color picker grid clicks
+  const handleColorSelect = (newColor) => {
+    setColor(newColor);
+    applyColor(newColor);
+  };
+
+  // Handler for custom color picker changes
+  const handleCustomColorChange = (e) => {
+    const newColor = e.target.value;
+    setColor(newColor);
+    applyColor(newColor);
   };
 
   if (!parts.length) {
@@ -94,8 +103,11 @@ export default function ColorPickerWidget({ config, applyRequest }) {
               <div
                 key={colorOption}
                 className="color-picker"
-                style={{ backgroundColor: colorOption }}
-                onClick={() => setColor(colorOption)}
+                style={{
+                  backgroundColor: colorOption,
+                  border: color === colorOption ? '2px solid #4f46e5' : '2px solid transparent'
+                }}
+                onClick={() => handleColorSelect(colorOption)}
                 title={colorOption}
               />
             ))}
@@ -104,7 +116,12 @@ export default function ColorPickerWidget({ config, applyRequest }) {
 
         <div className="form-group">
           <label className="form-label">Custom Color</label>
-          <input type="color" value={color} onChange={(e) => setColor(e.target.value)} style={{ width: '100%', height: '40px', border: 'none', borderRadius: '8px' }} />
+          <input
+            type="color"
+            value={color}
+            onChange={handleCustomColorChange}
+            style={{ width: '100%', height: '40px', border: 'none', borderRadius: '8px', cursor: 'pointer' }}
+          />
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
@@ -112,7 +129,9 @@ export default function ColorPickerWidget({ config, applyRequest }) {
           <label htmlFor="persistColor" style={{ fontSize: '13px' }}>Persist on Save / immediate persist</label>
         </div>
 
-        <button className="interface-button btn-full-width" onClick={handleApply}>Apply Color</button>
+        <div style={{ fontSize: '12px', color: '#6b7280', textAlign: 'center', padding: '8px', background: 'rgba(248, 250, 252, 0.5)', borderRadius: '6px' }}>
+          💡 Colors apply instantly when selected
+        </div>
       </div>
     </div>
   );
