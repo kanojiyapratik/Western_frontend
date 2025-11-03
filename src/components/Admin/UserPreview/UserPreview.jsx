@@ -12,24 +12,6 @@ function UserPreview() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   
-  // API URL resolution function moved outside component to avoid re-renders
-  const getApiBaseUrl = useMemo(() => {
-    return () => {
-      if (import.meta.env.VITE_API_BASE) {
-        return import.meta.env.VITE_API_BASE.replace('/api', '');
-      }
-      if (import.meta.env.MODE === 'production') {
-        return 'https://threed-configurator-backend-7pwk.onrender.com';
-      }
-      if (typeof window !== 'undefined' && 
-        (window.location.hostname.includes('vercel.app') || 
-         window.location.hostname.includes('netlify.app'))) {
-        return 'https://threed-configurator-backend-7pwk.onrender.com';
-      }
-      return 'http://192.168.1.7:5000';
-    };
-  }, []); // Empty deps as this never changes
-  
   // Simplified full permissions object
   const fullPermissions = {
     canRotate: true,
@@ -60,29 +42,38 @@ function UserPreview() {
   // Load database models just like MainApp
   const [dbModels, setDbModels] = useState([]);
   
-  const fetchDbModels = useCallback(async () => {
-    try {
-      const response = await fetch(`${getApiBaseUrl()}/api/models`);
-      if (response.ok) {
-        const models = await response.json();
-        setDbModels(models);
+  useEffect(() => {
+    const fetchDbModels = async () => {
+      try {
+        const response = await fetch(`http://192.168.1.7:5000/api/models`);
+        if (response.ok) {
+          const models = await response.json();
+          setDbModels(models);
+        }
+      } catch (err) {
+        console.error('Error fetching database models:', err);
       }
-    } catch (err) {
-      console.error('Error fetching models:', err);
-    }
-  }, [getApiBaseUrl]);
-
-  // Initial fetch
-  useEffect(() => {
+    };
     fetchDbModels();
-  }, [fetchDbModels]);
+  }, []);
 
-  // Listen for model updates from admin panel
+  // Listen for model updates from admin panel (like MainApp)
   useEffect(() => {
-    const handler = () => fetchDbModels();
+    const handler = async () => {
+      try {
+        const response = await fetch(`http://192.168.1.7:5000/api/models`);
+        if (response.ok) {
+          const models = await response.json();
+          setDbModels(models);
+        }
+      } catch (err) {
+        console.error('Error refreshing models in UserPreview:', err);
+      }
+    };
+    
     window.addEventListener('modelsUpdated', handler);
     return () => window.removeEventListener('modelsUpdated', handler);
-  }, [fetchDbModels]);
+  }, []);
 
   // Convert database models to the format expected by Experience component
   const dbModelsFormatted = useMemo(() => {
@@ -94,11 +85,9 @@ function UserPreview() {
         if (model.file.startsWith('http://') || model.file.startsWith('https://')) {
           normalizedPath = model.file;
         } else if (model.file.startsWith('/models/')) {
-          const apiUrl = getApiBaseUrl();
-          normalizedPath = `${apiUrl}${model.file}`;
+          normalizedPath = `${API_BASE_URL}${model.file}`;
         } else {
-          const apiUrl = getApiBaseUrl();
-          normalizedPath = `${apiUrl}/models/${model.file}`;
+          normalizedPath = `${API_BASE_URL}/models/${model.file}`;
         }
       }
 
@@ -138,14 +127,15 @@ function UserPreview() {
     return () => window.removeEventListener('customModelsUpdated', handler);
   }, []);
   // --- External config fetch/merge logic (copied from MainApp) ---
+  const API_BASE_URL = 'http://192.168.1.7:5000';
   const normalizeModelUrls = useCallback((cfg) => {
     if (!cfg || typeof cfg !== 'object') return cfg;
     const out = { ...cfg };
     const fix = (val) => {
       if (!val || typeof val !== 'string') return val;
       if (val.startsWith('http://') || val.startsWith('https://')) return val;
-      if (val.startsWith('/models/')) return `${getApiBaseUrl()}${val}`;
-      if (val.startsWith('models/')) return `${getApiBaseUrl()}/${val}`;
+      if (val.startsWith('/models/')) return `${API_BASE_URL}${val}`;
+      if (val.startsWith('models/')) return `${API_BASE_URL}/${val}`;
       return val;
     };
     if (out.path) out.path = fix(out.path);
@@ -156,7 +146,7 @@ function UserPreview() {
       });
     }
     return out;
-  }, [getApiBaseUrl]);
+  }, []);
 
   // Helper to unwrap external configs that might be nested
   const unwrapExternalConfig = useCallback((name, json) => {
@@ -191,7 +181,7 @@ function UserPreview() {
           candidates.push(`/configs/config-${safe(name)}.json`);
           for (let c of candidates) {
             try {
-              const full = c.startsWith('http') ? c : `${getApiBaseUrl()}${c.startsWith('/') ? '' : '/'}${c}`;
+              const full = c.startsWith('http') ? c : `${API_BASE_URL}${c.startsWith('/') ? '' : '/'}${c}`;
               const res = await fetch(full);
               if (!res.ok) continue;
               const json = await res.json();
@@ -220,7 +210,7 @@ function UserPreview() {
         if (!url) return;
 
         try {
-          const fullUrl = url.startsWith('http') ? url : `${getApiBaseUrl()}${url.startsWith('/') ? '' : '/'}${url}`;
+          const fullUrl = url.startsWith('http') ? url : `${API_BASE_URL}${url.startsWith('/') ? '' : '/'}${url}`;
           const res = await fetch(fullUrl);
           if (!res.ok) throw new Error(`Fetch ${fullUrl} failed ${res.status}`);
           const json = await res.json();
@@ -257,36 +247,24 @@ function UserPreview() {
     });
     return merged;
   }, [dbModelsFormatted, externalConfigs, normalizeModelUrls]);
-  const [selectedModel, setSelectedModel] = useState('Undercounter');
-  
-  // Initialize selected model from localStorage after dbModels are loaded
-  useEffect(() => {
+  const [selectedModel, setSelectedModel] = useState(() => {
     const saved = localStorage.getItem('selectedModel');
-    if (saved && (dbModelsFormatted[saved] || customModels[saved])) {
-      setSelectedModel(saved);
-    }
-  }, [dbModelsFormatted, customModels]);
+    return saved && (dbModelsFormatted[saved] || customModels[saved]) ? saved : 'Undercounter';
+  });
 
-  // After models are loaded, ensure we have a valid selection
+  // After DB models load, ensure we have a valid selection; prefer a DB model (often the one just created)
   useEffect(() => {
-    const validateAndSetModel = () => {
-      const allKeys = Object.keys(mergedModels);
-      if (!allKeys.length) return;
+    const allKeys = Object.keys(mergedModels);
+    if (!allKeys.length) return;
 
-      if (!mergedModels[selectedModel]) {
-        const dbKeys = Object.keys(dbModelsFormatted);
-        const next = dbKeys[0] || allKeys[0];
-        setSelectedModel(next);
-        try {
-          localStorage.setItem('selectedModel', next);
-        } catch(_) {
-          console.warn('Failed to save selected model to localStorage');
-        }
-        console.log('🔁 Auto-selected model in UserPreview:', next);
-      }
-    };
-
-    validateAndSetModel();
+    if (!mergedModels[selectedModel]) {
+      // Prefer first DB model if available
+      const dbKeys = Object.keys(dbModelsFormatted);
+      const next = dbKeys[0] || allKeys[0];
+      setSelectedModel(next);
+      try { localStorage.setItem('selectedModel', next); } catch(_) {}
+      console.log('🔁 Auto-selected model in UserPreview:', next);
+    }
   }, [mergedModels, dbModelsFormatted, selectedModel]);
   const [api, setApi] = useState(null);
   const [showActivityLog, setShowActivityLog] = useState(false);
