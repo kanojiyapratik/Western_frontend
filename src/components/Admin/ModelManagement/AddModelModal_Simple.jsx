@@ -492,6 +492,46 @@ export default function AddModelModalSimple({ onClose, onAdd, editModel = null, 
         }));
       }
 
+      // Extract thumbnail from config if available
+      if (configUrl) {
+        try {
+          console.log('🔍 Attempting to extract thumbnail from configUrl:', configUrl);
+          let configData;
+          if (configUrl.startsWith('http')) {
+            console.log('🌐 Fetching external config URL');
+            const response = await fetch(configUrl);
+            if (response.ok) {
+              configData = await response.json();
+              console.log('📄 External config fetched successfully');
+            } else {
+              console.log('❌ Failed to fetch external config, status:', response.status);
+            }
+          } else {
+            console.log('🏠 Fetching local config URL');
+            const fullUrl = `${getApiBaseUrl()}${configUrl}`;
+            console.log('📡 Full URL:', fullUrl);
+            const response = await fetch(fullUrl);
+            if (response.ok) {
+              configData = await response.json();
+              console.log('📄 Local config fetched successfully');
+            } else {
+              console.log('❌ Failed to fetch local config, status:', response.status);
+            }
+          }
+          if (configData && configData.thumbnail) {
+            modelData.thumbnail = configData.thumbnail;
+            console.log('✅ Extracted thumbnail from config:', configData.thumbnail);
+            console.log('📤 modelData before API call:', { ...modelData, thumbnail: modelData.thumbnail });
+          } else {
+            console.log('⚠️ No thumbnail found in config data:', configData ? 'config exists but no thumbnail' : 'no config data');
+          }
+        } catch (err) {
+          console.warn('❌ Failed to extract thumbnail from config:', err.message);
+        }
+      } else {
+        console.log('⚠️ No configUrl provided, cannot extract thumbnail');
+      }
+
       // Include additional model configuration fields
       modelData.placementMode = placementMode;
       if (modelPosition && Array.isArray(modelPosition) && modelPosition.length === 3) {

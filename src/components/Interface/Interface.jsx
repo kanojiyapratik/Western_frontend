@@ -21,6 +21,7 @@ export function Interface({
   sectionOptions = ['(All)'],
   selectedSection = '(All)',
   onSectionChange = () => {},
+  onShowModelSelector = () => {},
 }) {
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [showConfigsList, setShowConfigsList] = useState(false);
@@ -32,6 +33,8 @@ export function Interface({
 
   // Current model config from provided map
   const config = models[selectedModel] || {};
+
+
   const allWidgets = React.useMemo(() => {
     // Merge widgets from both direct and metadata locations
     let rawWidgets = [];
@@ -390,40 +393,53 @@ export function Interface({
 
   // No permissions message
   if (!userPermissions || Object.keys(userPermissions).length === 0) {
-    const renderToolbar = () => (
-      <div className="interface-toolbar compact">
-        <div className="toolbar-center left">
-          <div style={{display: 'flex', gap: 8, alignItems: 'center'}}>
-            <select
-              id="modelSelect"
-              aria-label="Select Model"
-              className="toolbar-select enhanced"
-              value={selectedModel}
-              onChange={(e) => onModelChange?.(e.target.value)}
-            >
-              {Object.keys(models).map(m => <option key={m} value={m}>{m}</option>)}
-            </select>
-            {Array.isArray(sectionOptions) && (
-              <select
-                id="sectionSelect"
-                aria-label="Filter by section"
-                className="toolbar-select enhanced"
-                value={selectedSection}
-                onChange={(e) => onSectionChange?.(e.target.value)}
-              >
-                {sectionOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-              </select>
-            )}
-          </div>
-        </div>
-        {/* Right side intentionally left empty per request (no username/logout) */}
-        <div className="toolbar-right" />
-      </div>
-    );
-
     return (
       <div className="interface-container">
-        {renderToolbar()}
+        {/* Modern Model Display Header */}
+        <div className="model-display-header">
+          <div className="current-model-display">
+            {config?.thumbnail ? (
+              <img
+                key={config.thumbnail + Date.now()} // Force re-render when thumbnail URL changes
+                src={config.thumbnail}
+                alt={`${config?.displayName || selectedModel} thumbnail`}
+                className="model-thumbnail-large"
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                  e.target.nextElementSibling.style.display = 'flex';
+                }}
+                onLoad={() => console.log('Interface thumbnail loaded:', config.thumbnail)}
+              />
+            ) : null}
+            <div
+              className="model-icon-large"
+              style={{ display: config?.thumbnail ? 'none' : 'flex' }}
+            >
+              {config?.type === 'Visicooler' ? '🧊' :
+               config?.type === 'Upright Counter' ? '🏪' :
+               config?.section === 'Upright Counter' ? '🏪' : '📦'}
+            </div>
+            <div className="model-info">
+              <div className="model-name">
+                {config?.displayName || selectedModel}
+              </div>
+              <div className="model-meta">
+                {config?.type || '3D Model'}
+                {config?.section && ` • ${config.section}`}
+              </div>
+            </div>
+          </div>
+          <button
+            className="switch-model-btn"
+            onClick={onShowModelSelector}
+            aria-label="Switch Model"
+          >
+            <span className="btn-icon">🔄</span>
+            <span className="btn-text">Switch Model</span>
+          </button>
+        </div>
+
+
         <div className="no-permissions">
           <h3>🔒 Access Required</h3>
           <p>You need appropriate permissions to use the configuration tools.</p>
@@ -434,40 +450,36 @@ export function Interface({
 
   // No widgets configured or no permissions for any widgets
   if (!widgets.length && !hasPermission('saveConfig')) {
-    const renderToolbar = () => (
-      <div className="interface-toolbar compact">
-        <div className="toolbar-center left">
-          <div style={{display: 'flex', gap: 8, alignItems: 'center'}}>
-            <select
-              id="modelSelect"
-              aria-label="Select Model"
-              className="toolbar-select enhanced"
-              value={selectedModel}
-              onChange={(e) => onModelChange?.(e.target.value)}
-            >
-              {Object.keys(models).map(m => <option key={m} value={m}>{m}</option>)}
-            </select>
-            {Array.isArray(sectionOptions) && (
-              <select
-                id="sectionSelect"
-                aria-label="Filter by section"
-                className="toolbar-select enhanced"
-                value={selectedSection}
-                onChange={(e) => onSectionChange?.(e.target.value)}
-              >
-                {sectionOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-              </select>
-            )}
-          </div>
-        </div>
-        {/* Right side intentionally left empty per request (no username/logout) */}
-        <div className="toolbar-right" />
-      </div>
-    );
-
     return (
       <div className="interface-container">
-        {renderToolbar()}
+        {/* Modern Model Display Header */}
+        <div className="model-display-header">
+          <div className="current-model-display">
+            <div className="model-icon-large">
+              {config?.type === 'Visicooler' ? '🧊' :
+               config?.type === 'Upright Counter' ? '🏪' :
+               config?.section === 'Upright Counter' ? '🏪' : '📦'}
+            </div>
+            <div className="model-info">
+              <div className="model-name">
+                {config?.displayName || selectedModel}
+              </div>
+              <div className="model-meta">
+                {config?.type || '3D Model'}
+                {config?.section && ` • ${config.section}`}
+              </div>
+            </div>
+          </div>
+          <button
+            className="switch-model-btn"
+            onClick={onShowModelSelector}
+            aria-label="Switch Model"
+          >
+            <span className="btn-icon">🔄</span>
+            <span className="btn-text">Switch Model</span>
+          </button>
+        </div>
+
         <div className="no-permissions">
           <h3>⚙️ No Configuration Available</h3>
           <p>You don't have permission to access configuration tools for this model.</p>
@@ -478,36 +490,34 @@ export function Interface({
 
   return (
     <div className="interface-container">
-      <div className="interface-toolbar compact">
-        <div className="toolbar-center left">
-          <div style={{display: 'flex', gap: 8, alignItems: 'center'}}>
-            <select
-              id="modelSelect"
-              aria-label="Select Model"
-              className="toolbar-select enhanced"
-              value={selectedModel}
-              onChange={(e) => onModelChange?.(e.target.value)}
-            >
-              {Object.keys(models).map(m => <option key={m} value={m}>{m}</option>)}
-            </select>
-            {/* Section filter (optional) */}
-            {Array.isArray(sectionOptions) && (
-              <select
-                id="sectionSelect"
-                aria-label="Filter by section"
-                className="toolbar-select enhanced"
-                value={selectedSection}
-                onChange={(e) => onSectionChange?.(e.target.value)}
-              >
-                {sectionOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-              </select>
-            )}
+      {/* Modern Model Display Header */}
+      <div className="model-display-header">
+        <div className="current-model-display">
+          <div className="model-icon-large">
+            {config?.type === 'Visicooler' ? '🧊' :
+             config?.type === 'Upright Counter' ? '🏪' :
+             config?.section === 'Upright Counter' ? '🏪' : '📦'}
+          </div>
+          <div className="model-info">
+            <div className="model-name">
+              {config?.displayName || selectedModel}
+            </div>
+            <div className="model-meta">
+              {config?.type || '3D Model'}
+              {config?.section && ` • ${config.section}`}
+            </div>
           </div>
         </div>
-        <div className="toolbar-right">
-          {/* User info and logout removed per request */}
-        </div>
+        <button
+          className="switch-model-btn"
+          onClick={onShowModelSelector}
+          aria-label="Switch Model"
+        >
+          <span className="btn-icon">🔄</span>
+          <span className="btn-text">Switch Model</span>
+        </button>
       </div>
+
       
       <div className="widgets-container">
         {widgets.map((widget, index) => renderWidget(widget, index))}

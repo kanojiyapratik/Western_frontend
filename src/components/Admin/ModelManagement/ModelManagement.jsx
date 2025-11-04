@@ -621,8 +621,8 @@ const ModelManagement = () => {
                 <tr key={modelName}>
                   <td style={{ width: '80px', textAlign: 'center' }}>
                     <div className="model-thumbnail">
-                      <img 
-                        src={config.thumbnail ? `${getApiBaseUrl()}/thumbnails/${config.thumbnail}` : '/placeholder-3d.svg'}
+                      <img
+                        src={config.thumbnail ? config.thumbnail : '/placeholder-3d.svg'}
                         alt={`${modelName} thumbnail`}
                         style={{
                           width: '64px',
@@ -633,7 +633,11 @@ const ModelManagement = () => {
                           backgroundColor: '#f9fafb'
                         }}
                         onError={(e) => {
+                          console.log('Thumbnail failed to load:', config.thumbnail, 'for model:', modelName, 'Error:', e);
                           e.target.src = '/placeholder-3d.svg';
+                        }}
+                        onLoad={(e) => {
+                          console.log('Thumbnail loaded successfully:', config.thumbnail, 'for model:', modelName, 'src:', e.target.src);
                         }}
                       />
                     </div>

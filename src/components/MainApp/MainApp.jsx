@@ -5,6 +5,7 @@ import { Interface } from "../Interface/Interface.jsx";
 // import { modelsConfig } from "../../modelsConfig"; // Removed - using dynamic configs only
 import { useAuth } from "../../context/AuthContext";
 import { ActivityLog } from "../ActivityLog/ActivityLog";
+import ModelSelector from "../Interface/ModelSelector.jsx";
 import './MainApp.css';
 
 // Lazy API URL resolution to prevent React error #310
@@ -264,6 +265,7 @@ function MainApp() {
   }, [mergedModels, dbModelsFormatted, selectedModel]);
   const [api, setApi] = useState(null);
   const [showActivityLog, setShowActivityLog] = useState(false);
+  const [showModelSelector, setShowModelSelector] = useState(false);
   // removed darkMode, showHelp
 
   // Ref for togglePart (passed to Experience)
@@ -500,12 +502,25 @@ function MainApp() {
           sectionOptions={sectionOptions}
           selectedSection={selectedSection}
           onSectionChange={setSelectedSection}
+          onShowModelSelector={() => setShowModelSelector(true)}
         />
       </div>
 
       {showActivityLog && (
         <ActivityLog onClose={() => setShowActivityLog(false)} />
       )}
+
+      {/* Full-Screen Model Selector */}
+      <ModelSelector
+        isOpen={showModelSelector}
+        onClose={() => setShowModelSelector(false)}
+        models={mergedModels}
+        selectedModel={selectedModel}
+        onModelSelect={handleModelChange}
+        sectionOptions={sectionOptions}
+        selectedSection={selectedSection}
+        onSectionChange={setSelectedSection}
+      />
     </div>
   );
 }

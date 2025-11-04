@@ -32,7 +32,8 @@ export default function AddModelModalMultiAsset({ onClose, onAdd }) {
     doors: null,
     drawers: null,
     glassDoors: null,
-    other: null
+    other: null,
+    thumbnail: null
   });
 
   const [uploading, setUploading] = useState(false);
@@ -247,7 +248,8 @@ export default function AddModelModalMultiAsset({ onClose, onAdd }) {
                 doors: 'Doors',
                 drawers: 'Drawers',
                 glassDoors: 'Glass Doors',
-                other: 'Other Assets'
+                other: 'Other Assets',
+                thumbnail: 'Thumbnail Image'
               }).map(([key, label]) => (
                 <div key={key} style={{ marginBottom: '8px' }}>
                   <label style={{ display: 'block', marginBottom: '2px', fontWeight: 'bold', fontSize: '12px' }}>
@@ -255,7 +257,7 @@ export default function AddModelModalMultiAsset({ onClose, onAdd }) {
                   </label>
                   <input
                     type="file"
-                    accept=".glb,.gltf"
+                    accept={key === 'thumbnail' ? '.jpg,.jpeg,.png,.webp' : '.glb,.gltf'}
                     onChange={(e) => handleFileChange(key, e.target.files[0])}
                     style={{ width: '100%', padding: '4px', fontSize: '12px' }}
                     required={key === 'base'}
