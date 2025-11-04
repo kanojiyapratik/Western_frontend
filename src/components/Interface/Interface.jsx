@@ -411,14 +411,6 @@ export function Interface({
                 onLoad={() => console.log('Interface thumbnail loaded:', config.thumbnail)}
               />
             ) : null}
-            <div
-              className="model-icon-large"
-              style={{ display: config?.thumbnail ? 'none' : 'flex' }}
-            >
-              {config?.type === 'Visicooler' ? '🧊' :
-               config?.type === 'Upright Counter' ? '🏪' :
-               config?.section === 'Upright Counter' ? '🏪' : '📦'}
-            </div>
             <div className="model-info">
               <div className="model-name">
                 {config?.displayName || selectedModel}
@@ -455,11 +447,6 @@ export function Interface({
         {/* Modern Model Display Header */}
         <div className="model-display-header">
           <div className="current-model-display">
-            <div className="model-icon-large">
-              {config?.type === 'Visicooler' ? '🧊' :
-               config?.type === 'Upright Counter' ? '🏪' :
-               config?.section === 'Upright Counter' ? '🏪' : '📦'}
-            </div>
             <div className="model-info">
               <div className="model-name">
                 {config?.displayName || selectedModel}
@@ -493,11 +480,6 @@ export function Interface({
       {/* Modern Model Display Header */}
       <div className="model-display-header">
         <div className="current-model-display">
-          <div className="model-icon-large">
-            {config?.type === 'Visicooler' ? '🧊' :
-             config?.type === 'Upright Counter' ? '🏪' :
-             config?.section === 'Upright Counter' ? '🏪' : '📦'}
-          </div>
           <div className="model-info">
             <div className="model-name">
               {config?.displayName || selectedModel}

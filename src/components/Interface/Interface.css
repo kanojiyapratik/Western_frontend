@@ -1767,8 +1767,9 @@ input:checked + .slider:before {
 .current-model-display {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
   flex: 1;
+  min-width: 0; /* Allow text to truncate if needed */
 }
 
 .model-icon-large {
@@ -1795,42 +1796,49 @@ input:checked + .slider:before {
 
 .model-info {
   flex: 1;
+  min-width: 0; /* Allow text truncation */
 }
 
 .model-name {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 700;
   color: #1e293b;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
   letter-spacing: -0.025em;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .model-meta {
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 500;
   color: #64748b;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  line-height: 1.3;
 }
 
 .switch-model-btn {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 12px 20px;
+  gap: 6px;
+  padding: 10px 16px;
   background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
   color: white;
   border: none;
-  border-radius: 12px;
-  font-size: 14px;
+  border-radius: 8px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 16px rgba(79, 70, 229, 0.3);
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.25);
   text-transform: none;
   letter-spacing: 0.025em;
   position: relative;
   overflow: hidden;
+  flex-shrink: 0; /* Prevent button from shrinking */
 }
 
 .switch-model-btn::before {
@@ -1862,22 +1870,9 @@ input:checked + .slider:before {
 }
 
 .switch-model-btn:hover {
-  transform: translateY(-2px) scale(1.02);
-  box-shadow: 0 8px 24px rgba(79, 70, 229, 0.4);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.35);
   background: linear-gradient(135deg, #4338ca 0%, #6d28d9 100%);
-  position: relative;
-  overflow: hidden;
-}
-
-.switch-model-btn:hover::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-  animation: waterFlow 1.5s ease-in-out;
 }
 
 @keyframes waterFlow {
@@ -1893,7 +1888,7 @@ input:checked + .slider:before {
 }
 
 .switch-model-btn:active {
-  transform: translateY(0) scale(1);
+  transform: translateY(0);
 }
 
 /* Model Selector Modal */
@@ -1909,7 +1904,13 @@ input:checked + .slider:before {
   display: flex;
   align-items: center;
   justify-content: center;
-  animation: fadeIn 0.3s ease-out;
+  opacity: 0;
+  transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.model-selector-overlay.open {
+  opacity: 1;
+  backdrop-filter: blur(16px);
 }
 
 .model-selector-panel {
@@ -1922,8 +1923,17 @@ input:checked + .slider:before {
   box-shadow:
     0 20px 60px rgba(0,0,0,0.2),
     0 8px 32px rgba(0,0,0,0.12);
-  animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   border: 1px solid rgba(226, 232, 240, 0.6);
+  transform: translateY(100vh) scale(0.3) perspective(1000px) rotateX(45deg);
+  opacity: 0;
+  transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transform-origin: center bottom;
+  transform-style: preserve-3d;
+}
+
+.model-selector-overlay.open .model-selector-panel {
+  transform: translateY(0) scale(1) perspective(1000px) rotateX(0deg);
+  opacity: 1;
 }
 
 .model-selector-header {
@@ -1933,6 +1943,9 @@ input:checked + .slider:before {
   padding: 24px 32px;
   border-bottom: 1px solid rgba(226, 232, 240, 0.6);
   background: linear-gradient(135deg, rgba(248,250,252,0.8) 0%, rgba(241,245,249,0.6) 100%);
+  transform: translateY(20px);
+  opacity: 0;
+  animation: contentSlideIn 0.4s ease-out 0.2s both;
 }
 
 .model-selector-header h3 {
@@ -1969,6 +1982,9 @@ input:checked + .slider:before {
   gap: 16px;
   padding: 20px 24px;
   border-bottom: 1px solid rgba(226, 232, 240, 0.6);
+  transform: translateY(20px);
+  opacity: 0;
+  animation: contentSlideIn 0.4s ease-out 0.3s both;
 }
 
 .search-container {
@@ -2034,6 +2050,9 @@ input:checked + .slider:before {
   padding: 24px 32px;
   max-height: 400px;
   overflow-y: auto;
+  transform: translateY(20px);
+  opacity: 0;
+  animation: contentSlideIn 0.4s ease-out 0.4s both;
 }
 
 .model-card {
@@ -2108,24 +2127,44 @@ input:checked + .slider:before {
   font-weight: 700;
 }
 
-/* Animations */
-@keyframes fadeIn {
-  from {
+/* Advanced Modal Animations */
+@keyframes modalBounce {
+  0% {
+    transform: translateY(40px) scale(0.9) rotateX(10deg);
     opacity: 0;
   }
-  to {
+  50% {
+    transform: translateY(-5px) scale(1.02) rotateX(-2deg);
+    opacity: 0.8;
+  }
+  70% {
+    transform: translateY(2px) scale(0.98) rotateX(1deg);
+  }
+  100% {
+    transform: translateY(0) scale(1) rotateX(0deg);
     opacity: 1;
   }
 }
 
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px) scale(0.95);
+@keyframes backdropPulse {
+  0% {
+    backdrop-filter: blur(0px);
+    background: rgba(0, 0, 0, 0);
   }
-  to {
+  100% {
+    backdrop-filter: blur(12px);
+    background: rgba(0, 0, 0, 0.6);
+  }
+}
+
+@keyframes contentSlideIn {
+  0% {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
     opacity: 1;
-    transform: translateY(0) scale(1);
   }
 }
 
@@ -2137,17 +2176,26 @@ input:checked + .slider:before {
   }
 
   .model-display-header {
-    padding: 12px;
+    padding: 12px 16px;
     margin-bottom: 12px;
+  }
+
+  .current-model-display {
+    gap: 8px;
   }
 
   .model-name {
     font-size: 16px;
   }
 
+  .model-meta {
+    font-size: 11px;
+  }
+
   .switch-model-btn {
     padding: 8px 12px;
     font-size: 12px;
+    gap: 4px;
   }
 
   .model-selector-panel {
@@ -2191,23 +2239,36 @@ input:checked + .slider:before {
 @media (max-width: 48rem) {
   .model-display-header {
     flex-direction: column;
-    gap: 10px;
+    gap: 12px;
     align-items: stretch;
-    padding: 10px;
+    padding: 12px 16px;
+  }
+
+  .current-model-display {
+    justify-content: center;
   }
 
   .model-info {
     text-align: center;
+    flex: none;
   }
 
   .model-name {
     font-size: 14px;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+  }
+
+  .model-meta {
+    font-size: 10px;
   }
 
   .switch-model-btn {
     align-self: center;
-    padding: 6px 10px;
+    padding: 8px 12px;
     font-size: 11px;
+    width: fit-content;
   }
 
   .model-selector-panel {

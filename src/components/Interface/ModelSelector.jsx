@@ -20,7 +20,9 @@ const ModelSelector = ({
     if (isOpen) {
       setSearchQuery('');
       setSelectedCategory(selectedSection);
-      setIsAnimating(true);
+      // Small delay to ensure DOM is ready for animation
+      const timer = setTimeout(() => setIsAnimating(true), 50);
+      return () => clearTimeout(timer);
     } else {
       setIsAnimating(false);
     }
@@ -113,8 +115,8 @@ const ModelSelector = ({
   if (!isOpen) return null;
 
   return (
-    <div className={`model-selector-overlay ${isAnimating ? 'active' : ''}`} onClick={handleOverlayClick}>
-      <div className={`model-selector-container ${isAnimating ? 'active' : ''}`}>
+    <div className={`model-selector-overlay ${isOpen ? 'open' : ''}`} onClick={handleOverlayClick}>
+      <div className="model-selector-panel">
         {/* Header */}
         <div className="model-selector-header">
           <div className="header-content">
