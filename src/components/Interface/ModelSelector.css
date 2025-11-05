@@ -99,15 +99,15 @@
 
 .header-controls {
   display: flex;
-  gap: 24px;
+  gap: 20px;
   align-items: center;
-  margin-right: 80px;
+  margin-right: 300px;
 }
 
 .category-wrapper {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 5px;
 }
 
 .category-label {
