@@ -166,6 +166,13 @@ const ModelSelector = ({
                 </button>
               )}
             </div>
+
+            {/* Model Count in Header */}
+            <div className="results-summary">
+              <span className="results-count">
+                {filteredModels.length} model{filteredModels.length !== 1 ? 's' : ''} found
+              </span>
+            </div>
           </div>
         </div>
 
@@ -180,12 +187,6 @@ const ModelSelector = ({
           </svg>
         </button>
 
-        {/* Results Summary */}
-        <div className="results-summary">
-          <span className="results-count">
-            {filteredModels.length} model{filteredModels.length !== 1 ? 's' : ''} found
-          </span>
-        </div>
 
         {/* Models Grid */}
         <div className="models-grid">
