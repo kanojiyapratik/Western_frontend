@@ -128,6 +128,21 @@ const ModelSelector = ({
 
           {/* Search and Filters - Right Side */}
           <div className="header-controls">
+            {Array.isArray(sectionOptions) && sectionOptions.length > 1 && (
+              <div className="category-wrapper">
+                <span className="category-label">Category:</span>
+                <select
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  className="category-filter"
+                >
+                  {sectionOptions.map(option => (
+                    <option key={option} value={option}>{option}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+
             <div className="search-input-wrapper">
               <svg className="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none">
                 <path d="M21 21l-4.35-4.35M19 11a8 8 0 1 1-16 0 8 8 0 0 1 16 0z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -151,18 +166,6 @@ const ModelSelector = ({
                 </button>
               )}
             </div>
-
-            {Array.isArray(sectionOptions) && sectionOptions.length > 1 && (
-              <select
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-                className="category-filter"
-              >
-                {sectionOptions.map(option => (
-                  <option key={option} value={option}>{option}</option>
-                ))}
-              </select>
-            )}
           </div>
         </div>
 
