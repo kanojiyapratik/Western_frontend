@@ -122,7 +122,7 @@ const ModelSelector = ({
           <div className="header-content">
             <h2 className="selector-title">
               <span className="title-icon">🎨</span>
-              Select the Model
+              Select Model
             </h2>
           </div>
 
