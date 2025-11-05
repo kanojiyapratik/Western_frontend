@@ -116,7 +116,7 @@ const ModelSelector = ({
 
   return (
     <div className={`model-selector-overlay ${isOpen ? 'open' : ''}`} onClick={handleOverlayClick}>
-      <div className="model-selector-panel">
+      <div className={`model-selector-container ${isOpen ? 'active' : ''}`}>
         {/* Header */}
         <div className="model-selector-header">
           <div className="header-content">

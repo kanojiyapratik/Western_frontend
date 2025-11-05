@@ -1750,114 +1750,110 @@ input:checked + .slider:before {
 .model-display-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 20px;
+  justify-content: center;
+  padding: 16px 20px;
   background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(248,250,252,0.9) 100%);
   border: 2px solid rgba(203,213,225,0.6);
   border-radius: 16px;
   margin-bottom: 20px;
   backdrop-filter: blur(12px);
   box-shadow:
-    0 4px 20px rgba(0,0,0,0.08),
-    0 2px 8px rgba(0,0,0,0.04),
+    0 4px 16px rgba(0,0,0,0.06),
+    0 2px 8px rgba(0,0,0,0.03),
     inset 0 1px 0 rgba(255,255,255,0.8);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.current-model-display {
+.model-header-content {
   display: flex;
   align-items: center;
-  gap: 12px;
-  flex: 1;
-  min-width: 0; /* Allow text to truncate if needed */
+  justify-content: space-between;
+  width: 100%;
+  max-width: 600px;
 }
 
-.model-icon-large {
-  font-size: 40px;
-  width: 64px;
-  height: 64px;
+.model-info-section {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, rgba(79,70,229,0.1) 0%, rgba(124,58,237,0.1) 100%);
-  border-radius: 20px;
-  border: 2px solid rgba(79,70,229,0.2);
-  box-shadow: 0 4px 16px rgba(79,70,229,0.15);
-}
-
-.model-thumbnail-large {
-  width: 64px;
-  height: 64px;
-  object-fit: cover;
-  border-radius: 20px;
-  border: 2px solid rgba(79,70,229,0.2);
-  box-shadow: 0 4px 16px rgba(79,70,229,0.15);
-}
-
-.model-info {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
   flex: 1;
-  min-width: 0; /* Allow text truncation */
 }
 
-.model-name {
-  font-size: 18px;
-  font-weight: 700;
-  color: #1e293b;
+.model-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
   margin-bottom: 2px;
+}
+
+.model-name-display {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1e293b;
   letter-spacing: -0.025em;
   line-height: 1.2;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  max-width: 250px;
 }
 
-.model-meta {
-  font-size: 12px;
-  font-weight: 500;
-  color: #64748b;
+.model-details {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.model-type-badge, .model-section-badge {
+  font-size: 10px;
+  font-weight: 600;
+  color: #4f46e5;
+  background: rgba(79, 70, 229, 0.1);
+  padding: 4px 8px;
+  border-radius: 12px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  line-height: 1.3;
+  border: 1px solid rgba(79, 70, 229, 0.2);
+}
+
+.model-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .switch-model-btn {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 10px 16px;
+  padding: 8px 14px;
   background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
   color: white;
   border: none;
-  border-radius: 8px;
-  font-size: 13px;
+  border-radius: 20px;
+  font-size: 12px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.25);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   text-transform: none;
   letter-spacing: 0.025em;
   position: relative;
   overflow: hidden;
-  flex-shrink: 0; /* Prevent button from shrinking */
+  flex-shrink: 0;
+  min-width: fit-content;
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
 }
 
-.switch-model-btn::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-  transition: left 0.5s;
-}
-
-.switch-model-btn:hover::before {
-  left: 100%;
+.switch-model-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(79, 70, 229, 0.4);
+  background: linear-gradient(135deg, #4338ca 0%, #6d28d9 100%);
 }
 
 .btn-icon {
-  font-size: 16px;
+  font-size: 14px;
   transition: transform 0.3s ease;
 }
 
@@ -1867,28 +1863,8 @@ input:checked + .slider:before {
 
 .btn-text {
   font-weight: 600;
-}
-
-.switch-model-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.35);
-  background: linear-gradient(135deg, #4338ca 0%, #6d28d9 100%);
-}
-
-@keyframes waterFlow {
-  0% {
-    left: -100%;
-  }
-  50% {
-    left: 100%;
-  }
-  100% {
-    left: 100%;
-  }
-}
-
-.switch-model-btn:active {
-  transform: translateY(0);
+  white-space: nowrap;
+  transition: all 0.2s ease;
 }
 
 /* Model Selector Modal */

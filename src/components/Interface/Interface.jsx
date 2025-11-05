@@ -397,38 +397,29 @@ export function Interface({
       <div className="interface-container">
         {/* Modern Model Display Header */}
         <div className="model-display-header">
-          <div className="current-model-display">
-            {config?.thumbnail ? (
-              <img
-                key={config.thumbnail + Date.now()} // Force re-render when thumbnail URL changes
-                src={config.thumbnail}
-                alt={`${config?.displayName || selectedModel} thumbnail`}
-                className="model-thumbnail-large"
-                onError={(e) => {
-                  e.target.style.display = 'none';
-                  e.target.nextElementSibling.style.display = 'flex';
-                }}
-                onLoad={() => console.log('Interface thumbnail loaded:', config.thumbnail)}
-              />
-            ) : null}
-            <div className="model-info">
-              <div className="model-name">
+          <div className="model-header-content">
+            <div className="model-info-section">
+              <div className="model-name-display">
                 {config?.displayName || selectedModel}
               </div>
-              <div className="model-meta">
-                {config?.type || '3D Model'}
-                {config?.section && ` • ${config.section}`}
+              <div className="model-details">
+                <span className="model-type-badge">{config?.type || '3D Model'}</span>
+                {config?.section && (
+                  <span className="model-section-badge">{config.section}</span>
+                )}
               </div>
             </div>
+            <div className="model-actions">
+              <button
+                className="switch-model-btn"
+                onClick={onShowModelSelector}
+                aria-label="Switch Model"
+              >
+                <span className="btn-icon">🔄</span>
+                <span className="btn-text">Switch Model</span>
+              </button>
+            </div>
           </div>
-          <button
-            className="switch-model-btn"
-            onClick={onShowModelSelector}
-            aria-label="Switch Model"
-          >
-            <span className="btn-icon">🔄</span>
-            <span className="btn-text">Switch Model</span>
-          </button>
         </div>
 
 
@@ -446,25 +437,29 @@ export function Interface({
       <div className="interface-container">
         {/* Modern Model Display Header */}
         <div className="model-display-header">
-          <div className="current-model-display">
-            <div className="model-info">
-              <div className="model-name">
+          <div className="model-header-content">
+            <div className="model-info-section">
+              <div className="model-name-display">
                 {config?.displayName || selectedModel}
               </div>
-              <div className="model-meta">
-                {config?.type || '3D Model'}
-                {config?.section && ` • ${config.section}`}
+              <div className="model-details">
+                <span className="model-type-badge">{config?.type || '3D Model'}</span>
+                {config?.section && (
+                  <span className="model-section-badge">{config.section}</span>
+                )}
               </div>
             </div>
+            <div className="model-actions">
+              <button
+                className="switch-model-btn"
+                onClick={onShowModelSelector}
+                aria-label="Switch Model"
+              >
+                <span className="btn-icon">🔄</span>
+                <span className="btn-text">Switch Model</span>
+              </button>
+            </div>
           </div>
-          <button
-            className="switch-model-btn"
-            onClick={onShowModelSelector}
-            aria-label="Switch Model"
-          >
-            <span className="btn-icon">🔄</span>
-            <span className="btn-text">Switch Model</span>
-          </button>
         </div>
 
         <div className="no-permissions">
@@ -479,25 +474,29 @@ export function Interface({
     <div className="interface-container">
       {/* Modern Model Display Header */}
       <div className="model-display-header">
-        <div className="current-model-display">
-          <div className="model-info">
-            <div className="model-name">
+        <div className="model-header-content">
+          <div className="model-info-section">
+            <div className="model-name-display">
               {config?.displayName || selectedModel}
             </div>
-            <div className="model-meta">
-              {config?.type || '3D Model'}
-              {config?.section && ` • ${config.section}`}
+            <div className="model-details">
+              <span className="model-type-badge">{config?.type || '3D Model'}</span>
+              {config?.section && (
+                <span className="model-section-badge">{config.section}</span>
+              )}
             </div>
           </div>
+          <div className="model-actions">
+            <button
+              className="switch-model-btn"
+              onClick={onShowModelSelector}
+              aria-label="Switch Model"
+            >
+              <span className="btn-icon">🔄</span>
+              <span className="btn-text">Switch Model</span>
+            </button>
+          </div>
         </div>
-        <button
-          className="switch-model-btn"
-          onClick={onShowModelSelector}
-          aria-label="Switch Model"
-        >
-          <span className="btn-icon">🔄</span>
-          <span className="btn-text">Switch Model</span>
-        </button>
       </div>
 
       
