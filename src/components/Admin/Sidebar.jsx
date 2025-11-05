@@ -18,9 +18,28 @@ const Sidebar = ({ collapsed, onToggle }) => {
 
   return (
     <aside className={`kt-sidebar ${collapsed ? 'collapsed' : ''}`}>
-      <div style={{padding:'12px 16px', borderBottom:'1px solid #334155'}}>
+      <div style={{padding:'8px 16px', borderBottom:'1px solid #334155'}}>
         <div style={{display:'flex', alignItems:'center', gap:'6px', fontSize:'14px', fontWeight:'600'}}>
-          ⚙️ {!collapsed && <span>Admin</span>}
+          {!collapsed && <>⚙️ <span>Admin</span></>}
+          <button
+            onClick={onToggle}
+            style={{
+              marginLeft: collapsed ? '0' : 'auto',
+              background: 'none',
+              border: 'none',
+              color: '#cbd5e1',
+              cursor: 'pointer',
+              padding: '4px',
+              borderRadius: '4px',
+              fontSize: '24px',
+              transition: 'all 0.2s ease'
+            }}
+            onMouseEnter={(e) => e.target.style.background = '#334155'}
+            onMouseLeave={(e) => e.target.style.background = 'none'}
+            title={collapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
+          >
+            {collapsed ? '⏵' : '⏴'}
+          </button>
         </div>
       </div>
       <nav className="kt-nav">
@@ -32,7 +51,14 @@ const Sidebar = ({ collapsed, onToggle }) => {
             title={collapsed ? item.label : ''}
             onClick={(e) => {
               // Force page reload when navigating from viewer to prevent routing issues
-              if (location.pathname === '/viewer' && item.path !== '/viewer') {
+              if (location.pathname === '/admin/viewer' && item.path !== '/admin/viewer') {
+                e.preventDefault();
+                if (typeof window !== 'undefined') {
+                  window.location.href = item.path;
+                }
+              }
+              // Force page reload when navigating to viewer from any other page
+              if (location.pathname !== '/admin/viewer' && item.path === '/admin/viewer') {
                 e.preventDefault();
                 if (typeof window !== 'undefined') {
                   window.location.href = item.path;
