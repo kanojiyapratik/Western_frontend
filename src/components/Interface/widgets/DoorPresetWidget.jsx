@@ -45,7 +45,7 @@ export function DoorPresetWidget({ config, api }) {
   if (!Object.keys(doorSelections).length) return null;
 
   return (
-    <div className="widget-container">
+    <div className="widget-container door-preset-widget">
       <div className="widget-title">🚪 Door Configuration</div>
       
       <div className="preset-controls">

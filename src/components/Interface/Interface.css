@@ -1113,6 +1113,12 @@
   margin-top: 16px;
 }
 
+/* Door preset widget should expand to show all content */
+.door-preset-widget {
+  height: auto !important;
+  min-height: var(--widget-h);
+}
+
 /* On small screens use a single column and slightly smaller widget height */
 @media (max-width: 900px) {
   .widgets-container { grid-template-columns: 1fr; }
