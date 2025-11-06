@@ -119,12 +119,22 @@ export default function AddModelModalSimple({ onClose, onAdd, editModel = null, 
     // On edit, load preset images from model.presetImages field if it exists
     if (isEditMode && editModel && editModel.presetImages && Array.isArray(editModel.presetImages)) {
       console.log('Loading preset images from editModel:', editModel.presetImages);
-      return editModel.presetImages.map(img => ({
-        originalName: img.originalName || img.filename || 'Unknown',
-        filename: img.filename || img.originalName || 'Unknown',
-        url: img.url,
-        uploadedAt: img.uploadedAt || new Date().toISOString()
-      }));
+      const apiBase = getApiBaseUrl();
+      return editModel.presetImages.map(img => {
+        // Ensure URL is absolute - if it's relative, prepend API base
+        let imageUrl = img.url;
+        if (imageUrl && !imageUrl.startsWith('http://') && !imageUrl.startsWith('https://')) {
+          imageUrl = `${apiBase}${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`;
+          console.log(`Converting relative URL to absolute: ${img.url} -> ${imageUrl}`);
+        }
+        return {
+          originalName: img.originalName || img.filename || 'Unknown',
+          filename: img.filename || img.originalName || 'Unknown',
+          url: imageUrl,
+          publicId: img.publicId || null,
+          uploadedAt: img.uploadedAt || new Date().toISOString()
+        };
+      });
     }
     return [];
   });
@@ -745,12 +755,19 @@ export default function AddModelModalSimple({ onClose, onAdd, editModel = null, 
           {presetImages.length > 0 && (
             <div style={{ marginTop: 8 }}>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 8 }}>
-                {presetImages.map((img, idx) => (
+                {presetImages.map((img, idx) => {
+                  console.log(`Rendering preset image ${idx}:`, img);
+                  return (
                   <div key={idx} style={{ border: '1px solid #e5e7eb', borderRadius: 8, padding: 8, textAlign: 'center' }}>
                     <img
                       src={img.url}
                       alt={img.originalName}
                       style={{ width: '100px', height: '100px', objectFit: 'cover', borderRadius: 4, marginBottom: 4 }}
+                      onLoad={() => console.log(`✅ Preset image ${idx} loaded successfully:`, img.url)}
+                      onError={(e) => {
+                        console.error(`❌ Failed to load preset image ${idx}:`, img.url, e);
+                        console.error('Full image object:', img);
+                      }}
                     />
                     <div style={{ fontSize: 11, fontWeight: 500, marginBottom: 4, wordBreak: 'break-all' }}>{img.originalName}</div>
                     <div style={{ fontSize: 10, color: '#64748b', marginBottom: 4, wordBreak: 'break-all', maxHeight: '40px', overflow: 'hidden' }}>
