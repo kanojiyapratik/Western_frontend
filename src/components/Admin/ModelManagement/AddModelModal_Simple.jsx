@@ -621,6 +621,39 @@ export default function AddModelModalSimple({ onClose, onAdd, editModel = null, 
               <button type="button" onClick={handleModelPick} disabled={uploadingModel || !isLoggedIn || checkingAuth}>
                 {uploadingModel ? 'Uploading…' : !isLoggedIn && !checkingAuth ? 'Login Required' : 'Upload'}
               </button>
+              {modelPath && (
+                <button
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      const current = (modelPath || '').trim();
+                      // If it's an S3 URL, ask backend to delete it
+                      if (current.startsWith('http://') || current.startsWith('https://')) {
+                        if (current.includes('amazonaws.com')) {
+                          const token = localStorage.getItem('token');
+                          await fetch(`${getApiBaseUrl()}/api/upload/delete`, {
+                            method: 'POST',
+                            headers: {
+                              'Content-Type': 'application/json',
+                              ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+                            },
+                            body: JSON.stringify({ url: current })
+                          }).catch(() => {});
+                        }
+                      }
+                    } catch (e) {
+                      // ignore network errors and still clear UI
+                    } finally {
+                      setModelPath('');
+                    }
+                  }}
+                  className="btn-danger"
+                  title="Clear uploaded model (also removes from S3 if applicable)"
+                  style={{ fontSize: 12, padding: '4px 8px' }}
+                >
+                  ✕
+                </button>
+              )}
             </div>
           </label>
           <label>

@@ -35,6 +35,15 @@ export default function AddModelModalMultiAsset({ onClose, onAdd }) {
     other: null,
     thumbnail: null
   });
+  // Force-remount keys to clear <input type="file"> elements
+  const [fileInputKeys, setFileInputKeys] = useState({
+    base: 0,
+    doors: 0,
+    drawers: 0,
+    glassDoors: 0,
+    other: 0,
+    thumbnail: 0
+  });
 
   const [uploading, setUploading] = useState(false);
   const [uploadResult, setUploadResult] = useState(null);
@@ -82,6 +91,11 @@ export default function AddModelModalMultiAsset({ onClose, onAdd }) {
       ...prev,
       [assetType]: file
     }));
+  };
+
+  const clearSelectedFile = (assetType) => {
+    setFiles(prev => ({ ...prev, [assetType]: null }));
+    setFileInputKeys(prev => ({ ...prev, [assetType]: prev[assetType] + 1 }));
   };
 
   const handleSubmit = async (e) => {
@@ -255,13 +269,27 @@ export default function AddModelModalMultiAsset({ onClose, onAdd }) {
                   <label style={{ display: 'block', marginBottom: '2px', fontWeight: 'bold', fontSize: '12px' }}>
                     {label} {key === 'base' ? '*' : ''}
                   </label>
-                  <input
-                    type="file"
-                    accept={key === 'thumbnail' ? '.jpg,.jpeg,.png,.webp' : '.glb,.gltf'}
-                    onChange={(e) => handleFileChange(key, e.target.files[0])}
-                    style={{ width: '100%', padding: '4px', fontSize: '12px' }}
-                    required={key === 'base'}
-                  />
+                  <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                    <input
+                      key={fileInputKeys[key]}
+                      type="file"
+                      accept={key === 'thumbnail' ? '.jpg,.jpeg,.png,.webp' : '.glb,.gltf'}
+                      onChange={(e) => handleFileChange(key, e.target.files[0])}
+                      style={{ flex: 1, padding: '4px', fontSize: '12px' }}
+                      required={key === 'base'}
+                    />
+                    {files[key] && (
+                      <button
+                        type="button"
+                        className="btn-danger"
+                        title="Clear selected file"
+                        onClick={() => clearSelectedFile(key)}
+                        style={{ fontSize: 12, padding: '4px 8px' }}
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
                   {files[key] && (
                     <div style={{ marginTop: '2px', fontSize: '11px', color: '#666' }}>
                       ✓ {files[key].name}
@@ -358,6 +386,58 @@ export default function AddModelModalMultiAsset({ onClose, onAdd }) {
                 {JSON.stringify(uploadResult.jsonConfig, null, 2)}
               </pre>
             </details>
+
+            {/* Allow quick corrections: delete any uploaded asset from S3 */}
+            {uploadResult.assetUrls && (
+              <div style={{ marginTop: '10px' }}>
+                <div style={{ fontWeight: 600, marginBottom: 6 }}>Uploaded assets</div>
+                <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr auto', gap: 6, alignItems: 'center' }}>
+                  {Object.entries(uploadResult.assetUrls).map(([k, url]) => (
+                    <React.Fragment key={k}>
+                      <div style={{ fontSize: 12, color: '#334155' }}>{k}</div>
+                      <div style={{ fontSize: 12, color: '#64748b', wordBreak: 'break-all' }}>{url}</div>
+                      <button
+                        type="button"
+                        className="btn-danger"
+                        title="Delete this asset from S3"
+                        onClick={async () => {
+                          try {
+                            if (!url || !String(url).includes('amazonaws.com')) {
+                              // Nothing to delete
+                              return;
+                            }
+                            const token = localStorage.getItem('token');
+                            const res = await fetch(`${getApiBaseUrl()}/api/upload/delete`, {
+                              method: 'POST',
+                              headers: {
+                                'Content-Type': 'application/json',
+                                ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+                              },
+                              body: JSON.stringify({ url })
+                            });
+                            if (res.ok) {
+                              // Remove from UI
+                              setUploadResult(prev => ({
+                                ...prev,
+                                assetUrls: Object.fromEntries(Object.entries(prev.assetUrls || {}).filter(([key]) => key !== k))
+                              }));
+                            }
+                          } catch (e) {
+                            // ignore error; user can retry
+                          }
+                        }}
+                        style={{ fontSize: 12, padding: '4px 8px' }}
+                      >
+                        ✕
+                      </button>
+                    </React.Fragment>
+                  ))}
+                </div>
+                <div style={{ marginTop: 6, fontSize: 11, color: '#64748b' }}>
+                  Note: This removes the file from S3. If the created model references it, update the model accordingly.
+                </div>
+              </div>
+            )}
           </div>
         )}
 
