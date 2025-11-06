@@ -908,12 +908,6 @@ const UserManagement = () => {
         }
       `}</style>
 
-      {/* DEBUG: show last delete-flow message and modal state for troubleshooting */}
-      {debugMessage && (
-        <div style={{padding:8, background:'rgba(15,23,42,0.04)', border:'1px solid var(--kt-border)', borderRadius:6}}>
-          <strong>Debug:</strong> {debugMessage} {showTransferModal ? '(transfer modal open)' : '(modal closed)'}
-        </div>
-      )}
       <div className="kt-card">
         <div className="flex gap-12" style={{alignItems:'center', justifyContent:'space-between'}}>
           <div>

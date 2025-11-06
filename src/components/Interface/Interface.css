@@ -1105,16 +1105,12 @@
   margin-bottom: 0;
 }
 
-/* Ensure preset-controls (door presets) can scroll when their content exceeds available space */
+/* Ensure preset-controls (door presets) show complete content without scrolling */
 .preset-controls {
   display: grid;
   grid-template-columns: 1fr;
   gap: 16px;
   margin-top: 16px;
-  /* Constrain height so it won't push the widget beyond its grid cell and enable internal scrolling */
-  max-height: calc(var(--widget-h) - 96px); /* account for title, padding and buttons */
-  overflow-y: auto;
-  padding-right: 6px; /* small space for scrollbar */
 }
 
 /* On small screens use a single column and slightly smaller widget height */
