@@ -790,7 +790,8 @@ export default function AddModelModalSimple({ onClose, onAdd, editModel = null, 
                       </button>
                     </div>
                   </div>
-                ))}
+                );
+                })}
               </div>
             </div>
           )}

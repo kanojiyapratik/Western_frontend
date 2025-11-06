@@ -195,7 +195,6 @@ const ModelManagement = () => {
         modelPosition: model.modelPosition,
         modelRotation: model.modelRotation,
         modelScale: model.modelScale,
-        interactionGroups: model.interactionGroups,
         shadows: model.shadows
       };
     });
