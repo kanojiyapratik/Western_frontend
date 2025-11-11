@@ -220,7 +220,7 @@ const getRoleDisplayName = (user) => {
   // Handle standard roles with proper capitalization
   return role.charAt(0).toUpperCase() + role.slice(1);
 };
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../../../context/AuthContext';
 import './UserManagement.css';
 import { ActivityLog } from '../../ActivityLog/ActivityLog';
@@ -262,6 +262,8 @@ const UserManagement = () => {
   const [showUserConfigs, setShowUserConfigs] = useState(false);
   const [configsUserId, setConfigsUserId] = useState(null);
   const [debugMessage, setDebugMessage] = useState('');
+  const [availableModels, setAvailableModels] = useState([]);
+  const [selectedModelForEdit, setSelectedModelForEdit] = useState('');
   const { user: tokenUser } = useAuth();
   const isSuperAdmin = tokenUser?.role === 'superadmin';
   const [selectedTab, setSelectedTab] = useState('admins'); // 'admins' | 'employees'
@@ -272,9 +274,18 @@ const UserManagement = () => {
   const [showSuccessAnimation, setShowSuccessAnimation] = useState(false);
 
   useEffect(() => {
+    console.log('🚀 UserManagement component mounted');
     fetchUsers();
-    loadModelPresets();
+    loadAvailableModels();
   }, []);
+
+  // Auto-select first model when models are loaded
+  useEffect(() => {
+    if (availableModels.length > 0 && !selectedModelForEdit && showEditModal) {
+      console.log('🎯 Auto-selecting first model:', availableModels[0].name);
+      setSelectedModelForEdit(availableModels[0].name);
+    }
+  }, [availableModels, selectedModelForEdit, showEditModal]);
 
   const fetchUsers = async () => {
     try {
@@ -324,6 +335,31 @@ const UserManagement = () => {
     }
   };
 
+  const loadAvailableModels = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      console.log('🔍 Loading available models...');
+      const response = await fetch(`${getApiBaseUrl()}/api/models`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      console.log('📡 Models API response status:', response.status);
+      if (!response.ok) {
+        console.error('❌ Models API failed:', response.status, response.statusText);
+        return;
+      }
+      const models = await response.json();
+      console.log('✅ Loaded models:', models);
+      console.log('📊 Models count:', Array.isArray(models) ? models.length : 'not array');
+      setAvailableModels(models || []);
+    } catch (error) {
+      console.error('❌ Failed to load available models:', error);
+      setAvailableModels([]);
+    }
+  };
+
   const handleEditUser = (user) => {
     if (user._id === currentUserId) {
       setError('You cannot edit your own account');
@@ -354,9 +390,13 @@ const UserManagement = () => {
       userManageDelete: dbPermissions.userManageDelete
     });
 
+    // Initialize model-specific permissions if they don't exist
+    let modelSpecificPermissions = dbPermissions.modelSpecificPermissions || {};
+    
     // Only add presetAccess if it doesn't exist
     let completePermissions = {
       ...dbPermissions,
+      modelSpecificPermissions: modelSpecificPermissions,
       presetAccess: dbPermissions.presetAccess || {}
     };
 
@@ -377,6 +417,19 @@ const UserManagement = () => {
       permissions: completePermissions,
       customRoleName: effectiveRole.customRoleName,
     });
+    
+    // Set the first available model as selected for editing
+    if (availableModels.length > 0) {
+      console.log('✅ Setting selected model to:', availableModels[0].name);
+      setSelectedModelForEdit(availableModels[0].name);
+    } else {
+      console.log('⚠️ No models available to set as selected');
+      setSelectedModelForEdit('');
+    }
+    
+    console.log('📝 Edit user - availableModels:', availableModels);
+    console.log('📝 Edit user - availableModels length:', availableModels.length);
+    
     setShowEditModal(true);
     setTimeout(() => loadModelPresets(), 10);
   };
@@ -499,6 +552,7 @@ const UserManagement = () => {
       setTimeout(() => {
         setShowEditModal(false);
         setEditingUser(null);
+        setSelectedModelForEdit('');
         setShowSuccessAnimation(false);
       }, 2000); // Show animation for 2 seconds
     } catch (error) {
@@ -529,6 +583,118 @@ const UserManagement = () => {
       };
     });
   };
+
+  // Handle model selection change
+  const handleModelSelectionChange = (modelName) => {
+    console.log('🔄 Model selection changed to:', modelName);
+    setSelectedModelForEdit(modelName);
+  };
+
+  // Get current model-specific permissions with proper React state management
+  const [permissionsCache, setPermissionsCache] = useState({});
+  
+  // The actual getCurrentModelPermissions function (this is the one that works!)
+  const getCurrentModelPermissions = () => {
+    const allWidgetPermissions = {
+      doorPresets: false,
+      doorToggles: false,
+      drawerToggles: false,
+      textureWidget: false,
+      lightWidget: false,
+      globalTextureWidget: false,
+      screenshotWidget: false,
+      canRotate: false,
+      canPan: false,
+      canZoom: false,
+      canMove: false
+    };
+    
+    if (!editingUser?.permissions?.modelSpecificPermissions || !selectedModelForEdit) {
+      console.log('🔍 getCurrentModelPermissions: No model-specific permissions found, returning defaults');
+      return allWidgetPermissions;
+    }
+    
+    const savedPerms = editingUser.permissions.modelSpecificPermissions[selectedModelForEdit] || {};
+    console.log('🔍 getCurrentModelPermissions: Saved permissions:', savedPerms);
+    
+    // Merge saved permissions with all widget defaults to ensure all widgets are present
+    const result = {
+      ...allWidgetPermissions,
+      ...savedPerms
+    };
+    console.log('🔍 getCurrentModelPermissions: Final result:', result);
+    
+    return result;
+  };
+
+  // Handle permission change for specific model with force re-render
+  const [forceUpdate, setForceUpdate] = useState(0);
+  
+  const handleModelPermissionChange = (permission, value) => {
+    console.log(`🚀 HANDLE PERMISSION CHANGE: ${permission} = ${value} for model: ${selectedModelForEdit}`);
+    
+    setEditingUser(prev => {
+      console.log('🚀 Previous editingUser:', prev);
+      
+      // Get current model-specific permissions object
+      const currentModelSpecificPerms = prev.permissions?.modelSpecificPermissions || {};
+      console.log('🚀 Current modelSpecificPermissions:', currentModelSpecificPerms);
+      
+      // Get permissions for this specific model
+      const currentModelPerms = currentModelSpecificPerms[selectedModelForEdit] || {};
+      console.log('🚀 Current permissions for', selectedModelForEdit, ':', currentModelPerms);
+      
+      // Initialize all widget permissions if model doesn't exist
+      const allWidgetPermissions = {
+        doorPresets: false,
+        doorToggles: false,
+        drawerToggles: false,
+        textureWidget: false,
+        lightWidget: false,
+        globalTextureWidget: false,
+        screenshotWidget: false,
+        canRotate: false,
+        canPan: false,
+        canZoom: false,
+        canMove: false
+      };
+      
+      // Merge current permissions with all widgets, then update the specific one
+      const updatedModelPerms = {
+        ...allWidgetPermissions,  // Start with all widget defaults
+        ...currentModelPerms,     // Override with existing permissions
+        [permission]: value       // Update the specific permission
+      };
+      
+      console.log('🚀 Updated permissions for', selectedModelForEdit, ':', updatedModelPerms);
+      
+      // Create new model-specific permissions object
+      const newModelSpecificPerms = {
+        ...currentModelSpecificPerms,
+        [selectedModelForEdit]: updatedModelPerms
+      };
+      console.log('🚀 New modelSpecificPermissions:', newModelSpecificPerms);
+
+      // Create complete permissions object
+      const newPermissions = {
+        ...prev.permissions,
+        modelSpecificPermissions: newModelSpecificPerms
+      };
+      console.log('🚀 New complete permissions:', newPermissions);
+
+      const newState = {
+        ...prev,
+        permissions: newPermissions
+      };
+      console.log('🚀 Final new state:', newState);
+      
+      return newState;
+    });
+    
+    // Force a re-render to update the checkboxes
+    setForceUpdate(prev => prev + 1);
+  };
+  
 
   // Active/deactivated status removed; no toggle function
 
@@ -1390,29 +1556,103 @@ const UserManagement = () => {
                 )}
               </div>
 
-              {/* Other feature permissions */}
+              {/* Model-specific widget permissions */}
               <div className="kt-card" style={{boxShadow:'none', border:'1px dashed var(--kt-border)'}}>
-                <div className="flex" style={{justifyContent:'space-between', alignItems:'center', marginBottom:12}}>
-                  <div className="kt-card-header" style={{marginBottom:0}}>Feature Permissions</div>
-                  <div className="flex gap-8">
-                    <button type="button" className="kt-btn outline" onClick={grantAll}>Grant All</button>
-                    <button type="button" className="kt-btn danger" onClick={revokeAll}>Revoke All</button>
+                <div className="kt-card-header" style={{marginBottom:12}}>Widget Permissions by Model</div>
+                
+                {/* Model Selection Dropdown */}
+                <div style={{marginBottom:16}}>
+                  <label style={{fontSize:12, fontWeight:600, color:'var(--kt-text-soft)', display:'block', marginBottom:8}}>Select Model</label>
+                  <select
+                    value={selectedModelForEdit}
+                    onChange={(e) => handleModelSelectionChange(e.target.value)}
+                    style={{width:'100%', padding:'8px 10px', borderRadius:6, border:'1px solid var(--kt-border)', fontSize:15}}
+                  >
+                    <option value="">-- Select a model --</option>
+                    {(() => {
+                      console.log('🎯 Rendering dropdown - availableModels:', availableModels);
+                      console.log('🎯 Rendering dropdown - availableModels length:', availableModels.length);
+                      console.log('🎯 Rendering dropdown - selectedModelForEdit:', selectedModelForEdit);
+                      return availableModels.map((model) => {
+                        console.log('🎯 Model object:', model);
+                        return (
+                          <option key={model._id} value={model.name}>
+                            {model.name}
+                          </option>
+                        );
+                      });
+                    })()}
+                  </select>
+                  {availableModels.length === 0 && (
+                    <div style={{fontSize:11, color:'var(--kt-text-soft)', marginTop:4}}>
+                      No models found. Check console for API errors.
+                    </div>
+                  )}
+                </div>
+
+                {/* Widget Permissions for Selected Model */}
+                {selectedModelForEdit && (
+                  <>
+                    <div className="flex" style={{justifyContent:'space-between', alignItems:'center', marginBottom:12}}>
+                      <div style={{fontSize:13, color:'var(--kt-text-soft)'}}>
+                        Widget permissions for: <strong>{selectedModelForEdit}</strong>
+                      </div>
+                      <div className="flex gap-8">
+                        <button
+                          type="button"
+                          className="kt-btn outline sm"
+                          onClick={() => {
+                            console.log('🎯 Grant All clicked for model:', selectedModelForEdit);
+                            const currentPerms = getCurrentModelPermissions();
+                            Object.keys(currentPerms).forEach(key => {
+                              handleModelPermissionChange(key, true);
+                            });
+                          }}
+                        >
+                          Grant All
+                        </button>
+                        <button
+                          type="button"
+                          className="kt-btn danger sm"
+                          onClick={() => {
+                            console.log('🎯 Revoke All clicked for model:', selectedModelForEdit);
+                            const currentPerms = getCurrentModelPermissions();
+                            Object.keys(currentPerms).forEach(key => {
+                              handleModelPermissionChange(key, false);
+                            });
+                          }}
+                        >
+                          Revoke All
+                        </button>
+                      </div>
+                    </div>
+                    
+                    <div style={{display:'grid', gap:10, gridTemplateColumns:'repeat(auto-fill,minmax(160px,1fr))'}} key={`${selectedModelForEdit}-${forceUpdate}`}>
+                      {Object.entries(getCurrentModelPermissions()).map(([key, value]) => {
+                        console.log(`🎯 Rendering checkbox: ${key} = ${value} for model ${selectedModelForEdit}`);
+                        return (
+                          <label key={key} style={{display:'flex', gap:6, alignItems:'center', fontSize:12, background:'var(--kt-surface-alt)', padding:'6px 8px', borderRadius:6, border:'1px solid var(--kt-border)'}}>
+                            <input
+                              type="checkbox"
+                              checked={value}
+                              onChange={(e) => {
+                                console.log(`🔄 Checkbox clicked: ${key}, new value: ${e.target.checked}`);
+                                handleModelPermissionChange(key, e.target.checked);
+                              }}
+                            />
+                            {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </>
+                )}
+                
+                {!selectedModelForEdit && (
+                  <div style={{textAlign:'center', padding:'20px', color:'var(--kt-text-soft)', fontSize:13}}>
+                    Please select a model above to configure widget permissions
                   </div>
-                </div>
-                <div style={{display:'grid', gap:10, gridTemplateColumns:'repeat(auto-fill,minmax(160px,1fr))'}}>
-                  {Object.entries(editingUser.permissions)
-                    .filter(([key]) => !["reflectionWidget","movementWidget","customWidget","imageDownloadQualities","modelUpload","modelManageUpload","modelManageEdit","modelManageDelete","userManagement","userManageCreate","userManageEdit","userManageDelete"].includes(key))
-                    .map(([key, value]) => (
-                      <label key={key} style={{display:'flex', gap:6, alignItems:'center', fontSize:12, background:'var(--kt-surface-alt)', padding:'6px 8px', borderRadius:6, border:'1px solid var(--kt-border)'}}>
-                        <input
-                          type="checkbox"
-                          checked={value}
-                          onChange={(e) => handlePermissionChange(key, e.target.checked)}
-                        />
-                        {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
-                      </label>
-                    ))}
-                </div>
+                )}
               </div>
 
               {/* Per-preset controls (Coke/Pepsi etc) */}
@@ -1451,7 +1691,7 @@ const UserManagement = () => {
               </div>
 
               <div className="flex" style={{justifyContent:'flex-end', gap:12}}>
-                <button type="button" className="kt-btn outline" onClick={() => setShowEditModal(false)}>Cancel</button>
+                <button type="button" className="kt-btn outline" onClick={() => { setShowEditModal(false); setEditingUser(null); setSelectedModelForEdit(''); }}>Cancel</button>
                 <button type="submit" className="kt-btn primary" onClick={() => console.log('UPDATE CLICKED - Current permissions:', editingUser.permissions)}>Update User</button>
               </div>
             </form>

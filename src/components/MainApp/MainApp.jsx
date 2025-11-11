@@ -314,9 +314,21 @@ function MainApp() {
         lightWidget: true,
         saveConfig: true,
         screenshotWidget: true,
-        role: user?.role
+        role: user?.role,
+        // Add model-specific permissions structure for admin
+        modelSpecificPermissions: {}
       }
     : user?.permissions || {};
+
+  // Debug logging for permissions
+  console.log('🔍 MainApp - User permissions debug:');
+  console.log('  - User role:', user?.role);
+  console.log('  - Full user object:', user);
+  console.log('  - user?.permissions:', user?.permissions);
+  console.log('  - userPermissions (final):', userPermissions);
+  console.log('  - modelSpecificPermissions:', userPermissions?.modelSpecificPermissions);
+  console.log('  - selectedModel:', selectedModel);
+  console.log('  - permissions for selectedModel:', userPermissions?.modelSpecificPermissions?.[selectedModel]);
 
   // Update position when changing models
   useEffect(() => {

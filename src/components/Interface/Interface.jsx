@@ -199,9 +199,14 @@ export function Interface({
     console.log('  - From config.metadata.uiWidgets:', config.metadata?.uiWidgets || []);
     console.log('  - Total merged widgets:', allWidgets.length);
     console.log('User Permissions:', userPermissions);
+    console.log('🔍 Model-Specific Permissions:');
+    console.log('  - userPermissions.modelSpecificPermissions:', userPermissions?.modelSpecificPermissions);
+    console.log('  - Permissions for current model:', userPermissions?.modelSpecificPermissions?.[selectedModel]);
     console.log('🔍 Specific permission checks:');
     console.log('  - lightWidget permission:', userPermissions?.lightWidget);
     console.log('  - hasPermission(lightWidget):', hasPermission('lightWidget'));
+    console.log('  - textureWidget permission:', userPermissions?.textureWidget);
+    console.log('  - hasPermission(textureWidget):', hasPermission('textureWidget'));
     console.log('Config.interactionGroups:', config.interactionGroups);
     console.log('Interaction Groups Length:', config.interactionGroups?.length || 0);
     console.log('=======================');
@@ -209,15 +214,50 @@ export function Interface({
 
   // Permission helpers (backend uses specific keys; derive common intents)
   const hasPermission = (permission) => {
+    console.log(`🚨 PERMISSION CHECK: ${permission} for model: ${selectedModel}`);
+    console.log(`🚨 userPermissions:`, userPermissions);
+    console.log(`🚨 userPermissions.modelSpecificPermissions:`, userPermissions?.modelSpecificPermissions);
+    
     // Grant full access to admin and superadmin roles
     if (userPermissions && (userPermissions.role === 'admin' || userPermissions.role === 'superadmin')) {
+      console.log(`✅ Admin/Superadmin - granting full access for: ${permission}`);
       return true;
     }
 
-    if (!userPermissions) return false;
+    if (!userPermissions) {
+      console.log(`❌ No user permissions - denying: ${permission}`);
+      return false;
+    }
+    
+    // NEW: Check model-specific permissions first
+    if (userPermissions.modelSpecificPermissions && selectedModel) {
+      const modelPermissions = userPermissions.modelSpecificPermissions[selectedModel];
+      console.log(`🔍 Model-specific permissions for ${selectedModel}:`, modelPermissions);
+      
+      if (modelPermissions) {
+        if (typeof modelPermissions[permission] !== 'undefined') {
+          const result = !!modelPermissions[permission];
+          console.log(`✅ Model-specific permission check for ${selectedModel}: ${permission} = ${result}`);
+          return result;
+        } else {
+          console.log(`❌ Permission ${permission} not found in model-specific permissions for ${selectedModel}`);
+        }
+      } else {
+        console.log(`❌ No model-specific permissions found for model: ${selectedModel}`);
+      }
+    } else {
+      console.log(`❌ No modelSpecificPermissions object or selectedModel missing`);
+    }
+    
+    // TEMPORARY: Disable global permissions fallback to force model-specific behavior
+    console.log(`🛑 BLOCKING global permission fallback - no global access should be granted`);
+    return false;
+    
+    // ORIGINAL FALLBACK CODE (DISABLED):
+    /*
     // Support old keys used earlier (canEdit/canTexture)
     if (permission === 'canEdit') {
-      return (
+      const result = (
         userPermissions.canEdit ||
         userPermissions.doorPresets ||
         userPermissions.doorToggles ||
@@ -226,15 +266,26 @@ export function Interface({
         userPermissions.globalTextureWidget ||
         userPermissions.lightWidget
       );
+      console.log(`🔍 Global canEdit permission check: ${result}`);
+      return result;
     }
     if (permission === 'canTexture') {
-      return (
+      const result = (
         userPermissions.canTexture ||
         userPermissions.textureWidget ||
         userPermissions.globalTextureWidget
       );
+      console.log(`🔍 Global canTexture permission check: ${result}`);
+      return result;
     }
-    return !!userPermissions[permission];
+    
+    // Check global permission as final fallback
+    const hasGlobalPermission = !!userPermissions[permission];
+    if (hasGlobalPermission) {
+      console.log(`🔍 Global permission check: ${permission} = ${hasGlobalPermission}`);
+    }
+    return hasGlobalPermission;
+    */
   };
 
   // Map widget types to permission requirements
@@ -287,22 +338,31 @@ export function Interface({
 
   // Filter widgets based on user permissions (memoized to prevent loops)
   const widgets = React.useMemo(() => {
+    console.log('🚨 WIDGET FILTERING DEBUG:');
+    console.log('  - allWidgets count:', allWidgets.length);
+    console.log('  - allWidgets:', allWidgets);
+    console.log('  - selectedModel:', selectedModel);
+    
     const filtered = allWidgets.filter(widget => {
       const requiredPermission = getWidgetPermission(widget.type);
       const hasPermissionResult = hasPermission(requiredPermission);
+      
+      console.log(`🚨 Widget: "${widget.type}" -> requires permission: "${requiredPermission}" -> hasPermission: ${hasPermissionResult}`);
+      
       if (!hasPermissionResult) {
-        console.debug(`Interface: widget "${widget.type}" requires "${requiredPermission}" but user lacks it`);
+        console.log(`❌ Interface: widget "${widget.type}" requires "${requiredPermission}" but user lacks it`);
       } else {
-        console.debug(`Interface: widget "${widget.type}" allowed (permission: ${requiredPermission})`);
+        console.log(`✅ Interface: widget "${widget.type}" allowed (permission: ${requiredPermission})`);
       }
       return hasPermissionResult;
     });
     
     // Simple logging without circular reference
-    console.log('🎮 Widgets updated:', filtered.length, 'widgets available');
+    console.log('🎮 FINAL RESULT: Widgets updated:', filtered.length, 'widgets available out of', allWidgets.length);
+    console.log('🎮 FILTERED WIDGETS:', filtered);
     
     return filtered;
-  }, [JSON.stringify(allWidgets), JSON.stringify(userPermissions)]); // Use JSON.stringify to avoid object reference issues
+  }, [JSON.stringify(allWidgets), JSON.stringify(userPermissions), selectedModel]); // Use JSON.stringify to avoid object reference issues
 
   // Widget filtering debug removed to prevent infinite loops
 

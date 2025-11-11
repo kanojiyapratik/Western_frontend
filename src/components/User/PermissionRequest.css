@@ -1,0 +1,204 @@
+/* PermissionRequest Component Styles */
+.kt-stack {
+  display: flex;
+  flex-direction: column;
+}
+
+.gap-16 > * + * {
+  margin-top: 16px;
+}
+
+.gap-12 > * + * {
+  margin-top: 12px;
+}
+
+.gap-8 > * + * {
+  margin-top: 8px;
+}
+
+.flex {
+  display: flex;
+}
+
+.flex-col {
+  flex-direction: column;
+}
+
+.gap-16 {
+  gap: 16px;
+}
+
+.gap-12 {
+  gap: 12px;
+}
+
+.gap-8 {
+  gap: 8px;
+}
+
+.justify-between {
+  justify-content: space-between;
+}
+
+.align-items-center {
+  align-items: center;
+}
+
+.justify-center {
+  justify-content: center;
+}
+
+.flex-wrap {
+  flex-wrap: wrap;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-faint {
+  color: var(--kt-text-soft);
+}
+
+/* Card styles */
+.kt-card {
+  background: var(--kt-surface);
+  border: 1px solid var(--kt-border);
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+.kt-card-header {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: var(--kt-text);
+}
+
+/* Button styles */
+.kt-btn {
+  padding: 8px 16px;
+  border-radius: 6px;
+  border: none;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.kt-btn.primary {
+  background: var(--kt-primary);
+  color: white;
+}
+
+.kt-btn.primary:hover {
+  background: var(--kt-primary-hover);
+}
+
+.kt-btn.outline {
+  background: transparent;
+  color: var(--kt-primary);
+  border: 1px solid var(--kt-primary);
+}
+
+.kt-btn.outline:hover {
+  background: var(--kt-primary);
+  color: white;
+}
+
+.kt-btn.danger {
+  background: var(--kt-danger);
+  color: white;
+}
+
+.kt-btn.danger:hover {
+  background: var(--kt-danger-hover);
+}
+
+.kt-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.kt-btn.sm {
+  padding: 6px 12px;
+  font-size: 12px;
+}
+
+/* Form elements */
+input, select, textarea {
+  background: var(--kt-surface);
+  border: 1px solid var(--kt-border);
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 14px;
+  color: var(--kt-text);
+  transition: border-color 0.2s ease;
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--kt-primary);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+label {
+  color: var(--kt-text);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* Badge styles */
+.badge {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Grid styles */
+.grid {
+  display: grid;
+}
+
+.grid-cols-2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.grid-cols-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.grid-cols-4 {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.gap-4 {
+  gap: 16px;
+}
+
+/* Responsive utilities */
+@media (max-width: 768px) {
+  .kt-stack {
+    padding: 8px;
+  }
+  
+  .kt-card {
+    padding: 12px;
+  }
+  
+  .kt-card-header {
+    font-size: 16px;
+  }
+  
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
