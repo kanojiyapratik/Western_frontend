@@ -9,6 +9,7 @@ import '../Admin/AdminLayout.css';
 import AddModelModalMultiAsset from '../Admin/ModelManagement/AddModelModal_MultiAsset';
 import ModelManagement from '../Admin/ModelManagement/ModelManagement';
 import UserManagement from '../Admin/UserManagement/UserManagement';
+import PermissionRequest from '../User/PermissionRequest';
 import PasswordReset from '../../components/Auth/PasswordReset';
 
 // replaced with PasswordReset component
@@ -31,6 +32,7 @@ const UserShell = () => {
     '/user/dashboard': 'Dashboard',
     '/user/viewer': 'Viewer',
     '/user/user-management': 'User Management',
+    '/user/permission-request': 'Permission Request',
     '/user/change-password': 'Change Password',
   };
   const pageTitle = pageTitleMap[location.pathname] || 'Dashboard';
@@ -50,6 +52,7 @@ const UserShell = () => {
             <Route path="/upload-model" element={<UserUpload />} />
             <Route path="/model-management" element={<UserModelManagement />} />
             <Route path="/user-management" element={<UserUserManagement />} />
+            <Route path="/permission-request" element={<PermissionRequest />} />
             <Route path="/change-password" element={<PasswordReset />} />
             <Route path="*" element={<Navigate to="/user/dashboard" replace />} />
           </Routes>

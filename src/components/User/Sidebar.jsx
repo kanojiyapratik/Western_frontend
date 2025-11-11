@@ -16,6 +16,7 @@ const UserSidebar = ({ collapsed, onToggle }) => {
     ...(canViewModels ? [
       { path: '/user/model-management', icon: '🧩', label: 'Model Management' },
     ] : []),
+    { path: '/user/permission-request', icon: '📋', label: 'Permission Request' },
     ...(canManageUsers ? [
       { path: '/user/user-management', icon: '👥', label: 'User Management' },
     ] : []),

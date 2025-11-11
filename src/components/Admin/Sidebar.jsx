@@ -9,6 +9,7 @@ const Sidebar = ({ collapsed, onToggle }) => {
 
   const menuItems = [
     { path: '/admin/dashboard', icon: '📊', label: 'Dashboard' },
+    { path: '/admin/permission-requests', icon: '📋', label: 'Permission Requests' },
     { path: '/admin/users', icon: '👥', label: 'Users' },
     { path: '/admin/models', icon: '🧩', label: 'Models' },
   // { path: '/admin/models/generator', icon: '🧰', label: 'Model Generator' },

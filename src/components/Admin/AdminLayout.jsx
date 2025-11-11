@@ -5,6 +5,7 @@ import Dashboard from './Dashboard/Dashboard';
 import UserManagement from './UserManagement/UserManagement';
 import ModelManagement from './ModelManagement/ModelManagement';
 import ConfigurationManagement from './ConfigurationManagement/ConfigurationManagement';
+import PermissionRequest from '../User/PermissionRequest';
 import PasswordReset from '../Auth/PasswordReset';
 import MainApp from '../MainApp/MainApp';
 import { useAuth } from '../../context/AuthContext';
@@ -44,6 +45,7 @@ const AdminShell = () => {
     '/admin/dashboard': 'Dashboard',
     '/admin/users': 'User Management',
     '/admin/models': 'Model Management',
+    '/admin/permission-requests': 'Permission Requests',
     '/admin/configuration': 'Configuration Management',
   // '/admin/activity-log': 'Activity Logs',
   // '/admin/models/generator': 'Model Generator',
@@ -61,6 +63,7 @@ const AdminShell = () => {
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/users" element={<UserManagement />} />
             <Route path="/models" element={<ModelManagement />} />
+            <Route path="/permission-requests" element={<PermissionRequest />} />
             <Route path="/configuration" element={<ConfigurationManagement />} />
             <Route path="/viewer" element={<MainApp />} />
             {/* Model Generator removed */}
