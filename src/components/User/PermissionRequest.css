@@ -202,3 +202,31 @@ label {
     grid-template-columns: 1fr;
   }
 }
+/* PermissionRequest specific scroll fix */
+.permission-request-scroll {
+  height: 100% !important;
+  overflow: auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 16px !important;
+  padding: 16px !important;
+}
+
+/* Custom scrollbar styling for PermissionRequest */
+.permission-request-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.permission-request-scroll::-webkit-scrollbar-track {
+  background: var(--kt-surface);
+  border-radius: 3px;
+}
+
+.permission-request-scroll::-webkit-scrollbar-thumb {
+  background: var(--kt-border);
+  border-radius: 3px;
+}
+
+.permission-request-scroll::-webkit-scrollbar-thumb:hover {
+  background: var(--kt-border-strong);
+}
