@@ -277,7 +277,15 @@ const UserManagement = () => {
   
   const { user: tokenUser } = useAuth();
   const isSuperAdmin = tokenUser?.role === 'superadmin';
-  const currentUserId = tokenUser?.id || tokenUser?._id || (tokenUser?._id && tokenUser._id.toString && tokenUser._id.toString());
+  // Improved currentUserId calculation with better handling of different ID formats
+  const currentUserId = useMemo(() => {
+    if (!tokenUser) return null;
+    // Handle different possible ID field names and formats
+    const id = tokenUser.id || tokenUser._id;
+    if (!id) return null;
+    // Convert to string for consistent comparison
+    return typeof id === 'string' ? id : (id.toString ? id.toString() : String(id));
+  }, [tokenUser]);
 
   useEffect(() => {
     console.log('🚀 UserManagement component mounted');
@@ -343,6 +351,7 @@ const UserManagement = () => {
       setLoading(false);
     }
   };
+
 
   // Fetch permission requests for admin management
   const fetchPermissionRequests = async () => {
@@ -1181,89 +1190,23 @@ const UserManagement = () => {
           </div>
           <div className="flex gap-12" style={{fontSize:12}}>
             <span className="badge primary">Total {users.length}</span>
-            
-            {/* Permission Requests Indicator - Only show for admins */}
-            {((isSuperAdmin || tokenUser?.role === 'admin' || tokenUser?.permissions?.userManagement)) && permissionRequests.filter(r => r.status === 'pending').length > 0 && (
-              <button
-                className="badge"
-                style={{
-                  background: 'var(--kt-warning)',
-                  color: 'white',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  padding: '8px 12px',
-                  borderRadius: '8px',
-                  fontSize: '12px',
-                  fontWeight: '600',
-                  border: 'none',
-                  boxShadow: '0 2px 8px rgba(251, 191, 36, 0.3)',
-                  animation: 'pulse 2s infinite'
-                }}
-                onClick={() => {
-                  setSelectedTab('requests');
-                  // Scroll to top to make the tab visible
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                }}
-                title="Click to view permission requests"
-              >
-                <span style={{fontSize: '14px'}}>🔔</span>
-                <span>Permission Requests</span>
-                <span className="badge" style={{
-                  background: 'rgba(255,255,255,0.2)',
-                  color: 'white',
-                  fontSize: '10px',
-                  padding: '2px 6px',
-                  borderRadius: '10px',
-                  minWidth: '18px',
-                  textAlign: 'center'
-                }}>
-                  {permissionRequests.filter(r => r.status === 'pending').length}
-                </span>
-              </button>
-            )}
-            
-            {/* Pending icon for when no requests but admin can see the tab */}
-            {((isSuperAdmin || tokenUser?.role === 'admin' || tokenUser?.permissions?.userManagement)) && permissionRequests.filter(r => r.status === 'pending').length === 0 && permissionRequests.length > 0 && (
-              <button
-                className="badge"
-                style={{
-                  background: 'var(--kt-success)',
-                  color: 'white',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  padding: '8px 12px',
-                  borderRadius: '8px',
-                  fontSize: '12px',
-                  fontWeight: '600',
-                  border: 'none',
-                  boxShadow: '0 2px 8px rgba(34, 197, 94, 0.2)'
-                }}
-                onClick={() => {
-                  setSelectedTab('requests');
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                }}
-                title="All requests handled"
-              >
-                <span style={{fontSize: '14px'}}>✅</span>
-                <span>Requests</span>
-              </button>
-            )}
           </div>
           <div>
-            <button
-              className="kt-btn primary"
-              onClick={() => {
-                // Ensure non-superadmin cannot pre-select admin role when opening the modal
-                if (!isSuperAdmin) setNewUser(prev => ({ ...prev, role: 'employee' }));
-                setShowCreateModal(true);
-              }}
-            >
-              Create User
-            </button>
+            {/* Only show Create User button for users with user management permissions */}
+            {(isSuperAdmin || tokenUser?.role === 'admin' || tokenUser?.permissions?.userManagement) && (
+              <button
+                className="kt-btn primary"
+                onClick={() => {
+                  // Regular admins cannot create admin accounts - force role to employee
+                  if (!isSuperAdmin && tokenUser?.role === 'admin') {
+                    setNewUser(prev => ({ ...prev, role: 'employee' }));
+                  }
+                  setShowCreateModal(true);
+                }}
+              >
+                Create User
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -1276,7 +1219,7 @@ const UserManagement = () => {
         </div>
       )}
 
-      {(isSuperAdmin || tokenUser?.role === 'admin') ? (
+      {isSuperAdmin ? (
         <div className="kt-card" style={{padding:12}}>
           <div style={{display:'flex', alignItems:'center', justifyContent:'space-between', gap:12}}>
             <div style={{display:'flex', gap:8, alignItems:'center'}}>
@@ -1345,7 +1288,23 @@ const UserManagement = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {users.filter(u => (u.role === 'admin' || u.role === 'superadmin') && String(u._id) !== String(currentUserId)).map(user => (
+                    {users.filter(u => {
+                      const isAdminUser = u.role === 'admin' || u.role === 'superadmin';
+                      const isNotCurrentUser = String(u._id) !== String(currentUserId);
+                      const shouldInclude = isAdminUser && isNotCurrentUser;
+                      
+                      // Debug logging
+                      if (isAdminUser && !isNotCurrentUser) {
+                        console.log('🔍 Filtering out current user from admin list:', {
+                          userName: u.name,
+                          userId: u._id,
+                          currentUserId: currentUserId,
+                          role: u.role
+                        });
+                      }
+                      
+                      return shouldInclude;
+                    }).map(user => (
                       <tr key={user._id}>
                         <td style={{display:'flex', alignItems:'center', gap:8}}>
                           <div className="kt-avatar" style={{width:34, height:34, fontSize:13}}>{user.name.charAt(0).toUpperCase()}</div>
@@ -1456,36 +1415,6 @@ const UserManagement = () => {
                               ⤴️
                             </span>
                           ) : null}
-                          {/* Bell icon for users with pending permission requests */}
-                          {permissionRequests.some(req => req.userEmail === user.email && req.status === 'pending') && (
-                            <span
-                              title="This user has pending permission requests"
-                              style={{
-                                display:'inline-flex',
-                                alignItems:'center',
-                                justifyContent:'center',
-                                fontSize:14,
-                                lineHeight:1,
-                                padding:'2px 4px',
-                                borderRadius:999,
-                                background:'var(--kt-warning)',
-                                color:'white',
-                                animation: 'pulse 2s infinite',
-                                cursor: 'pointer'
-                              }}
-                              onClick={() => {
-                                setSelectedTab('requests');
-                                setTimeout(() => {
-                                  const requestElement = document.querySelector(`[data-user-email="${user.email}"]`);
-                                  if (requestElement) {
-                                    requestElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                                  }
-                                }, 100);
-                              }}
-                            >
-                              🔔
-                            </span>
-                          )}
                         </td>
                         <td>{user.email}</td>
                         <td style={{textAlign:'center'}}>
@@ -1517,23 +1446,6 @@ const UserManagement = () => {
                           <div className="kt-actions">
                             <button onClick={() => handleEditUser(user)}>Edit</button>
                             <button onClick={() => { setActivityUserId(user._id); setShowActivityModal(true); }}>View Activity</button>
-                            {permissionRequests.some(req => req.userEmail === user.email && req.status === 'pending') && (
-                              <button
-                                onClick={() => {
-                                  setSelectedTab('requests');
-                                  setTimeout(() => {
-                                    const requestElement = document.querySelector(`[data-user-email="${user.email}"]`);
-                                    if (requestElement) {
-                                      requestElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                                    }
-                                  }, 100);
-                                }}
-                                style={{color:'var(--kt-warning)'}}
-                                title="View this user's permission requests"
-                              >
-                                🔔 Requests
-                              </button>
-                            )}
                             <SendPasswordReset userEmail={user.email} />
                             <button onClick={() => handleDeleteUser(user._id)}>Delete</button>
                           </div>
@@ -1669,36 +1581,6 @@ const UserManagement = () => {
                         ⤴️
                       </span>
                     ) : null}
-                    {/* Bell icon for users with pending permission requests */}
-                    {permissionRequests.some(req => req.userEmail === user.email && req.status === 'pending') && (
-                      <span
-                        title="This user has pending permission requests"
-                        style={{
-                          display:'inline-flex',
-                          alignItems:'center',
-                          justifyContent:'center',
-                          fontSize:14,
-                          lineHeight:1,
-                          padding:'2px 4px',
-                          borderRadius:999,
-                          background:'var(--kt-warning)',
-                          color:'white',
-                          animation: 'pulse 2s infinite',
-                          cursor: 'pointer'
-                        }}
-                        onClick={() => {
-                          setSelectedTab('requests');
-                          setTimeout(() => {
-                            const requestElement = document.querySelector(`[data-user-email="${user.email}"]`);
-                            if (requestElement) {
-                              requestElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                            }
-                          }, 100);
-                        }}
-                      >
-                        🔔
-                      </span>
-                    )}
                   </td>
                   <td>{user.email}</td>
                   <td style={{textAlign:'center'}}>
@@ -1730,23 +1612,6 @@ const UserManagement = () => {
                     <div className="kt-actions">
                       <button onClick={() => handleEditUser(user)}>Edit</button>
                       <button onClick={() => { setActivityUserId(user._id); setShowActivityModal(true); }}>View Activity</button>
-                      {permissionRequests.some(req => req.userEmail === user.email && req.status === 'pending') && (
-                        <button
-                          onClick={() => {
-                            setSelectedTab('requests');
-                            setTimeout(() => {
-                              const requestElement = document.querySelector(`[data-user-email="${user.email}"]`);
-                              if (requestElement) {
-                                requestElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                              }
-                            }, 100);
-                          }}
-                          style={{color:'var(--kt-warning)'}}
-                          title="View this user's permission requests"
-                        >
-                          🔔 Requests
-                        </button>
-                      )}
                       <button onClick={() => handleDeleteUser(user._id)}>Delete</button>
                     </div>
                   </td>
@@ -2242,9 +2107,12 @@ const UserManagement = () => {
                     onChange={(e) => setNewUser(prev => ({ ...prev, role: e.target.value, customRoleName: e.target.value === 'custom' ? prev.customRoleName : '' }))} 
                     style={{padding:'8px 10px', borderRadius:6, border:'1px solid var(--kt-border)', fontSize:15}}
                   >
-                    {getAllowedRoles(tokenUser?.role).filter(role => role !== 'superadmin').map(role => (
+                    {getAllowedRoles(tokenUser?.role).filter(role =>
+                      role !== 'superadmin' &&
+                      (isSuperAdmin || role !== 'admin') // Allow admin role only for superadmins
+                    ).map(role => (
                       <option key={role} value={role}>
-                        {role === 'assistantmanager' ? 'Assistant Manager' : 
+                        {role === 'assistantmanager' ? 'Assistant Manager' :
                          role.charAt(0).toUpperCase() + role.slice(1)}
                       </option>
                     ))}

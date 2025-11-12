@@ -74,7 +74,9 @@ const UserSidebar = ({ collapsed, onToggle }) => {
     ...(canViewModels ? [
       { path: '/user/model-management', icon: '🧩', label: 'Model Management' },
     ] : []),
-    { path: '/user/permission-request', icon: pendingRequestsCount > 0 ? '🔔' : '📋', label: 'Permission Request' },
+    ...(user?.role !== 'admin' && user?.role !== 'superadmin' ? [
+      { path: '/user/permission-request', icon: pendingRequestsCount > 0 ? '🔔' : '📋', label: 'Permission Request' },
+    ] : []),
     ...(canManageUsers ? [
       { path: '/user/user-management', icon: '👥', label: 'User Management' },
     ] : []),
