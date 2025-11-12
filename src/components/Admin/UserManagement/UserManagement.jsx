@@ -292,7 +292,10 @@ const UserManagement = () => {
     fetchUsers();
     loadAvailableModels();
     if (isSuperAdmin || tokenUser?.role === 'admin' || tokenUser?.permissions?.userManagement) {
+      console.log('🔓 Fetching permission requests for role:', tokenUser?.role, 'SuperAdmin:', isSuperAdmin, 'Has userManagement perm:', !!tokenUser?.permissions?.userManagement);
       fetchPermissionRequests();
+    } else {
+      console.log('🔒 Not fetching permission requests - insufficient permissions');
     }
   }, []);
 
@@ -1219,17 +1222,19 @@ const UserManagement = () => {
         </div>
       )}
 
-      {isSuperAdmin ? (
+      {(isSuperAdmin || tokenUser?.role === 'admin' || tokenUser?.permissions?.userManagement) ? (
         <div className="kt-card" style={{padding:12}}>
           <div style={{display:'flex', alignItems:'center', justifyContent:'space-between', gap:12}}>
             <div style={{display:'flex', gap:8, alignItems:'center'}}>
-              <button
-                className={`kt-btn sm ${selectedTab === 'admins' ? 'primary' : 'outline'}`}
-                onClick={() => setSelectedTab('admins')}
-                style={{minWidth:110}}
-              >
-                Admins ({users.filter(u => (u.role === 'admin' || u.role === 'superadmin') && String(u._id) !== String(currentUserId)).length})
-              </button>
+              {isSuperAdmin && (
+                <button
+                  className={`kt-btn sm ${selectedTab === 'admins' ? 'primary' : 'outline'}`}
+                  onClick={() => setSelectedTab('admins')}
+                  style={{minWidth:110}}
+                >
+                  Admins ({users.filter(u => (u.role === 'admin' || u.role === 'superadmin') && String(u._id) !== String(currentUserId)).length})
+                </button>
+              )}
               <button
                 className={`kt-btn sm ${selectedTab === 'employees' ? 'primary' : 'outline'}`}
                 onClick={() => setSelectedTab('employees')}
