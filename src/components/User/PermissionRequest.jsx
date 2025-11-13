@@ -19,8 +19,7 @@ const PermissionRequest = () => {
   const { user } = useAuth();
   const [formData, setFormData] = useState({
     requestedPermissions: {},
-    justification: '',
-    urgency: 'medium'
+    justification: ''
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -101,8 +100,7 @@ const PermissionRequest = () => {
         targetId: user.id || user._id, // Current user's ID
         requestedPermissions: {}, // Empty for general requests
         justification: formData.justification,
-        requestedBy: 'self',
-        urgency: formData.urgency
+        requestedBy: 'self'
       };
 
       const response = await fetch(`${getApiBaseUrl()}/api/permission-requests`, {
@@ -123,7 +121,7 @@ const PermissionRequest = () => {
       console.log('Permission request submitted:', result);
       
       setSuccess('Your permission request has been submitted successfully! An email notification will be sent to the administrators.');
-      setFormData({ requestedPermissions: {}, justification: '', urgency: 'medium' });
+      setFormData({ requestedPermissions: {}, justification: '' });
       
       // Refresh the list of requests
       // Refresh the list of requests
@@ -144,10 +142,43 @@ const PermissionRequest = () => {
     switch (status) {
       case 'pending':
         return 'var(--kt-warning)';
+      case 'approved':
       case 'resolved':
         return 'var(--kt-success)';
+      case 'rejected':
+        return 'var(--kt-danger)';
       default:
         return 'var(--kt-text-soft)';
+    }
+  };
+  
+  const getStatusIcon = (status) => {
+    switch (status) {
+      case 'pending':
+        return '⏳';
+      case 'approved':
+        return '✅';
+      case 'rejected':
+        return '❌';
+      case 'resolved':
+        return '✅';
+      default:
+        return '📋';
+    }
+  };
+  
+  const getStatusLabel = (status) => {
+    switch (status) {
+      case 'pending':
+        return 'Pending';
+      case 'approved':
+        return 'Approved';
+      case 'rejected':
+        return 'Rejected';
+      case 'resolved':
+        return 'Resolved';
+      default:
+        return status || 'Unknown';
     }
   };
 
@@ -260,33 +291,9 @@ const PermissionRequest = () => {
             />
           </div>
 
-          <div>
-            <label style={{display:'block', marginBottom:8, fontSize:14, fontWeight:600}}>Urgency Level</label>
-            <div style={{display:'flex', gap:12, flexWrap:'wrap'}}>
-              {[
-                { key: 'low', label: 'Low', color: 'var(--kt-primary)' },
-                { key: 'medium', label: 'Medium', color: 'var(--kt-warning)' },
-                { key: 'high', label: 'High', color: 'var(--kt-danger)' }
-              ].map(urgency => (
-                <label key={urgency.key} style={{display:'flex', alignItems:'center', gap:6, cursor:'pointer'}}>
-                  <input
-                    type="radio"
-                    name="urgency"
-                    value={urgency.key}
-                    checked={formData.urgency === urgency.key}
-                    onChange={(e) => setFormData(prev => ({ ...prev, urgency: e.target.value }))}
-                  />
-                  <span style={{color:urgency.color, fontWeight:urgency.key === formData.urgency ? 600 : 400}}>
-                    {urgency.label}
-                  </span>
-                </label>
-              ))}
-            </div>
-          </div>
-
           <div style={{display:'flex', justifyContent:'flex-end', gap:12}}>
             <button type="button" className="kt-btn outline" onClick={() => {
-              setFormData({ requestedPermissions: {}, justification: '', urgency: 'medium' });
+              setFormData({ requestedPermissions: {}, justification: '' });
               setError('');
               setSuccess('');
             }}>
@@ -334,7 +341,7 @@ const PermissionRequest = () => {
                           background: getStatusColor(request.status),
                           color: 'white'
                         }}>
-                          {request.status}
+                          {getStatusIcon(request.status)} {getStatusLabel(request.status)}
                         </div>
                         {/* Delete Button - only for pending requests */}
                         {request.status === 'pending' && (
@@ -354,35 +361,57 @@ const PermissionRequest = () => {
                       <div style={{fontSize:'14px', color:'var(--kt-text)'}}>{request.justification || request.reason}</div>
                     </div>
                     
-                    {request.urgency && (
-                      <div style={{marginBottom:'8px'}}>
-                        <span className="badge" style={{
-                          background: request.urgency === 'high' ? 'var(--kt-danger)' : 
-                                     request.urgency === 'medium' ? 'var(--kt-warning)' : 'var(--kt-primary)',
-                          color: 'white'
-                        }}>
-                          {request.urgency} priority
-                        </span>
-                      </div>
-                    )}
-                    
-                    {request.status === 'resolved' && (
-                      <div style={{marginTop:'12px', padding:'8px', background:'var(--kt-surface-alt)', borderRadius:'4px'}}>
-                        <div style={{fontSize:'12px', fontWeight:'600', marginBottom:'4px'}}>
-                          ✅ Resolved by {request.respondedBy?.name || 'Administrator'}
+                    {(request.status === 'approved' || request.status === 'rejected' || request.status === 'resolved') && (
+                      <div style={{marginTop:'12px', padding:'12px', background:'var(--kt-surface-alt)', borderRadius:'6px', border:'1px solid var(--kt-border)'}}>
+                        <div style={{display:'flex', alignItems:'center', gap:'8px', marginBottom:'8px'}}>
+                          <span style={{fontSize:'16px'}}>
+                            {request.status === 'approved' ? '✅' : request.status === 'rejected' ? '❌' : '✅'}
+                          </span>
+                          <div style={{fontSize:'14px', fontWeight:'600', color:'var(--kt-text)'}}>
+                            {request.status === 'approved' ? 'Approved' : request.status === 'rejected' ? 'Rejected' : 'Resolved'} by
+                          </div>
                         </div>
-                        {request.respondedBy && (
-                          <div style={{fontSize:'12px', color:'var(--kt-text-soft)', marginBottom:'4px'}}>
-                            on {new Date(request.respondedAt || request.updatedAt).toLocaleDateString()}
+                        
+                        {/* Approver Information */}
+                        <div style={{display:'flex', alignItems:'center', gap:'12px', marginBottom:'8px'}}>
+                          <div className="kt-avatar" style={{width:'32px', height:'32px', fontSize:'14px', fontWeight:'600'}}>
+                            {request.respondedBy?.name ? request.respondedBy.name.charAt(0).toUpperCase() : 'A'}
                           </div>
-                        )}
+                          <div>
+                            <div style={{fontSize:'14px', fontWeight:'600', color:'var(--kt-text)'}}>
+                              {request.respondedBy?.name || 'Administrator'}
+                            </div>
+                            <div style={{fontSize:'12px', color:'var(--kt-text-soft)'}}>
+                              {request.respondedBy?.email || 'admin@company.com'}
+                              {request.respondedBy?.role && ` • ${request.respondedBy.role.charAt(0).toUpperCase() + request.respondedBy.role.slice(1)}`}
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {/* Resolution Date */}
+                        <div style={{fontSize:'12px', color:'var(--kt-text-soft)', marginBottom:'8px'}}>
+                          <span>📅 {new Date(request.respondedAt || request.updatedAt).toLocaleDateString()} at {new Date(request.respondedAt || request.updatedAt).toLocaleTimeString()}</span>
+                        </div>
+                        
+                        {/* Admin Response */}
                         {request.adminResponse && (
-                          <div style={{fontSize:'14px', color:'var(--kt-text)'}}>
-                            <strong>Resolution notes:</strong> {request.adminResponse}
+                          <div style={{marginTop:'8px', padding:'8px', background:'var(--kt-surface)', borderRadius:'4px', border:'1px solid var(--kt-border)'}}>
+                            <div style={{fontSize:'12px', fontWeight:'600', marginBottom:'4px', color:'var(--kt-text)'}}>
+                              📝 Resolution Notes:
+                            </div>
+                            <div style={{fontSize:'13px', color:'var(--kt-text)'}}>
+                              {request.adminResponse}
+                            </div>
                           </div>
                         )}
-                        <div style={{fontSize:'14px', color:'var(--kt-text)'}}>
-                          Your request has been reviewed. Please check your user profile to see the updated permissions.
+                        
+                        <div style={{fontSize:'13px', color:'var(--kt-text)', marginTop:'8px', fontStyle:'italic'}}>
+                          {request.status === 'approved'
+                            ? '🎉 Your request has been approved. Please check your user profile to see the updated permissions.'
+                            : request.status === 'rejected'
+                            ? '❌ Your request has been declined. You can submit a new request with additional justification if needed.'
+                            : 'Your request has been reviewed. Please check your user profile to see the updated permissions.'
+                          }
                         </div>
                       </div>
                     )}
