@@ -203,20 +203,20 @@ const getEffectiveRole = (currentRole, permissions, existingCustomRoleName = '')
 // Display role name with proper formatting
 const getRoleDisplayName = (user) => {
   const role = user.role || 'employee';
-  
+   
   // Debug: Log what we're actually getting from the database
   // console.log('getRoleDisplayName - User:', user.name, 'Role from DB:', user.role, 'Permissions keys:', user.permissions ? Object.keys(user.permissions) : 'none');
-  
+   
   // Handle custom roles
   if (role === 'custom') {
     return user.customRoleName || 'Custom';
   }
-  
+   
   // Handle special formatting for compound role names
   if (role === 'assistantmanager') {
     return 'Assistant Manager';
   }
-  
+   
   // Handle standard roles with proper capitalization
   return role.charAt(0).toUpperCase() + role.slice(1);
 };
@@ -273,7 +273,7 @@ const UserManagement = () => {
   const [showRequestModal, setShowRequestModal] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [resolving, setResolving] = useState(false);
-  const [selectedTab, setSelectedTab] = useState('admins'); // 'admins' | 'employees' | 'requests'
+  const [selectedTab, setSelectedTab] = useState('employees'); // 'admins' | 'employees' | 'requests'
   
   const { user: tokenUser } = useAuth();
   const isSuperAdmin = tokenUser?.role === 'superadmin';
@@ -355,7 +355,6 @@ const UserManagement = () => {
     }
   };
 
-
   // Fetch permission requests for admin management
   const fetchPermissionRequests = async () => {
     try {
@@ -414,7 +413,8 @@ const UserManagement = () => {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to resolve request');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Failed to resolve request');
       }
 
       // Remove resolved request from the list
@@ -691,7 +691,7 @@ const UserManagement = () => {
 
   // Get current model-specific permissions with proper React state management
   const [permissionsCache, setPermissionsCache] = useState({});
-   
+    
   // The actual getCurrentModelPermissions function (this is the one that works!)
   const getCurrentModelPermissions = () => {
     const allWidgetPermissions = {
@@ -728,7 +728,7 @@ const UserManagement = () => {
 
   // Handle permission change for specific model with force re-render
   const [forceUpdate, setForceUpdate] = useState(0);
-   
+    
   const handleModelPermissionChange = (permission, value) => {
     console.log(`🚀 HANDLE PERMISSION CHANGE: ${permission} = ${value} for model: ${selectedModelForEdit}`);
     
@@ -793,7 +793,7 @@ const UserManagement = () => {
     // Force a re-render to update the checkboxes
     setForceUpdate(prev => prev + 1);
   };
-   
+    
 
   // Active/deactivated status removed; no toggle function
 
@@ -1280,7 +1280,7 @@ const UserManagement = () => {
           </div>
 
           <div style={{marginTop:12}}>
-            {selectedTab === 'admins' ? (
+            {selectedTab === 'admins' && isSuperAdmin ? (
               <div className="kt-table-wrapper">
                 <table className="kt-table">
                   <thead>
