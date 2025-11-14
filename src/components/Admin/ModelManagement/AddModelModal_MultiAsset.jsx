@@ -1,9 +1,9 @@
 // Multi-Asset Model Upload Modal
 // - Upload base, doors, drawers, glassDoors, other assets in one request
 // - Automatically generates JSON configuration with asset URLs
-// - Admin can copy the JSON and use it as a starting point
+// - Simplified version without advanced options, but with JSON paste functionality
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 const getApiBaseUrl = () => {
   if (import.meta.env.VITE_API_BASE) {
@@ -23,8 +23,7 @@ export default function AddModelModalMultiAsset({ onClose, onAdd }) {
   const [displayName, setDisplayName] = useState('');
   const [type, setType] = useState('cabinet');
   const [section, setSection] = useState('Upright Counter');
-  const [interactionGroups, setInteractionGroups] = useState('');
-  const [metadata, setMetadata] = useState('');
+  const [configUrl, setConfigUrl] = useState('');
 
   // Asset files
   const [files, setFiles] = useState({
@@ -35,6 +34,7 @@ export default function AddModelModalMultiAsset({ onClose, onAdd }) {
     other: null,
     thumbnail: null
   });
+  
   // Force-remount keys to clear <input type="file"> elements
   const [fileInputKeys, setFileInputKeys] = useState({
     base: 0,
@@ -44,6 +44,13 @@ export default function AddModelModalMultiAsset({ onClose, onAdd }) {
     other: 0,
     thumbnail: 0
   });
+
+  // JSON paste functionality (like simple modal)
+  const [showPasteJSON, setShowPasteJSON] = useState(false);
+  const [pastedJSON, setPastedJSON] = useState('');
+  const [pasteError, setPasteError] = useState('');
+  const [uploadingConfig, setUploadingConfig] = useState(false);
+  const inlineUploadInProgress = useRef(false);
 
   const [uploading, setUploading] = useState(false);
   const [uploadResult, setUploadResult] = useState(null);
@@ -86,6 +93,97 @@ export default function AddModelModalMultiAsset({ onClose, onAdd }) {
     checkAuth();
   }, []);
 
+  // Upload file function (like simple modal)
+  const uploadFile = async (file, subPath = 'models') => {
+    if (!isLoggedIn) {
+      throw new Error('You must be logged in to upload files. Please log in and try again.');
+    }
+
+    const token = localStorage.getItem('token');
+    console.log('Upload token:', token ? 'present' : 'missing');
+
+    if (!token) {
+      throw new Error('No authentication token found. Please log in again.');
+    }
+
+    if (subPath === 'configs') {
+      // For config files, save directly to backend instead of S3
+      const configData = await file.text();
+      const jsonData = JSON.parse(configData);
+
+      const res = await fetch(`${getApiBaseUrl()}/api/upload-config`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ config: jsonData })
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        console.error('[ConfigUploadError]', res.status, err);
+        throw new Error(err.message || `Config upload failed (${res.status})`);
+      }
+
+      const data = await res.json();
+      console.log('[ConfigUploadSuccess]', data);
+      return data.path;
+    } else {
+      // For model files, use S3 upload
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const res = await fetch(`${getApiBaseUrl()}/api/upload`, {
+        method: 'POST',
+        headers: token ? { 'Authorization': `Bearer ${token}` } : undefined,
+        body: formData
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        console.error('[UploadError]', res.status, err);
+        throw new Error(err.message || `Upload failed (${res.status})`);
+      }
+      const data = await res.json();
+      console.log('[UploadSuccess]', subPath, data);
+      return data?.path || (data?.filename ? `/models/${data.filename}` : '');
+    }
+  };
+
+  // Debounced inline JSON paste auto-upload to avoid spamming the server
+  useEffect(() => {
+    const v = (configUrl || '').trim();
+    // If the dedicated paste panel is open, don't auto-upload from the input field
+    if (showPasteJSON) return;
+    // Ignore if field is empty or looks like a URL/path already
+    if (!v || v.startsWith('http://') || v.startsWith('https://') || v.startsWith('/')) return;
+    // Only handle if it looks like full JSON text
+    if (!(v.startsWith('{') && v.endsWith('}'))) return;
+
+    const timer = setTimeout(async () => {
+      if (inlineUploadInProgress.current) return; // prevent duplicate concurrent uploads
+      inlineUploadInProgress.current = true;
+      try {
+        // Parse and upload pasted JSON content
+        const parsed = JSON.parse(v);
+        const blob = new Blob([JSON.stringify(parsed)], { type: 'application/json' });
+        const file = new File([blob], `config-${Date.now()}.json`, { type: 'application/json' });
+        setUploadingConfig(true);
+        const path = await uploadFile(file, 'configs');
+        setConfigUrl(path);
+        console.log('[ConfigInlineUpload] Uploaded from input paste (debounced), got path:', path);
+      } catch (err) {
+        console.error('[ConfigInlineUploadError]', err);
+        setError(err.message || 'Failed to upload pasted JSON');
+      } finally {
+        setUploadingConfig(false);
+        inlineUploadInProgress.current = false;
+      }
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [configUrl, showPasteJSON]);
+
   const handleFileChange = (assetType, file) => {
     setFiles(prev => ({
       ...prev,
@@ -96,6 +194,32 @@ export default function AddModelModalMultiAsset({ onClose, onAdd }) {
   const clearSelectedFile = (assetType) => {
     setFiles(prev => ({ ...prev, [assetType]: null }));
     setFileInputKeys(prev => ({ ...prev, [assetType]: prev[assetType] + 1 }));
+  };
+
+  const handlePasteUpload = async () => {
+    setPasteError('');
+    try {
+      if (!pastedJSON.trim()) {
+        setPasteError('Please paste JSON content first');
+        return;
+      }
+      // Validate JSON
+      JSON.parse(pastedJSON);
+      // Create a File from the pasted JSON and reuse the upload endpoint
+      const blob = new Blob([pastedJSON], { type: 'application/json' });
+      const filename = `config-${Date.now()}.json`;
+      const file = new File([blob], filename, { type: 'application/json' });
+      setUploadingConfig(true);
+      const path = await uploadFile(file, 'configs');
+      setConfigUrl(path);
+      setShowPasteJSON(false);
+      setPastedJSON('');
+    } catch (err) {
+      console.error(err);
+      setPasteError(err.message || 'Invalid JSON');
+    } finally {
+      setUploadingConfig(false);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -120,15 +244,11 @@ export default function AddModelModalMultiAsset({ onClose, onAdd }) {
       formData.append('name', name);
       formData.append('displayName', displayName || name);
       formData.append('type', type);
-  // Section (category) for the model
-  if (section) formData.append('section', section);
-
-      if (interactionGroups.trim()) {
-        formData.append('interactionGroups', interactionGroups);
-      }
-
-      if (metadata.trim()) {
-        formData.append('metadata', metadata);
+      formData.append('section', section);
+      
+      // Add config URL if provided
+      if (configUrl.trim()) {
+        formData.append('configUrl', configUrl);
       }
 
       // Add asset files
@@ -186,7 +306,6 @@ export default function AddModelModalMultiAsset({ onClose, onAdd }) {
     <div className="modal-overlay">
       <div className="modal" style={{ maxWidth: '700px', maxHeight: '85vh', overflow: 'auto' }}>
         <h3>Upload Multi-Asset Model</h3>
-
 
         {error && (
           <div style={{ padding: '8px', background: '#fee2e2', border: '1px solid #dc2626', borderRadius: '8px', marginBottom: '16px' }}>
@@ -252,6 +371,72 @@ export default function AddModelModalMultiAsset({ onClose, onAdd }) {
             </div>
           </div>
 
+          {/* Config JSON - Like Simple Modal */}
+          <div style={{ marginBottom: '16px' }}>
+            <label style={{ display: 'block', marginBottom: '4px', fontWeight: 'bold', fontSize: '13px' }}>
+              Config JSON (Optional)
+            </label>
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+              <input 
+                value={configUrl} 
+                onChange={(e) => setConfigUrl(e.target.value)} 
+                placeholder="/configs/your-model-config.json or https://..."
+                style={{ flex: 1, padding: '6px', border: '1px solid #ccc', borderRadius: '4px', fontSize: '13px' }}
+              />
+              <button 
+                type="button" 
+                onClick={() => setShowPasteJSON(v => !v)} 
+                className="btn-secondary"
+                style={{ padding: '6px 12px', fontSize: '13px' }}
+                disabled={!isLoggedIn || checkingAuth}
+              >
+                {showPasteJSON ? 'Hide paste' : 'Paste JSON'}
+              </button>
+            </div>
+
+            {/* Paste JSON Panel */}
+            {showPasteJSON && (
+              <div style={{ marginTop: '8px', padding: '12px', background: '#f8f9fa', border: '1px solid #dee2e6', borderRadius: '6px' }}>
+                <div style={{ display: 'grid', gap: '8px' }}>
+                  <textarea
+                    value={pastedJSON}
+                    onChange={(e) => setPastedJSON(e.target.value)}
+                    placeholder='Paste your config JSON here'
+                    rows={8}
+                    style={{ 
+                      width: '100%', 
+                      fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace', 
+                      padding: '8px', 
+                      border: '1px solid #cbd5e1', 
+                      borderRadius: '6px',
+                      fontSize: '12px'
+                    }}
+                  />
+                  {pasteError && <div style={{ color: '#dc2626', fontSize: '12px' }}>{pasteError}</div>}
+                  <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                    <button 
+                      type="button" 
+                      className="btn-secondary" 
+                      onClick={() => { setShowPasteJSON(false); setPastedJSON(''); setPasteError(''); }}
+                      style={{ padding: '6px 12px', fontSize: '12px' }}
+                    >
+                      Cancel
+                    </button>
+                    <button 
+                      type="button" 
+                      className="btn-primary" 
+                      onClick={handlePasteUpload} 
+                      disabled={uploadingConfig || !isLoggedIn || checkingAuth}
+                      style={{ padding: '6px 12px', fontSize: '12px' }}
+                    >
+                      {uploadingConfig ? 'Uploading…' : 'Upload pasted JSON'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
           {/* Asset Files - Compact Layout */}
           <div style={{ marginBottom: '16px' }}>
             <h4 style={{ marginBottom: '8px', fontSize: '14px' }}>Asset Files</h4>
@@ -299,41 +484,6 @@ export default function AddModelModalMultiAsset({ onClose, onAdd }) {
               ))}
             </div>
           </div>
-
-          {/* Advanced Options - Collapsed by default */}
-          <details style={{ marginBottom: '16px' }}>
-            <summary style={{ cursor: 'pointer', fontWeight: 'bold', marginBottom: '8px', fontSize: '13px' }}>
-              ⚙️ Advanced Options (Optional)
-            </summary>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-              <div>
-                <label style={{ display: 'block', marginBottom: '4px', fontWeight: 'bold', fontSize: '12px' }}>
-                  Interaction Groups (JSON)
-                </label>
-                <textarea
-                  value={interactionGroups}
-                  onChange={(e) => setInteractionGroups(e.target.value)}
-                  placeholder='[{"type": "doors", "label": "Doors", "parts": []}]'
-                  rows={2}
-                  style={{ width: '100%', padding: '6px', border: '1px solid #ccc', borderRadius: '4px', fontFamily: 'monospace', fontSize: '12px' }}
-                />
-              </div>
-
-              <div>
-                <label style={{ display: 'block', marginBottom: '4px', fontWeight: 'bold', fontSize: '12px' }}>
-                  Metadata (JSON)
-                </label>
-                <textarea
-                  value={metadata}
-                  onChange={(e) => setMetadata(e.target.value)}
-                  placeholder='{"panels": [], "solidDoorMeshPrefixes": []}'
-                  rows={2}
-                  style={{ width: '100%', padding: '6px', border: '1px solid #ccc', borderRadius: '4px', fontFamily: 'monospace', fontSize: '12px' }}
-                />
-              </div>
-            </div>
-          </details>
 
           <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
             <button
@@ -468,6 +618,53 @@ export default function AddModelModalMultiAsset({ onClose, onAdd }) {
           .modal h3 {
             margin-top: 0;
             margin-bottom: 16px;
+          }
+
+          .btn-danger {
+            background: #dc2626;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            padding: 4px 8px;
+          }
+
+          .btn-danger:hover {
+            background: #b91c1c;
+          }
+
+          .btn-secondary {
+            background: #e2e8f0;
+            color: #111827;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+          }
+
+          .btn-secondary:hover {
+            background: #cbd5e1;
+          }
+
+          .btn-primary {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+          }
+
+          .btn-primary:hover {
+            background: #1d4ed8;
+          }
+
+          .btn-primary:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
           }
         `}</style>
       </div>
