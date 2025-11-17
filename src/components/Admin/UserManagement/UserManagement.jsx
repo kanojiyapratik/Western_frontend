@@ -225,7 +225,6 @@ import { useAuth } from '../../../context/AuthContext';
 import './UserManagement.css';
 import { ActivityLog } from '../../ActivityLog/ActivityLog';
 import SavedConfigsList from '../../Interface/SavedConfigsList';
-import SendPasswordReset from '../SendPasswordReset';
 
 const getApiBaseUrl = () => {
   if (import.meta.env.VITE_API_BASE) {
@@ -1451,7 +1450,6 @@ const UserManagement = () => {
                           <div className="kt-actions">
                             <button onClick={() => handleEditUser(user)}>Edit</button>
                             <button onClick={() => { setActivityUserId(user._id); setShowActivityModal(true); }}>View Activity</button>
-                            <SendPasswordReset userEmail={user.email} />
                             <button onClick={() => handleDeleteUser(user._id)}>Delete</button>
                           </div>
                         </td>
